@@ -1,0 +1,24 @@
+{
+  "name": "nirmala",
+  "private": true,
+  "version": "0.1.0",
+  "description": "NIRMALA - Budget Review & Follow-up Intelligence",
+  "workspaces": [
+    "apps/web",
+    "apps/api",
+    "packages/shared"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev -w @nirmala/api\" \"npm run dev -w @nirmala/web\"",
+    "build": "npm run build -w @nirmala/shared && npm run build -w @nirmala/web && npm run build -w @nirmala/api",
+    "typecheck": "npm run typecheck -w @nirmala/shared && npm run typecheck -w @nirmala/web && npm run typecheck -w @nirmala/api",
+    "test": "npm run test -ws",
+    "db:generate": "npm run db:generate -w @nirmala/api",
+    "db:migrate": "npm run db:migrate -w @nirmala/api",
+    "db:seed": "npm run db:seed -w @nirmala/api"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "typescript": "^5.7.3"
+  }
+}
