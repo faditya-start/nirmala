@@ -18,10 +18,11 @@ Repository kini mencakup fondasi domain, autentikasi demo lokal, dan RBAC dasar:
 - Laporan internal dengan definisi metrik dan ekspor CSV.
 - Audit log read-only untuk admin.
 - Halaman publik `/transparansi` dengan dataset agregat sintetis terpisah.
+- Grafik dashboard untuk distribusi risiko dan progres reviu.
 - Login cookie-session dengan password di-hash menggunakan scrypt.
 - Data demo sintetis yang dapat di-seed ulang.
 
-Risk triage, keputusan reviewer, CHR, Smart Tracker, laporan, dan dashboard lengkap belum dianggap selesai.
+Risk triage, keputusan reviewer, CHR, Smart Tracker, laporan, konfigurasi risiko, user management, dan dashboard analytics tersedia dalam mode demo lokal. Deployment Cloudflare sengaja ditunda.
 
 ## Prasyarat
 
@@ -37,6 +38,8 @@ npm run dev
 
 Frontend tersedia di `http://localhost:5173`, sedangkan API tersedia di `http://localhost:8787`.
 
+Jalankan hanya satu instance `npm run dev`. Jika muncul `EADDRINUSE`, hentikan proses lama yang masih menggunakan port `5173` atau `8787`, lalu jalankan kembali. Vite dikonfigurasi `strictPort` agar tidak diam-diam berpindah ke port lain sementara proxy masih mengarah ke port yang salah.
+
 Buka halaman berikut setelah server berjalan:
 
 - `http://localhost:5173/` — beranda.
@@ -44,6 +47,8 @@ Buka halaman berikut setelah server berjalan:
 - `http://localhost:5173/dashboard` — dashboard setelah login.
 - `http://localhost:5173/reports` — laporan dan ekspor CSV setelah login.
 - `http://localhost:5173/audit-logs` — audit log, khusus akun admin.
+- `http://localhost:5173/admin/risk-config` — konfigurasi risk scoring, khusus akun admin.
+- `http://localhost:5173/admin/users` — manajemen role pengguna, khusus akun admin.
 - `http://localhost:5173/transparansi` — transparansi publik, tanpa login.
 
 Akun demo:
@@ -84,9 +89,19 @@ Frontend memakai React/Vite dan akan berkomunikasi dengan Hono melalui REST API.
 
 Tidak ada secret atau kredensial demo pada repository. Gunakan `.env.example` sebagai referensi konfigurasi lokal.
 
+## Status Cloudflare
+
+Template [wrangler.jsonc](./wrangler.jsonc) dan entrypoint Worker [worker.ts](./apps/api/src/worker.ts) disediakan sebagai target deployment berikutnya. Runtime yang tervalidasi saat ini tetap Node.js lokal karena API aktif menggunakan `node:sqlite`; jangan menjalankan `wrangler deploy` sebelum adapter D1 untuk seluruh workflow dan migration remote diselesaikan. Placeholder `database_id` dan domain wajib diganti dengan nilai deployment Anda.
+
 ## Tahap 7: laporan dan transparansi
 
 Endpoint laporan internal memerlukan session login dan RBAC. Endpoint transparansi publik tidak membaca tabel internal dan hanya mengembalikan agregat sintetis yang didefinisikan di `apps/api/src/publicData.ts`. Nilai publik tersebut adalah data demonstrasi, bukan statistik resmi.
+
+## Status implementasi lokal sesuai PRD
+
+Sudah tersedia: login cookie-session, RBAC dasar, seed multi-kategori, explainable risk scoring, historical findings, risk configuration API/UI, user role management, dashboard charts, laporan dengan filter export, audit log pagination/filter, CHR draft/issue/version, Smart Tracker revision/check/close, simulasi SAKTI success/failure/retry endpoint, dan public transparency terisolasi.
+
+Belum diklaim production-ready: adapter D1/Cloudflare, rate limiting produksi, integration test penuh seluruh workflow, dan PDF resmi. Cloudflare sengaja ditunda sesuai keputusan proyek.
 
 ## Prinsip produk
 

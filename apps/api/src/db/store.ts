@@ -34,15 +34,29 @@ CREATE INDEX IF NOT EXISTS tracker_checks_task_idx ON tracker_checks(task_id);
 CREATE TABLE IF NOT EXISTS integration_logs (id TEXT PRIMARY KEY, chr_id TEXT NOT NULL REFERENCES chr_documents(id), status TEXT NOT NULL, message TEXT NOT NULL, created_at INTEGER NOT NULL);
 CREATE INDEX IF NOT EXISTS integration_logs_chr_idx ON integration_logs(chr_id);
 CREATE TABLE IF NOT EXISTS audit_logs (id TEXT PRIMARY KEY, actor_user_id TEXT REFERENCES users(id), action TEXT NOT NULL, entity_type TEXT NOT NULL, entity_id TEXT NOT NULL, detail TEXT NOT NULL, created_at INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS risk_config (id TEXT PRIMARY KEY, version TEXT NOT NULL, weights_json TEXT NOT NULL, thresholds_json TEXT NOT NULL, updated_by_user_id TEXT REFERENCES users(id), updated_at INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS historical_findings (id TEXT PRIMARY KEY, rka_item_id TEXT NOT NULL REFERENCES rka_items(id), finding_year INTEGER NOT NULL, category TEXT NOT NULL, summary TEXT NOT NULL, reference TEXT NOT NULL, similarity REAL, limitation TEXT NOT NULL, created_at INTEGER NOT NULL);
+CREATE INDEX IF NOT EXISTS historical_findings_item_idx ON historical_findings(rka_item_id);
 `;
 
 export function db() { if (!database) { database = new DatabaseSync(databasePath); database.exec(schema); } return database; }
+function ensureColumn(connection: Database, table: string, column: string, definition: string) {
+  const columns = connection.prepare(`PRAGMA table_info(${table})`).all();
+  if (!columns.some((entry) => entry.name === column)) connection.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+}
+function ensureWorkflowColumns(connection: Database) {
+  ensureColumn(connection, "rka_revisions", "proposed_description", "TEXT");
+  ensureColumn(connection, "rka_revisions", "proposed_quantity", "REAL");
+  ensureColumn(connection, "rka_revisions", "proposed_unit", "TEXT");
+  ensureColumn(connection, "rka_revisions", "proposed_total_amount", "INTEGER");
+  ensureColumn(connection, "integration_logs", "attempt", "INTEGER NOT NULL DEFAULT 1");
+}
 export function id(prefix: string) { return `${prefix}_${randomBytes(12).toString("hex")}`; }
 export async function hashPassword(password: string) { const salt = randomBytes(16).toString("hex"); const derived = await scrypt(password, salt, 64) as Buffer; return `${salt}:${derived.toString("hex")}`; }
 export async function verifyPassword(password: string, stored: string) { const [salt, expected] = stored.split(":"); if (!salt || !expected) return false; const derived = await scrypt(password, salt, 64) as Buffer; const expectedBuffer = Buffer.from(expected, "hex"); return expectedBuffer.length === derived.length && timingSafeEqual(expectedBuffer, derived); }
 
 export async function seedDatabase() {
-  const conn = db(); const count = conn.prepare("SELECT COUNT(*) AS count FROM users").get()!.count as number; if (count) return;
+  const conn = db(); ensureWorkflowColumns(conn); const count = conn.prepare("SELECT COUNT(*) AS count FROM users").get()!.count as number; if (count) { await ensureExpandedDemoData(conn); return; }
   const now = Date.now();
   const accounts = [["usr_reviewer", "reviewer.demo", "Rani Reviewer", "reviewer", "Review123!"], ["usr_leader", "pimpinan.demo", "Pandu Pimpinan", "leader", "Pimpin123!"], ["usr_admin", "admin.demo", "Ayu Admin", "admin", "Admin123!"]] as const;
   for (const [userId, username, name, role, password] of accounts) conn.prepare("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?)").run(userId, username, name, role, await hashPassword(password), now);
@@ -52,5 +66,25 @@ export async function seedDatabase() {
   conn.prepare("INSERT INTO rka_items VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").run("item_demo_high", "rka_2026_demo", "521211", "Program Infrastruktur Sintetis", "Pemeliharaan", "Pengadaan perangkat survei sintetis", 10, "unit", 25000000, 250000000, "pending", now, now);
   conn.prepare("INSERT INTO price_references VALUES (?, ?, ?, ?, ?, ?, ?, ?)").run("price_demo", 2026, "Perangkat survei sintetis", "unit", 18000000, "Referensi pasar sintetis", 1, now);
   conn.prepare("INSERT INTO risk_assessments VALUES (?, ?, ?, ?, ?, ?, ?)").run("assessment_demo_high", "item_demo_high", 82, "high", "rules-v1", "sufficient", now);
+  conn.prepare("INSERT INTO risk_config VALUES (?, ?, ?, ?, ?, ?)").run("risk-config-default", "rules-v2", JSON.stringify({ price_variance: 35, bas_alignment: 25, historical_similarity: 20, description_quality: 10, revision_pattern: 10 }), JSON.stringify({ medium: 35, high: 70 }), "usr_admin", now);
+  conn.prepare("INSERT INTO historical_findings VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)").run("finding_demo_high", "item_demo_high", 2024, "Kewajaran harga", "Nilai satuan berada di atas rentang pembanding sintetis.", "TEMUAN-SIM-2024-01", 72, "Kesetaraan spesifikasi belum diverifikasi.", now);
   conn.prepare("INSERT INTO audit_logs VALUES (?, ?, ?, ?, ?, ?, ?)").run("audit_seed", "usr_admin", "seed.created", "dataset", "demo", "Dataset demo sintetis diinisialisasi.", now);
+  await ensureExpandedDemoData(conn);
+}
+
+async function ensureExpandedDemoData(conn: Database) {
+  const now = Date.now();
+  const rows = [
+    ["item_demo_medium", 52, "medium", "Uraian kegiatan pelatihan teknis", "unit", 12000000, 11000000],
+    ["item_demo_low", 18, "low", "Layanan pemeliharaan jaringan kantor", "paket", 5000000, 5000000],
+    ["item_demo_incomplete", 44, "medium", "Jasa", "paket", 9000000, 6000000]
+  ] as const;
+  for (const [itemId, score, category, description, unit, unitPrice, referencePrice] of rows) {
+    if (conn.prepare("SELECT id FROM rka_items WHERE id=?").get(itemId)) continue;
+    const documentId = `${itemId}_doc`;
+    conn.prepare("INSERT OR IGNORE INTO rka_documents VALUES (?, ?, ?, ?, ?, ?, ?, ?)").run(documentId, 2026, "org_pembangunan", "satker_infra", 0, "submitted", now, now);
+    conn.prepare("INSERT INTO rka_items VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").run(itemId, documentId, "521211", "Program Demo Sintetis", "Kegiatan Demo", description, 1, unit, unitPrice, unitPrice, "pending", now, now);
+    conn.prepare("INSERT INTO price_references VALUES (?, ?, ?, ?, ?, ?, ?, ?)").run(`${itemId}_price`, 2026, description, unit, referencePrice, "Referensi pasar sintetis", 1, now);
+    conn.prepare("INSERT INTO risk_assessments VALUES (?, ?, ?, ?, ?, ?, ?)").run(`${itemId}_assessment`, itemId, score, category, "rules-v2", category === "medium" && itemId.endsWith("incomplete") ? "partial" : "sufficient", now);
+  }
 }

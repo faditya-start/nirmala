@@ -6,8 +6,9 @@ import { getCookie, setCookie, deleteCookie } from "hono/cookie";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 import type { AuthResponse, HealthResponse, SessionUser } from "@nirmala/shared";
-import { db, id, seedDatabase, verifyPassword } from "./db/store.js";
+import { db, hashPassword, id, seedDatabase, verifyPassword } from "./db/store.js";
 import { publicTransparency } from "./publicData.js";
+import { DEFAULT_RISK_CONFIG, validateRiskConfig } from "./services/riskScoring.js";
 
 const port = Number(process.env.API_PORT ?? 8787);
 const webOrigin = process.env.WEB_ORIGIN ?? "http://localhost:5173";
@@ -17,6 +18,7 @@ const sessionLifetimeMs = 8 * 60 * 60 * 1000;
 const app = new Hono();
 await seedDatabase();
 app.use("*", cors({ origin: webOrigin, credentials: true }));
+app.use("*", async (context, next) => { await next(); context.header("X-Content-Type-Options", "nosniff"); context.header("X-Frame-Options", "DENY"); context.header("Referrer-Policy", "same-origin"); });
 
 function sign(value: string) { return createHmac("sha256", sessionSecret).update(value).digest("base64url"); }
 function encodeSession(sessionId: string) { return `${sessionId}.${sign(sessionId)}`; }
@@ -38,7 +40,7 @@ app.post("/api/auth/login", async (context) => {
   const parsed = loginSchema.safeParse(await context.req.json().catch(() => null));
   if (!parsed.success) return context.json({ error: "Username dan password wajib diisi." }, 400);
   const record = db().prepare("SELECT id, username, display_name, role, password_hash FROM users WHERE username=?").get(parsed.data.username);
-  if (!record || !(await verifyPassword(parsed.data.password, String(record.password_hash)))) return context.json({ error: "Username atau password tidak valid." }, 401);
+  if (!record || !(await verifyPassword(parsed.data.password, String(record.password_hash)))) { if (record) audit(String(record.id), "auth.login_failed", "user", String(record.id), "Percobaan login gagal."); return context.json({ error: "Username atau password tidak valid." }, 401); }
   const sessionId = id("session"); const now = Date.now();
   db().prepare("INSERT INTO sessions VALUES (?, ?, ?, ?)").run(sessionId, record.id, now + sessionLifetimeMs, now);
   const user: SessionUser = { id: String(record.id), name: String(record.display_name), role: record.role as SessionUser["role"] };
@@ -48,6 +50,45 @@ app.post("/api/auth/login", async (context) => {
 });
 app.post("/api/auth/logout", (context) => { const sessionId = verifiedSessionId(getCookie(context, sessionCookie)); if (sessionId) db().prepare("DELETE FROM sessions WHERE id=?").run(sessionId); deleteCookie(context, sessionCookie, { path: "/" }); return context.body(null, 204); });
 app.get("/api/users", (context) => { if (!requireRole(context, ["admin"])) return context.json({ error: "Akses admin diperlukan." }, 403); const users = db().prepare("SELECT id, username, display_name AS displayName, role, created_at AS createdAt FROM users ORDER BY display_name").all(); return context.json({ users }); });
+const userCreateSchema = z.object({ username: z.string().trim().min(3).max(100), displayName: z.string().trim().min(2).max(150), role: z.enum(["reviewer", "leader", "admin"]), password: z.string().min(12).max(200) });
+app.post("/api/users", async (context) => {
+  const actor = requireRole(context, ["admin"]); if (!actor) return context.json({ error: "Akses admin diperlukan." }, 403);
+  const parsed = userCreateSchema.safeParse(await context.req.json().catch(() => null)); if (!parsed.success) return context.json({ error: parsed.error.issues[0]?.message ?? "Data user tidak valid." }, 400);
+  if (db().prepare("SELECT id FROM users WHERE username=?").get(parsed.data.username)) return context.json({ error: "Username sudah digunakan." }, 409);
+  const userId = id("user"); db().prepare("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?)").run(userId, parsed.data.username, parsed.data.displayName, parsed.data.role, await hashPassword(parsed.data.password), Date.now()); audit(actor.id, "user.created", "user", userId, `User ${parsed.data.username} dibuat.`); return context.json({ id: userId }, 201);
+});
+app.put("/api/users/:id", async (context) => {
+  const actor = requireRole(context, ["admin"]); if (!actor) return context.json({ error: "Akses admin diperlukan." }, 403);
+  const parsed = z.object({ displayName: z.string().trim().min(2).max(150), password: z.string().min(12).max(200).optional() }).safeParse(await context.req.json().catch(() => null));
+  if (!parsed.success) return context.json({ error: parsed.error.issues[0]?.message ?? "Data user tidak valid." }, 400);
+  const target = db().prepare("SELECT id FROM users WHERE id=?").get(context.req.param("id")); if (!target) return context.json({ error: "User tidak ditemukan." }, 404);
+  if (parsed.data.password) db().prepare("UPDATE users SET display_name=?, password_hash=? WHERE id=?").run(parsed.data.displayName, await hashPassword(parsed.data.password), context.req.param("id"));
+  else db().prepare("UPDATE users SET display_name=? WHERE id=?").run(parsed.data.displayName, context.req.param("id"));
+  audit(actor.id, "user.updated", "user", context.req.param("id"), "Profil user diperbarui."); return context.json({ id: context.req.param("id"), displayName: parsed.data.displayName });
+});
+app.put("/api/users/:id/role", async (context) => {
+  const actor = requireRole(context, ["admin"]); if (!actor) return context.json({ error: "Akses admin diperlukan." }, 403);
+  const parsed = z.object({ role: z.enum(["reviewer", "leader", "admin"]) }).safeParse(await context.req.json().catch(() => null)); if (!parsed.success) return context.json({ error: "Role tidak valid." }, 400);
+  const target = db().prepare("SELECT id, role FROM users WHERE id=?").get(context.req.param("id")); if (!target) return context.json({ error: "User tidak ditemukan." }, 404); if (target.id === actor.id && parsed.data.role !== "admin") return context.json({ error: "Admin tidak dapat menurunkan role dirinya sendiri." }, 409);
+  db().prepare("UPDATE users SET role=? WHERE id=?").run(parsed.data.role, context.req.param("id")); audit(actor.id, "user.role_changed", "user", context.req.param("id"), `Role ${target.role} -> ${parsed.data.role}.`); return context.json({ id: context.req.param("id"), role: parsed.data.role });
+});
+app.get("/api/risk-config", (context) => {
+  if (!requireRole(context, ["admin"])) return context.json({ error: "Akses konfigurasi risiko hanya tersedia untuk admin." }, 403);
+  const record = db().prepare("SELECT version, weights_json AS weights, thresholds_json AS thresholds, updated_at AS updatedAt FROM risk_config ORDER BY updated_at DESC LIMIT 1").get();
+  if (!record) return context.json({ config: DEFAULT_RISK_CONFIG });
+  return context.json({ config: { version: record.version, weights: JSON.parse(String(record.weights)), thresholds: JSON.parse(String(record.thresholds)), updatedAt: record.updatedAt } });
+});
+const riskConfigSchema = z.object({
+  version: z.string().trim().min(1).max(50),
+  weights: z.object({ price_variance: z.number().min(0), bas_alignment: z.number().min(0), historical_similarity: z.number().min(0), description_quality: z.number().min(0), revision_pattern: z.number().min(0) }),
+  thresholds: z.object({ medium: z.number().int().min(0).max(99), high: z.number().int().min(1).max(100) })
+});
+app.put("/api/risk-config", async (context) => {
+  const user = requireRole(context, ["admin"]); if (!user) return context.json({ error: "Akses konfigurasi risiko hanya tersedia untuk admin." }, 403);
+  const parsed = riskConfigSchema.safeParse(await context.req.json().catch(() => null)); if (!parsed.success) return context.json({ error: parsed.error.issues[0]?.message ?? "Konfigurasi tidak valid." }, 400);
+  const error = validateRiskConfig(parsed.data); if (error) return context.json({ error }, 400);
+  const now = Date.now(); db().prepare("INSERT INTO risk_config VALUES (?, ?, ?, ?, ?, ?)").run(id("risk-config"), parsed.data.version, JSON.stringify(parsed.data.weights), JSON.stringify(parsed.data.thresholds), user.id, now); audit(user.id, "risk_config.updated", "risk_config", parsed.data.version, "Konfigurasi risk scoring diperbarui."); return context.json({ config: { ...parsed.data, updatedAt: now } });
+});
 app.get("/api/dashboard/bootstrap", (context) => { const user = requireRole(context, ["reviewer", "leader", "admin"]); if (!user) return context.json({ error: "Silakan masuk untuk melanjutkan." }, 401); const items = db().prepare("SELECT COUNT(*) AS count FROM rka_items").get()!.count; const highRisk = db().prepare("SELECT COUNT(*) AS count FROM risk_assessments WHERE category='high'").get()!.count; return context.json({ user, metrics: { totalItems: items, highRisk } }); });
 function dashboardData() {
   const connection = db();
@@ -77,15 +118,18 @@ app.get("/api/reports/summary", (context) => { if (!requireRole(context, ["revie
 function csvCell(value: unknown) { const text = String(value ?? ""); return `"${text.replaceAll("\"", "\"\"")}"`; }
 app.get("/api/reports/export", (context) => {
   if (!requireRole(context, ["reviewer", "leader", "admin"])) return context.json({ error: "Silakan masuk untuk melanjutkan." }, 401);
-  const rows = db().prepare("SELECT i.id, d.fiscal_year AS fiscalYear, o.name AS organizationUnit, w.name AS workUnit, i.description, i.total_amount AS totalAmount, a.score, a.category, i.evaluation_status AS evaluationStatus FROM rka_items i JOIN rka_documents d ON d.id=i.document_id JOIN organization_units o ON o.id=d.organization_unit_id JOIN work_units w ON w.id=d.work_unit_id JOIN risk_assessments a ON a.rka_item_id=i.id ORDER BY a.score DESC").all();
+  const where: string[] = []; const values: unknown[] = []; const year = context.req.query("fiscalYear"); const category = context.req.query("category"); const status = context.req.query("status");
+  if (/^\d{4}$/.test(year ?? "")) { where.push("d.fiscal_year=?"); values.push(Number(year)); } if (["low", "medium", "high"].includes(category ?? "")) { where.push("a.category=?"); values.push(category); } if (["pending", "confirmed", "false_positive"].includes(status ?? "")) { where.push("i.evaluation_status=?"); values.push(status); }
+  const rows = db().prepare(`SELECT i.id, d.fiscal_year AS fiscalYear, o.name AS organizationUnit, w.name AS workUnit, i.description, i.total_amount AS totalAmount, a.score, a.category, i.evaluation_status AS evaluationStatus FROM rka_items i JOIN rka_documents d ON d.id=i.document_id JOIN organization_units o ON o.id=d.organization_unit_id JOIN work_units w ON w.id=d.work_unit_id JOIN risk_assessments a ON a.rka_item_id=i.id ${where.length ? `WHERE ${where.join(" AND ")}` : ""} ORDER BY a.score DESC`).all(...values);
   const header = ["ID Item", "Tahun Anggaran", "Unit Organisasi", "Satuan Kerja", "Uraian", "Nilai Anggaran", "Skor Risiko", "Kategori Risiko", "Status Evaluasi"];
   const body = rows.map((row) => [row.id, row.fiscalYear, row.organizationUnit, row.workUnit, row.description, row.totalAmount, row.score, row.category, row.evaluationStatus].map(csvCell).join(","));
   return new Response([header.map(csvCell).join(","), ...body].join("\r\n"), { headers: { "content-type": "text/csv; charset=utf-8", "content-disposition": "attachment; filename=\"nirmala-report.csv\"" } });
 });
 app.get("/api/audit-logs", (context) => {
   if (!requireRole(context, ["admin"])) return context.json({ error: "Akses audit log hanya tersedia untuk admin." }, 403);
-  const logs = db().prepare("SELECT a.action, a.entity_type AS entityType, a.entity_id AS entityId, a.detail, a.created_at AS createdAt, COALESCE(u.display_name, 'Sistem') AS actor FROM audit_logs a LEFT JOIN users u ON u.id=a.actor_user_id ORDER BY a.created_at DESC LIMIT 100").all();
-  return context.json({ logs });
+  const action = context.req.query("action"); const page = Math.max(1, Number.parseInt(context.req.query("page") ?? "1", 10) || 1); const pageSize = Math.min(100, Math.max(1, Number.parseInt(context.req.query("pageSize") ?? "25", 10) || 25)); const where = action ? "WHERE a.action LIKE ?" : ""; const values = action ? [`%${action}%`] : [];
+  const total = Number(db().prepare(`SELECT COUNT(*) AS count FROM audit_logs a ${where}`).get(...values)?.count ?? 0); const logs = db().prepare(`SELECT a.action, a.entity_type AS entityType, a.entity_id AS entityId, a.detail, a.created_at AS createdAt, COALESCE(u.display_name, 'Sistem') AS actor FROM audit_logs a LEFT JOIN users u ON u.id=a.actor_user_id ${where} ORDER BY a.created_at DESC LIMIT ? OFFSET ?`).all(...values, pageSize, (page - 1) * pageSize);
+  return context.json({ logs, pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) } });
 });
 app.get("/api/public/transparency/summary", (context) => context.json({ synthetic: publicTransparency.synthetic, disclaimer: publicTransparency.disclaimer, summary: publicTransparency.summary }));
 app.get("/api/public/transparency/trends", (context) => context.json({ synthetic: publicTransparency.synthetic, disclaimer: publicTransparency.disclaimer, trends: publicTransparency.trends }));
@@ -116,7 +160,8 @@ app.get("/api/risk-items/:id", (context) => {
     { code: "data_completeness", label: "Kelengkapan data", value: String(item.dataCompleteness), contribution: item.dataCompleteness === "sufficient" ? "low" : "medium", explanation: "Kelengkapan data memengaruhi tingkat keyakinan sinyal, bukan kesimpulan pelanggaran." }
   ];
   const decision = db().prepare("SELECT d.decision, d.reason, d.created_at AS createdAt, u.display_name AS reviewerName FROM reviewer_decisions d JOIN users u ON u.id=d.reviewer_user_id WHERE d.rka_item_id=?").get(context.req.param("id"));
-  return context.json({ item, reference: reference ?? null, decision: decision ?? null, factors, limitations: ["Skor adalah prioritas pemeriksaan berbasis aturan deterministik.", "Dataset dan referensi harga pada demo ini bersifat sintetis.", "Keputusan akhir tetap berada pada reviewer setelah memeriksa bukti."] });
+  const historicalFindings = db().prepare("SELECT finding_year AS findingYear, category, summary, reference, similarity, limitation FROM historical_findings WHERE rka_item_id=? ORDER BY finding_year DESC").all(context.req.param("id"));
+  return context.json({ item, reference: reference ?? null, decision: decision ?? null, factors, historicalFindings, limitations: ["Skor adalah prioritas pemeriksaan berbasis aturan deterministik.", "Dataset dan referensi harga pada demo ini bersifat sintetis.", "Keputusan akhir tetap berada pada reviewer setelah memeriksa bukti.", "Temuan historis tidak otomatis membuktikan masalah pada item saat ini."] });
 });
 const decisionSchema = z.object({ reason: z.string().trim().min(10, "Alasan minimal 10 karakter.").max(1000) });
 function saveDecision(context: Parameters<typeof currentUser>[0] & { req: { param(name: string): string; json(): Promise<unknown> } }, decision: "confirmed" | "false_positive") {
@@ -168,28 +213,37 @@ app.post("/api/chr/:id/issue", (context) => {
   const now = Date.now(); const documentNumber = `CHR/DEMO/${new Date(now).getFullYear()}/${String(now).slice(-6)}`; db().prepare("UPDATE chr_documents SET status='issued', document_number=?, issued_at=?, updated_at=? WHERE id=?").run(documentNumber, now, now, context.req.param("id")); audit(user.id, "chr.issued", "chr", context.req.param("id"), `CHR diterbitkan sebagai ${documentNumber}.`); return context.json({ chr: chrRecord(context.req.param("id")) });
 });
 app.get("/api/chr/:id/versions", (context) => { if (!requireRole(context, ["reviewer", "leader", "admin"])) return context.json({ error: "Silakan masuk untuk melanjutkan." }, 401); const versions = db().prepare("SELECT version_number AS versionNumber, title, findings, recommendation, created_at AS createdAt FROM chr_versions WHERE chr_id=? ORDER BY version_number DESC").all(context.req.param("id")); return context.json({ versions }); });
-app.post("/api/chr/:id/sync", (context) => {
+const syncSchema = z.object({ simulateFailure: z.boolean().optional().default(false) });
+type RequestContext = Parameters<typeof currentUser>[0] & { req: { json(): Promise<unknown>; param(name: string): string }; json(body: unknown, status?: number): Response };
+function syncChr(context: RequestContext, chrId: string, simulateFailure: boolean) {
   const user = requireRole(context, ["reviewer", "admin"]); if (!user) return context.json({ error: "Hanya reviewer atau admin yang dapat menjalankan simulasi." }, 403);
-  const chr = chrRecord(context.req.param("id")); if (!chr) return context.json({ error: "CHR tidak ditemukan." }, 404); if (chr.status !== "issued") return context.json({ error: "CHR harus diterbitkan sebelum disinkronkan." }, 409);
-  const now = Date.now(); let task = db().prepare("SELECT id FROM follow_up_tasks WHERE chr_id=?").get(context.req.param("id"));
-  if (!task) { const taskId = id("task"); db().prepare("INSERT INTO follow_up_tasks VALUES (?, ?, ?, ?, ?, ?, ?)").run(taskId, context.req.param("id"), "awaiting_revision", null, now, now, null); task = { id: taskId }; }
-  db().prepare("INSERT INTO integration_logs VALUES (?, ?, ?, ?, ?)").run(id("sync"), context.req.param("id"), "success", "Simulasi SAKTI: CHR diteruskan ke satuan kerja sintetis.", now); audit(user.id, "sakti.sync_simulated", "chr", context.req.param("id"), "Sinkronisasi simulasi berhasil."); return context.json({ taskId: task.id, status: "success", simulated: true });
-});
+  const chr = chrRecord(chrId); if (!chr) return context.json({ error: "CHR tidak ditemukan." }, 404); if (chr.status !== "issued") return context.json({ error: "CHR harus diterbitkan sebelum disinkronkan." }, 409);
+  const now = Date.now(); let task = db().prepare("SELECT id FROM follow_up_tasks WHERE chr_id=?").get(chrId);
+  if (!task) { const taskId = id("task"); db().prepare("INSERT INTO follow_up_tasks VALUES (?, ?, ?, ?, ?, ?, ?)").run(taskId, chrId, "awaiting_revision", null, now, now, null); task = { id: taskId }; }
+  const previousAttempt = Number(db().prepare("SELECT MAX(attempt) AS attempt FROM integration_logs WHERE chr_id=?").get(chrId)?.attempt ?? 0);
+  const status = simulateFailure ? "failed" : "success";
+  db().prepare("INSERT INTO integration_logs (id, chr_id, status, message, created_at, attempt) VALUES (?, ?, ?, ?, ?, ?)").run(id("sync"), chrId, status, simulateFailure ? "Simulasi SAKTI gagal: respons sintetis tidak dapat diproses." : "Simulasi SAKTI: CHR diteruskan ke satuan kerja sintetis.", now, previousAttempt + 1);
+  audit(user.id, simulateFailure ? "sakti.sync_failed" : "sakti.sync_simulated", "chr", chrId, simulateFailure ? "Sinkronisasi simulasi gagal." : "Sinkronisasi simulasi berhasil.");
+  return context.json({ taskId: task.id, status, simulated: true }, simulateFailure ? 502 : 200);
+}
+app.post("/api/chr/:id/sync", async (context) => { const parsed = syncSchema.safeParse(await context.req.json().catch(() => ({}))); return syncChr(context, context.req.param("id"), parsed.success && parsed.data.simulateFailure); });
+app.post("/api/chr/:id/sync/retry", (context) => syncChr(context, context.req.param("id"), false));
+app.get("/api/chr/:id/sync-logs", (context) => { if (!requireRole(context, ["reviewer", "leader", "admin"])) return context.json({ error: "Silakan masuk untuk melanjutkan." }, 401); return context.json({ logs: db().prepare("SELECT status, message, attempt, created_at AS createdAt FROM integration_logs WHERE chr_id=? ORDER BY created_at DESC").all(context.req.param("id")) }); });
 function trackerRecord(taskId: string) { return db().prepare("SELECT t.id, t.chr_id AS chrId, t.status, t.last_check_at AS lastCheckAt, t.created_at AS createdAt, t.closed_at AS closedAt, c.document_number AS documentNumber, c.recommendation, i.description AS itemDescription, i.unit_price AS originalUnitPrice, p.reference_price AS referencePrice FROM follow_up_tasks t JOIN chr_documents c ON c.id=t.chr_id JOIN rka_items i ON i.id=c.rka_item_id LEFT JOIN price_references p ON p.fiscal_year=(SELECT fiscal_year FROM rka_documents WHERE id=i.document_id) AND p.unit=i.unit WHERE t.id=?").get(taskId); }
 app.get("/api/tracker", (context) => { if (!requireRole(context, ["reviewer", "leader", "admin"])) return context.json({ error: "Silakan masuk untuk melanjutkan." }, 401); const tasks = db().prepare("SELECT t.id, t.status, t.updated_at AS updatedAt, c.document_number AS documentNumber, i.description AS itemDescription FROM follow_up_tasks t JOIN chr_documents c ON c.id=t.chr_id JOIN rka_items i ON i.id=c.rka_item_id ORDER BY t.updated_at DESC").all(); return context.json({ tasks }); });
-app.get("/api/tracker/:id", (context) => { if (!requireRole(context, ["reviewer", "leader", "admin"])) return context.json({ error: "Silakan masuk untuk melanjutkan." }, 401); const task = trackerRecord(context.req.param("id")); if (!task) return context.json({ error: "Tugas tindak lanjut tidak ditemukan." }, 404); const revisions = db().prepare("SELECT id, revision_number AS revisionNumber, proposed_unit_price AS proposedUnitPrice, note, created_at AS createdAt FROM rka_revisions WHERE task_id=? ORDER BY revision_number DESC").all(context.req.param("id")); const checks = db().prepare("SELECT result, reason, checked_at AS checkedAt FROM tracker_checks WHERE task_id=? ORDER BY checked_at DESC").all(context.req.param("id")); return context.json({ task, revisions, checks, simulated: true }); });
-const revisionSchema = z.object({ proposedUnitPrice: z.number().int().positive().max(10_000_000_000), note: z.string().trim().min(10).max(1000) });
+app.get("/api/tracker/:id", (context) => { if (!requireRole(context, ["reviewer", "leader", "admin"])) return context.json({ error: "Silakan masuk untuk melanjutkan." }, 401); const task = trackerRecord(context.req.param("id")); if (!task) return context.json({ error: "Tugas tindak lanjut tidak ditemukan." }, 404); const revisions = db().prepare("SELECT id, revision_number AS revisionNumber, proposed_unit_price AS proposedUnitPrice, proposed_description AS proposedDescription, proposed_quantity AS proposedQuantity, proposed_unit AS proposedUnit, proposed_total_amount AS proposedTotalAmount, note, created_at AS createdAt FROM rka_revisions WHERE task_id=? ORDER BY revision_number DESC").all(context.req.param("id")); const checks = db().prepare("SELECT result, reason, checked_at AS checkedAt FROM tracker_checks WHERE task_id=? ORDER BY checked_at DESC").all(context.req.param("id")); return context.json({ task, revisions, checks, simulated: true }); });
+const revisionSchema = z.object({ proposedUnitPrice: z.number().int().positive().max(10_000_000_000), proposedDescription: z.string().trim().min(3).max(1000).optional(), proposedQuantity: z.number().positive().max(1_000_000).optional(), proposedUnit: z.string().trim().min(1).max(50).optional(), proposedTotalAmount: z.number().int().positive().max(10_000_000_000).optional(), note: z.string().trim().min(10).max(1000) });
 app.post("/api/tracker/:id/simulate-revision", async (context) => {
   const user = requireRole(context, ["reviewer", "admin"]); if (!user) return context.json({ error: "Hanya reviewer atau admin yang dapat mensimulasikan revisi." }, 403); const parsed = revisionSchema.safeParse(await context.req.json().catch(() => null)); if (!parsed.success) return context.json({ error: parsed.error.issues[0]?.message ?? "Data revisi tidak valid." }, 400);
   const task = trackerRecord(context.req.param("id")); if (!task) return context.json({ error: "Tugas tindak lanjut tidak ditemukan." }, 404); if (["resolved", "closed"].includes(String(task.status))) return context.json({ error: "Tugas sudah selesai dan tidak menerima revisi baru." }, 409);
-  const version = db().prepare("SELECT MAX(revision_number) AS revision FROM rka_revisions WHERE task_id=?").get(context.req.param("id"))!.revision as number | null; const now = Date.now(); const revisionId = id("revision"); db().prepare("INSERT INTO rka_revisions VALUES (?, ?, ?, ?, ?, ?)").run(revisionId, context.req.param("id"), Number(version ?? 0) + 1, parsed.data.proposedUnitPrice, parsed.data.note, now); db().prepare("UPDATE follow_up_tasks SET status='awaiting_revision', updated_at=? WHERE id=?").run(now, context.req.param("id")); audit(user.id, "tracker.revision_simulated", "follow_up_task", context.req.param("id"), parsed.data.note); return context.json({ revisionId, simulated: true }, 201);
+  const version = db().prepare("SELECT MAX(revision_number) AS revision FROM rka_revisions WHERE task_id=?").get(context.req.param("id"))!.revision as number | null; const now = Date.now(); const revisionId = id("revision"); db().prepare("INSERT INTO rka_revisions (id, task_id, revision_number, proposed_unit_price, note, created_at, proposed_description, proposed_quantity, proposed_unit, proposed_total_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").run(revisionId, context.req.param("id"), Number(version ?? 0) + 1, parsed.data.proposedUnitPrice, parsed.data.note, now, parsed.data.proposedDescription ?? null, parsed.data.proposedQuantity ?? null, parsed.data.proposedUnit ?? null, parsed.data.proposedTotalAmount ?? null); db().prepare("UPDATE follow_up_tasks SET status='awaiting_revision', updated_at=? WHERE id=?").run(now, context.req.param("id")); audit(user.id, "tracker.revision_simulated", "follow_up_task", context.req.param("id"), parsed.data.note); return context.json({ revisionId, simulated: true }, 201);
 });
 app.post("/api/tracker/:id/check", (context) => {
   const user = requireRole(context, ["reviewer", "admin"]); if (!user) return context.json({ error: "Hanya reviewer atau admin yang dapat menjalankan pemeriksaan." }, 403); const task = trackerRecord(context.req.param("id")); if (!task) return context.json({ error: "Tugas tindak lanjut tidak ditemukan." }, 404); if (task.status === "closed") return context.json({ error: "Tugas yang telah ditutup tidak dapat diperiksa ulang." }, 409);
-  const revision = db().prepare("SELECT id, proposed_unit_price AS proposedUnitPrice FROM rka_revisions WHERE task_id=? ORDER BY revision_number DESC LIMIT 1").get(context.req.param("id")); if (!revision) return context.json({ error: "Belum ada revisi sintetis untuk diperiksa." }, 409);
-  const reference = Number(task.referencePrice); const proposed = Number(revision.proposedUnitPrice); const compliant = reference > 0 && proposed <= reference * 1.05; const result = compliant ? "compliant" : "not_compliant"; const reason = compliant ? `Harga revisi ${proposed.toLocaleString("id-ID")} berada dalam toleransi 5% dari referensi sintetis ${reference.toLocaleString("id-ID")}.` : `Harga revisi ${proposed.toLocaleString("id-ID")} masih melebihi toleransi 5% dari referensi sintetis ${reference.toLocaleString("id-ID")}.`; const now = Date.now(); db().prepare("INSERT INTO tracker_checks VALUES (?, ?, ?, ?, ?, ?)").run(id("check"), context.req.param("id"), revision.id, result, reason, now); db().prepare("UPDATE follow_up_tasks SET status=?, last_check_at=?, updated_at=? WHERE id=?").run(compliant ? "resolved" : "needs_follow_up", now, now, context.req.param("id")); audit(user.id, "tracker.checked", "follow_up_task", context.req.param("id"), reason); return context.json({ result, reason, status: compliant ? "resolved" : "needs_follow_up" });
+  const revision = db().prepare("SELECT id, proposed_unit_price AS proposedUnitPrice, proposed_description AS proposedDescription, proposed_quantity AS proposedQuantity, proposed_unit AS proposedUnit FROM rka_revisions WHERE task_id=? ORDER BY revision_number DESC LIMIT 1").get(context.req.param("id")); if (!revision) return context.json({ error: "Belum ada revisi sintetis untuk diperiksa." }, 409);
+  const reference = Number(task.referencePrice); const proposed = Number(revision.proposedUnitPrice); const insufficient = !reference || !revision.proposedUnit; const compliant = !insufficient && proposed <= reference * 1.05; const result = compliant ? "compliant" : "not_compliant"; const reason = insufficient ? "Insufficient Data: data revisi belum lengkap untuk pemeriksaan otomatis; diperlukan verifikasi manual." : compliant ? `Harga revisi ${proposed.toLocaleString("id-ID")} berada dalam toleransi 5% dari referensi sintetis ${reference.toLocaleString("id-ID")}.` : `Harga revisi ${proposed.toLocaleString("id-ID")} masih melebihi toleransi 5% dari referensi sintetis ${reference.toLocaleString("id-ID")}.`; const now = Date.now(); db().prepare("INSERT INTO tracker_checks VALUES (?, ?, ?, ?, ?, ?)").run(id("check"), context.req.param("id"), revision.id, result, reason, now); db().prepare("UPDATE follow_up_tasks SET status=?, last_check_at=?, updated_at=? WHERE id=?").run(compliant ? "resolved" : "needs_follow_up", now, now, context.req.param("id")); audit(user.id, "tracker.checked", "follow_up_task", context.req.param("id"), reason); return context.json({ result, reason, status: compliant ? "resolved" : "needs_follow_up" });
 });
 app.post("/api/tracker/:id/close", (context) => { const user = requireRole(context, ["admin"]); if (!user) return context.json({ error: "Hanya admin yang dapat menutup tugas." }, 403); const task = trackerRecord(context.req.param("id")); if (!task) return context.json({ error: "Tugas tindak lanjut tidak ditemukan." }, 404); if (task.status !== "resolved") return context.json({ error: "Hanya tugas berstatus resolved yang dapat ditutup." }, 409); const now = Date.now(); db().prepare("UPDATE follow_up_tasks SET status='closed', closed_at=?, updated_at=? WHERE id=?").run(now, now, context.req.param("id")); audit(user.id, "tracker.closed", "follow_up_task", context.req.param("id"), "Tugas ditutup oleh admin."); return context.json({ status: "closed" }); });
 app.notFound((context) => context.json({ error: "Endpoint tidak ditemukan." }, 404));
-serve({ fetch: app.fetch, port });
-console.log(`NIRMALA API listening on http://localhost:${port}`);
+serve({ fetch: app.fetch, port, hostname: "127.0.0.1" });
+console.log(`NIRMALA API listening on http://127.0.0.1:${port}`);
