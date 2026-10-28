@@ -3,6 +3,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { Link, Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import type { AuthResponse, SessionUser } from "@nirmala/shared";
 import { RiskItemDetail, RiskTriage } from "./RiskTriage";
+import { ChrEditor } from "./ChrEditor";
 
 function Landing() {
   return (
@@ -54,7 +55,7 @@ function App() {
   const [user, setUser] = useState<SessionUser | null | undefined>(undefined);
   useEffect(() => { fetch("/api/auth/me", { credentials: "include" }).then((result) => result.json()).then((data) => setUser(data.user ?? null)).catch(() => setUser(null)); }, []);
   if (user === undefined) return <main className="loading">Memeriksa sesi…</main>;
-  return <Routes><Route path="/" element={<Landing />} /><Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login onLogin={setUser} />} /><Route path="/dashboard" element={user ? <Dashboard user={user} onLogout={() => setUser(null)} /> : <Navigate to="/login" replace />} /><Route path="/risk-triage" element={user ? <RiskTriage /> : <Navigate to="/login" replace />} /><Route path="/risk-triage/:id" element={user ? <RiskItemDetail /> : <Navigate to="/login" replace />} /><Route path="*" element={<Navigate to="/" replace />} /></Routes>;
+  return <Routes><Route path="/" element={<Landing />} /><Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login onLogin={setUser} />} /><Route path="/dashboard" element={user ? <Dashboard user={user} onLogout={() => setUser(null)} /> : <Navigate to="/login" replace />} /><Route path="/risk-triage" element={user ? <RiskTriage /> : <Navigate to="/login" replace />} /><Route path="/risk-triage/:id" element={user ? <RiskItemDetail /> : <Navigate to="/login" replace />} /><Route path="/chr/:id" element={user ? <ChrEditor /> : <Navigate to="/login" replace />} /><Route path="*" element={<Navigate to="/" replace />} /></Routes>;
 }
 
 export default App;
