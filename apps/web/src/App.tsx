@@ -4,6 +4,7 @@ import { Link, Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import type { AuthResponse, SessionUser } from "@nirmala/shared";
 import { RiskItemDetail, RiskTriage } from "./RiskTriage";
 import { ChrEditor } from "./ChrEditor";
+import { Tracker, TrackerDetail } from "./Tracker";
 
 function Landing() {
   return (
@@ -48,14 +49,14 @@ function Dashboard({ user, onLogout }: { user: SessionUser; onLogout: () => void
   const [metrics, setMetrics] = useState<{ totalItems: number; highRisk: number } | null>(null); const navigate = useNavigate();
   useEffect(() => { fetch("/api/dashboard/bootstrap", { credentials: "include" }).then((response) => response.json()).then((data) => setMetrics(data.metrics)).catch(() => setMetrics(null)); }, []);
   async function logout() { await fetch("/api/auth/logout", { method: "POST", credentials: "include" }); onLogout(); navigate("/login"); }
-  return <main className="dashboard"><header><div><p className="eyebrow">NIRMALA · Dashboard</p><h1>Selamat datang, {user.name}</h1><p>Peran aktif: {user.role}</p></div><button className="logout" onClick={logout}><LogOut size={16} /> Keluar</button></header><section className="kpis"><article><span>Total Item RKA</span><strong>{metrics?.totalItems ?? "—"}</strong></article><article><span>Item High Risk</span><strong>{metrics?.highRisk ?? "—"}</strong></article></section><Link className="dashboard-link" to="/risk-triage">Buka Risk Triage <ArrowRight size={16} /></Link><p className="notice">Data dashboard ini berasal dari seed sintetis lokal. Workflow CHR akan ditambahkan pada tahap berikutnya.</p></main>;
+  return <main className="dashboard"><header><div><p className="eyebrow">NIRMALA · Dashboard</p><h1>Selamat datang, {user.name}</h1><p>Peran aktif: {user.role}</p></div><button className="logout" onClick={logout}><LogOut size={16} /> Keluar</button></header><section className="kpis"><article><span>Total Item RKA</span><strong>{metrics?.totalItems ?? "—"}</strong></article><article><span>Item High Risk</span><strong>{metrics?.highRisk ?? "—"}</strong></article></section><div className="dashboard-actions"><Link className="dashboard-link" to="/risk-triage">Buka Risk Triage <ArrowRight size={16} /></Link><Link className="dashboard-link" to="/tracker">Buka Smart Tracker <ArrowRight size={16} /></Link></div><p className="notice">Data dashboard ini berasal dari seed sintetis lokal. Integrasi SAKTI dan pemeriksaan tindak lanjut diberi label simulasi.</p></main>;
 }
 
 function App() {
   const [user, setUser] = useState<SessionUser | null | undefined>(undefined);
   useEffect(() => { fetch("/api/auth/me", { credentials: "include" }).then((result) => result.json()).then((data) => setUser(data.user ?? null)).catch(() => setUser(null)); }, []);
   if (user === undefined) return <main className="loading">Memeriksa sesi…</main>;
-  return <Routes><Route path="/" element={<Landing />} /><Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login onLogin={setUser} />} /><Route path="/dashboard" element={user ? <Dashboard user={user} onLogout={() => setUser(null)} /> : <Navigate to="/login" replace />} /><Route path="/risk-triage" element={user ? <RiskTriage /> : <Navigate to="/login" replace />} /><Route path="/risk-triage/:id" element={user ? <RiskItemDetail /> : <Navigate to="/login" replace />} /><Route path="/chr/:id" element={user ? <ChrEditor /> : <Navigate to="/login" replace />} /><Route path="*" element={<Navigate to="/" replace />} /></Routes>;
+  return <Routes><Route path="/" element={<Landing />} /><Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login onLogin={setUser} />} /><Route path="/dashboard" element={user ? <Dashboard user={user} onLogout={() => setUser(null)} /> : <Navigate to="/login" replace />} /><Route path="/risk-triage" element={user ? <RiskTriage /> : <Navigate to="/login" replace />} /><Route path="/risk-triage/:id" element={user ? <RiskItemDetail /> : <Navigate to="/login" replace />} /><Route path="/chr/:id" element={user ? <ChrEditor /> : <Navigate to="/login" replace />} /><Route path="/tracker" element={user ? <Tracker /> : <Navigate to="/login" replace />} /><Route path="/tracker/:id" element={user ? <TrackerDetail /> : <Navigate to="/login" replace />} /><Route path="*" element={<Navigate to="/" replace />} /></Routes>;
 }
 
 export default App;

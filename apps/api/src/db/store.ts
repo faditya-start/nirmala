@@ -26,6 +26,13 @@ CREATE INDEX IF NOT EXISTS reviewer_decisions_reviewer_idx ON reviewer_decisions
 CREATE TABLE IF NOT EXISTS chr_documents (id TEXT PRIMARY KEY, rka_item_id TEXT NOT NULL UNIQUE REFERENCES rka_items(id), document_number TEXT UNIQUE, title TEXT NOT NULL, findings TEXT NOT NULL, recommendation TEXT NOT NULL, status TEXT NOT NULL CHECK(status IN ('draft','issued')), created_by_user_id TEXT NOT NULL REFERENCES users(id), created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, issued_at INTEGER);
 CREATE INDEX IF NOT EXISTS chr_documents_status_idx ON chr_documents(status);
 CREATE TABLE IF NOT EXISTS chr_versions (id TEXT PRIMARY KEY, chr_id TEXT NOT NULL REFERENCES chr_documents(id), version_number INTEGER NOT NULL, title TEXT NOT NULL, findings TEXT NOT NULL, recommendation TEXT NOT NULL, created_by_user_id TEXT NOT NULL REFERENCES users(id), created_at INTEGER NOT NULL, UNIQUE(chr_id, version_number));
+CREATE TABLE IF NOT EXISTS follow_up_tasks (id TEXT PRIMARY KEY, chr_id TEXT NOT NULL UNIQUE REFERENCES chr_documents(id), status TEXT NOT NULL CHECK(status IN ('awaiting_revision','needs_follow_up','resolved','closed')), last_check_at INTEGER, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, closed_at INTEGER);
+CREATE INDEX IF NOT EXISTS follow_up_tasks_status_idx ON follow_up_tasks(status);
+CREATE TABLE IF NOT EXISTS rka_revisions (id TEXT PRIMARY KEY, task_id TEXT NOT NULL REFERENCES follow_up_tasks(id), revision_number INTEGER NOT NULL, proposed_unit_price INTEGER NOT NULL, note TEXT NOT NULL, created_at INTEGER NOT NULL, UNIQUE(task_id, revision_number));
+CREATE TABLE IF NOT EXISTS tracker_checks (id TEXT PRIMARY KEY, task_id TEXT NOT NULL REFERENCES follow_up_tasks(id), revision_id TEXT NOT NULL REFERENCES rka_revisions(id), result TEXT NOT NULL CHECK(result IN ('compliant','not_compliant')), reason TEXT NOT NULL, checked_at INTEGER NOT NULL);
+CREATE INDEX IF NOT EXISTS tracker_checks_task_idx ON tracker_checks(task_id);
+CREATE TABLE IF NOT EXISTS integration_logs (id TEXT PRIMARY KEY, chr_id TEXT NOT NULL REFERENCES chr_documents(id), status TEXT NOT NULL, message TEXT NOT NULL, created_at INTEGER NOT NULL);
+CREATE INDEX IF NOT EXISTS integration_logs_chr_idx ON integration_logs(chr_id);
 CREATE TABLE IF NOT EXISTS audit_logs (id TEXT PRIMARY KEY, actor_user_id TEXT REFERENCES users(id), action TEXT NOT NULL, entity_type TEXT NOT NULL, entity_id TEXT NOT NULL, detail TEXT NOT NULL, created_at INTEGER NOT NULL);
 `;
 

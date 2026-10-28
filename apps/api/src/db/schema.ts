@@ -113,6 +113,42 @@ export const chrVersions = sqliteTable("chr_versions", {
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull()
 }, (table) => [uniqueIndex("chr_versions_number_unique").on(table.chrId, table.versionNumber)]);
 
+export const followUpTasks = sqliteTable("follow_up_tasks", {
+  id: text("id").primaryKey(),
+  chrId: text("chr_id").notNull().references(() => chrDocuments.id),
+  status: text("status").notNull().default("awaiting_revision"),
+  lastCheckAt: integer("last_check_at", { mode: "timestamp_ms" }),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+  closedAt: integer("closed_at", { mode: "timestamp_ms" })
+}, (table) => [uniqueIndex("follow_up_tasks_chr_unique").on(table.chrId), index("follow_up_tasks_status_idx").on(table.status)]);
+
+export const rkaRevisions = sqliteTable("rka_revisions", {
+  id: text("id").primaryKey(),
+  taskId: text("task_id").notNull().references(() => followUpTasks.id),
+  revisionNumber: integer("revision_number").notNull(),
+  proposedUnitPrice: integer("proposed_unit_price").notNull(),
+  note: text("note").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull()
+}, (table) => [uniqueIndex("rka_revisions_number_unique").on(table.taskId, table.revisionNumber)]);
+
+export const trackerChecks = sqliteTable("tracker_checks", {
+  id: text("id").primaryKey(),
+  taskId: text("task_id").notNull().references(() => followUpTasks.id),
+  revisionId: text("revision_id").notNull().references(() => rkaRevisions.id),
+  result: text("result").notNull(),
+  reason: text("reason").notNull(),
+  checkedAt: integer("checked_at", { mode: "timestamp_ms" }).notNull()
+}, (table) => [index("tracker_checks_task_idx").on(table.taskId)]);
+
+export const integrationLogs = sqliteTable("integration_logs", {
+  id: text("id").primaryKey(),
+  chrId: text("chr_id").notNull().references(() => chrDocuments.id),
+  status: text("status").notNull(),
+  message: text("message").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull()
+}, (table) => [index("integration_logs_chr_idx").on(table.chrId)]);
+
 export const auditLogs = sqliteTable("audit_logs", {
   id: text("id").primaryKey(),
   actorUserId: text("actor_user_id").references(() => users.id),
