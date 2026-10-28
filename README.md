@@ -6,17 +6,18 @@ NIRMALA adalah fondasi aplikasi pendukung reviu RKA, prioritisasi pemeriksaan be
 
 ## Status saat ini
 
-Repository ini baru berada pada fase **foundation** sesuai keputusan implementasi awal:
+Repository kini mencakup fondasi domain, autentikasi demo lokal, dan RBAC dasar:
 
 - React + Vite frontend dengan identitas visual NIRMALA.
 - Hono API yang berjalan pada Node.js untuk development lokal.
 - Shared TypeScript contracts.
-- Drizzle schema awal untuk users dan sessions.
+- Schema Drizzle untuk users, sessions, struktur organisasi, RKA, referensi harga, risk assessment, dan audit log.
 - Konfigurasi awal yang dapat dilanjutkan ke Cloudflare D1.
 - Endpoint `GET /api/health`.
-- Struktur cookie-session sudah ditetapkan, tetapi login penuh belum aktif.
+- Login cookie-session dengan password di-hash menggunakan scrypt.
+- Data demo sintetis yang dapat di-seed ulang.
 
-Fitur bisnis seperti risk triage, risk scoring, CHR, Smart Tracker, dan dashboard belum dianggap selesai pada fase ini.
+Risk triage, keputusan reviewer, CHR, Smart Tracker, laporan, dan dashboard lengkap belum dianggap selesai.
 
 ## Prasyarat
 
@@ -47,6 +48,14 @@ npm run db:generate
 npm run db:migrate
 npm run db:seed
 ```
+
+## Akun demo lokal
+
+- Reviewer: `reviewer.demo` / `Review123!`
+- Pimpinan: `pimpinan.demo` / `Pimpin123!`
+- Admin: `admin.demo` / `Admin123!`
+
+Ganti `SESSION_SECRET` pada `.env` lokal sebelum penggunaan selain demo. Akun dan data di atas seluruhnya sintetis.
 
 ## Arah arsitektur
 

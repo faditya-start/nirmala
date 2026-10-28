@@ -1,1 +1,4 @@
-console.log("Seed foundation belum membuat user demo; implementasi autentikasi akan ditambahkan pada fase berikutnya.");
+import { seedDatabase } from "./store.js";
+
+await seedDatabase();
+console.log("Seed sintetis NIRMALA selesai dibuat.");

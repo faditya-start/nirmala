@@ -15,3 +15,11 @@ export interface SessionUser {
   name: string;
   role: "reviewer" | "leader" | "admin";
 }
+
+export interface AuthResponse {
+  user: SessionUser;
+}
+
+export interface ApiError {
+  error: string;
+}
