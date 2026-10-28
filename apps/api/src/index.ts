@@ -7,6 +7,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 import type { AuthResponse, HealthResponse, SessionUser } from "@nirmala/shared";
 import { db, id, seedDatabase, verifyPassword } from "./db/store.js";
+import { publicTransparency } from "./publicData.js";
 
 const port = Number(process.env.API_PORT ?? 8787);
 const webOrigin = process.env.WEB_ORIGIN ?? "http://localhost:5173";
@@ -48,6 +49,46 @@ app.post("/api/auth/login", async (context) => {
 app.post("/api/auth/logout", (context) => { const sessionId = verifiedSessionId(getCookie(context, sessionCookie)); if (sessionId) db().prepare("DELETE FROM sessions WHERE id=?").run(sessionId); deleteCookie(context, sessionCookie, { path: "/" }); return context.body(null, 204); });
 app.get("/api/users", (context) => { if (!requireRole(context, ["admin"])) return context.json({ error: "Akses admin diperlukan." }, 403); const users = db().prepare("SELECT id, username, display_name AS displayName, role, created_at AS createdAt FROM users ORDER BY display_name").all(); return context.json({ users }); });
 app.get("/api/dashboard/bootstrap", (context) => { const user = requireRole(context, ["reviewer", "leader", "admin"]); if (!user) return context.json({ error: "Silakan masuk untuk melanjutkan." }, 401); const items = db().prepare("SELECT COUNT(*) AS count FROM rka_items").get()!.count; const highRisk = db().prepare("SELECT COUNT(*) AS count FROM risk_assessments WHERE category='high'").get()!.count; return context.json({ user, metrics: { totalItems: items, highRisk } }); });
+function dashboardData() {
+  const connection = db();
+  const count = (sql: string) => Number(connection.prepare(sql).get()?.count ?? 0);
+  const riskDistribution = connection.prepare("SELECT category, COUNT(*) AS count FROM risk_assessments GROUP BY category ORDER BY CASE category WHEN 'high' THEN 1 WHEN 'medium' THEN 2 ELSE 3 END").all();
+  const reviewProgress = connection.prepare("SELECT w.name AS unit, COUNT(i.id) AS total, SUM(CASE WHEN i.evaluation_status != 'pending' THEN 1 ELSE 0 END) AS evaluated FROM work_units w LEFT JOIN rka_documents d ON d.work_unit_id=w.id LEFT JOIN rka_items i ON i.document_id=d.id GROUP BY w.id, w.name ORDER BY w.name").all();
+  const followUpProgress = connection.prepare("SELECT t.status, COUNT(*) AS count FROM follow_up_tasks t GROUP BY t.status").all();
+  const activity = connection.prepare("SELECT a.action, a.entity_type AS entityType, a.entity_id AS entityId, a.detail, a.created_at AS createdAt, COALESCE(u.display_name, 'Sistem') AS actor FROM audit_logs a LEFT JOIN users u ON u.id=a.actor_user_id ORDER BY a.created_at DESC LIMIT 8").all();
+  return {
+    metrics: {
+      totalItems: count("SELECT COUNT(*) AS count FROM rka_items"),
+      highRisk: count("SELECT COUNT(*) AS count FROM risk_assessments WHERE category='high'"),
+      evaluatedItems: count("SELECT COUNT(*) AS count FROM rka_items WHERE evaluation_status != 'pending'"),
+      issuedChr: count("SELECT COUNT(*) AS count FROM chr_documents WHERE status='issued'"),
+      openFollowUps: count("SELECT COUNT(*) AS count FROM follow_up_tasks WHERE status != 'closed'"),
+      resolvedFollowUps: count("SELECT COUNT(*) AS count FROM follow_up_tasks WHERE status IN ('resolved','closed')"),
+      falsePositives: count("SELECT COUNT(*) AS count FROM reviewer_decisions WHERE decision='false_positive'")
+    },
+    riskDistribution,
+    reviewProgress,
+    followUpProgress,
+    activity
+  };
+}
+app.get("/api/dashboard/summary", (context) => { if (!requireRole(context, ["reviewer", "leader", "admin"])) return context.json({ error: "Silakan masuk untuk melanjutkan." }, 401); return context.json(dashboardData()); });
+app.get("/api/reports/summary", (context) => { if (!requireRole(context, ["reviewer", "leader", "admin"])) return context.json({ error: "Silakan masuk untuk melanjutkan." }, 401); return context.json({ ...dashboardData(), definitions: { evaluatedItems: "Item dengan keputusan reviewer tersimpan.", openFollowUps: "Tugas yang belum berstatus closed.", falsePositives: "Keputusan reviewer dengan decision false_positive." } }); });
+function csvCell(value: unknown) { const text = String(value ?? ""); return `"${text.replaceAll("\"", "\"\"")}"`; }
+app.get("/api/reports/export", (context) => {
+  if (!requireRole(context, ["reviewer", "leader", "admin"])) return context.json({ error: "Silakan masuk untuk melanjutkan." }, 401);
+  const rows = db().prepare("SELECT i.id, d.fiscal_year AS fiscalYear, o.name AS organizationUnit, w.name AS workUnit, i.description, i.total_amount AS totalAmount, a.score, a.category, i.evaluation_status AS evaluationStatus FROM rka_items i JOIN rka_documents d ON d.id=i.document_id JOIN organization_units o ON o.id=d.organization_unit_id JOIN work_units w ON w.id=d.work_unit_id JOIN risk_assessments a ON a.rka_item_id=i.id ORDER BY a.score DESC").all();
+  const header = ["ID Item", "Tahun Anggaran", "Unit Organisasi", "Satuan Kerja", "Uraian", "Nilai Anggaran", "Skor Risiko", "Kategori Risiko", "Status Evaluasi"];
+  const body = rows.map((row) => [row.id, row.fiscalYear, row.organizationUnit, row.workUnit, row.description, row.totalAmount, row.score, row.category, row.evaluationStatus].map(csvCell).join(","));
+  return new Response([header.map(csvCell).join(","), ...body].join("\r\n"), { headers: { "content-type": "text/csv; charset=utf-8", "content-disposition": "attachment; filename=\"nirmala-report.csv\"" } });
+});
+app.get("/api/audit-logs", (context) => {
+  if (!requireRole(context, ["admin"])) return context.json({ error: "Akses audit log hanya tersedia untuk admin." }, 403);
+  const logs = db().prepare("SELECT a.action, a.entity_type AS entityType, a.entity_id AS entityId, a.detail, a.created_at AS createdAt, COALESCE(u.display_name, 'Sistem') AS actor FROM audit_logs a LEFT JOIN users u ON u.id=a.actor_user_id ORDER BY a.created_at DESC LIMIT 100").all();
+  return context.json({ logs });
+});
+app.get("/api/public/transparency/summary", (context) => context.json({ synthetic: publicTransparency.synthetic, disclaimer: publicTransparency.disclaimer, summary: publicTransparency.summary }));
+app.get("/api/public/transparency/trends", (context) => context.json({ synthetic: publicTransparency.synthetic, disclaimer: publicTransparency.disclaimer, trends: publicTransparency.trends }));
 app.get("/api/risk-items", (context) => {
   if (!requireRole(context, ["reviewer", "leader", "admin"])) return context.json({ error: "Silakan masuk untuk melanjutkan." }, 401);
   const search = (context.req.query("q") ?? "").trim().slice(0, 100);

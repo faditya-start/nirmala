@@ -5,6 +5,8 @@ import type { AuthResponse, SessionUser } from "@nirmala/shared";
 import { RiskItemDetail, RiskTriage } from "./RiskTriage";
 import { ChrEditor } from "./ChrEditor";
 import { Tracker, TrackerDetail } from "./Tracker";
+import { AuditLogs, Reports } from "./Reports";
+import { Transparency } from "./Transparency";
 
 function Landing() {
   return (
@@ -18,6 +20,7 @@ function Landing() {
         <Link className="primary-button" to="/login">
           Masuk ke aplikasi <ArrowRight size={18} />
         </Link>
+        <Link className="public-home-link" to="/transparansi">Lihat transparansi publik demo</Link>
       </section>
       <section className="status-panel" aria-label="Status fondasi aplikasi">
         <div className="panel-heading">
@@ -46,17 +49,18 @@ function Login({ onLogin }: { onLogin: (user: SessionUser) => void }) {
 }
 
 function Dashboard({ user, onLogout }: { user: SessionUser; onLogout: () => void }) {
-  const [metrics, setMetrics] = useState<{ totalItems: number; highRisk: number } | null>(null); const navigate = useNavigate();
-  useEffect(() => { fetch("/api/dashboard/bootstrap", { credentials: "include" }).then((response) => response.json()).then((data) => setMetrics(data.metrics)).catch(() => setMetrics(null)); }, []);
+  const [data, setData] = useState<{ metrics: Record<string, number>; riskDistribution: { category: string; count: number }[]; followUpProgress: { status: string; count: number }[] } | null>(null); const navigate = useNavigate();
+  useEffect(() => { fetch("/api/dashboard/summary", { credentials: "include" }).then((response) => response.json()).then(setData).catch(() => setData(null)); }, []);
   async function logout() { await fetch("/api/auth/logout", { method: "POST", credentials: "include" }); onLogout(); navigate("/login"); }
-  return <main className="dashboard"><header><div><p className="eyebrow">NIRMALA · Dashboard</p><h1>Selamat datang, {user.name}</h1><p>Peran aktif: {user.role}</p></div><button className="logout" onClick={logout}><LogOut size={16} /> Keluar</button></header><section className="kpis"><article><span>Total Item RKA</span><strong>{metrics?.totalItems ?? "—"}</strong></article><article><span>Item High Risk</span><strong>{metrics?.highRisk ?? "—"}</strong></article></section><div className="dashboard-actions"><Link className="dashboard-link" to="/risk-triage">Buka Risk Triage <ArrowRight size={16} /></Link><Link className="dashboard-link" to="/tracker">Buka Smart Tracker <ArrowRight size={16} /></Link></div><p className="notice">Data dashboard ini berasal dari seed sintetis lokal. Integrasi SAKTI dan pemeriksaan tindak lanjut diberi label simulasi.</p></main>;
+  const metricCards = [["totalItems", "Total Item RKA"], ["highRisk", "Item High Risk"], ["evaluatedItems", "Sudah Dievaluasi"], ["issuedChr", "CHR Diterbitkan"], ["openFollowUps", "Tindak Lanjut Terbuka"], ["resolvedFollowUps", "Tindak Lanjut Selesai"]];
+  return <main className="dashboard"><header><div><p className="eyebrow">NIRMALA · Dashboard</p><h1>Selamat datang, {user.name}</h1><p>Peran aktif: {user.role}</p></div><button className="logout" onClick={logout}><LogOut size={16} /> Keluar</button></header><section className="kpis">{metricCards.map(([key, label]) => <article key={key}><span>{label}</span><strong>{data?.metrics[key] ?? "—"}</strong></article>)}</section>{data && <section className="dashboard-overview"><article className="assessment"><h2>Distribusi risiko</h2>{data.riskDistribution.map((row) => <div className="metric-row" key={row.category}><span>{row.category}</span><strong>{row.count}</strong></div>)}</article><article className="assessment"><h2>Status tindak lanjut</h2>{data.followUpProgress.length ? data.followUpProgress.map((row) => <div className="metric-row" key={row.status}><span>{row.status}</span><strong>{row.count}</strong></div>) : <p className="page-copy">Belum ada tugas tindak lanjut.</p>}</article></section>}<div className="dashboard-actions"><Link className="dashboard-link" to="/risk-triage">Buka Risk Triage <ArrowRight size={16} /></Link><Link className="dashboard-link" to="/tracker">Buka Smart Tracker <ArrowRight size={16} /></Link><Link className="dashboard-link secondary-link" to="/reports">Lihat Laporan <ArrowRight size={16} /></Link>{user.role === "admin" && <Link className="dashboard-link secondary-link" to="/audit-logs">Audit Log <ArrowRight size={16} /></Link>}</div><p className="notice">Data dashboard berasal dari seed sintetis lokal. Integrasi SAKTI dan pemeriksaan tindak lanjut diberi label simulasi.</p></main>;
 }
 
 function App() {
   const [user, setUser] = useState<SessionUser | null | undefined>(undefined);
   useEffect(() => { fetch("/api/auth/me", { credentials: "include" }).then((result) => result.json()).then((data) => setUser(data.user ?? null)).catch(() => setUser(null)); }, []);
   if (user === undefined) return <main className="loading">Memeriksa sesi…</main>;
-  return <Routes><Route path="/" element={<Landing />} /><Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login onLogin={setUser} />} /><Route path="/dashboard" element={user ? <Dashboard user={user} onLogout={() => setUser(null)} /> : <Navigate to="/login" replace />} /><Route path="/risk-triage" element={user ? <RiskTriage /> : <Navigate to="/login" replace />} /><Route path="/risk-triage/:id" element={user ? <RiskItemDetail /> : <Navigate to="/login" replace />} /><Route path="/chr/:id" element={user ? <ChrEditor /> : <Navigate to="/login" replace />} /><Route path="/tracker" element={user ? <Tracker /> : <Navigate to="/login" replace />} /><Route path="/tracker/:id" element={user ? <TrackerDetail /> : <Navigate to="/login" replace />} /><Route path="*" element={<Navigate to="/" replace />} /></Routes>;
+  return <Routes><Route path="/" element={<Landing />} /><Route path="/transparansi" element={<Transparency />} /><Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login onLogin={setUser} />} /><Route path="/dashboard" element={user ? <Dashboard user={user} onLogout={() => setUser(null)} /> : <Navigate to="/login" replace />} /><Route path="/reports" element={user ? <Reports /> : <Navigate to="/login" replace />} /><Route path="/audit-logs" element={user?.role === "admin" ? <AuditLogs /> : <Navigate to="/dashboard" replace />} /><Route path="/risk-triage" element={user ? <RiskTriage /> : <Navigate to="/login" replace />} /><Route path="/risk-triage/:id" element={user ? <RiskItemDetail /> : <Navigate to="/login" replace />} /><Route path="/chr/:id" element={user ? <ChrEditor /> : <Navigate to="/login" replace />} /><Route path="/tracker" element={user ? <Tracker /> : <Navigate to="/login" replace />} /><Route path="/tracker/:id" element={user ? <TrackerDetail /> : <Navigate to="/login" replace />} /><Route path="*" element={<Navigate to="/" replace />} /></Routes>;
 }
 
 export default App;
