@@ -171,7 +171,10 @@ export function ImportDialog({ open, onClose, cycle, rows, initialOrganizationId
             </div>
           </div>
         </div>
-        <div className={styles.progress} role="status" aria-live="polite">
+        <div className={styles.progress}>
+          <p className="sr-only" role="status">
+            {heading}, {Math.floor(percent / 25) * 25} persen selesai
+          </p>
           <div className={styles.progressHead}>
             <span>{heading}</span>
             <span className="num">{percent}%</span>
@@ -207,7 +210,7 @@ export function ImportDialog({ open, onClose, cycle, rows, initialOrganizationId
             </li>
           ))}
         </ol>
-        <p className={styles.soft}>Dialog boleh ditutup. Impor tetap berjalan di server dan statusnya muncul di halaman ini.</p>
+        <p className={styles.soft}>Dialog boleh ditutup, tetapi tetap berada di halaman ini sampai file selesai terkirim. Setelah itu impor berjalan di server.</p>
       </ModalFrame>
     );
   }

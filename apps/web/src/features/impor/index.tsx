@@ -3,7 +3,7 @@ import { CalendarDays, CircleAlert, CircleCheck, Inbox, LoaderCircle, Upload, X 
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useCycle } from "../../app/cycle";
-import { errorMessage } from "../../lib/api";
+import { errorMessage, isApiError } from "../../lib/api";
 import { Button, EmptyState, IconButton, Loading, PageHeader } from "../../ui";
 import { fetchImportOverview } from "./api";
 import { CycleTable, SnapshotTable, resultHref } from "./components/CycleSnapshotTables";
@@ -45,7 +45,7 @@ function CycleImportList() {
     fetchImportOverview(cycleId, controller.signal)
       .then((data) => setOverview({ status: "ready", data }))
       .catch((error) => {
-        if (!controller.signal.aborted) setOverview({ status: "error", message: errorMessage(error, "Daftar snapshot tidak dapat dimuat.") });
+        if (!controller.signal.aborted) setOverview({ status: "error", message: isApiError(error) && error.status === 501 ? "Fitur impor belum tersedia di server ini." : errorMessage(error, "Daftar snapshot tidak dapat dimuat.") });
       });
     return () => controller.abort();
   }, [cycleId, attempt]);

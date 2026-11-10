@@ -26,7 +26,7 @@ export function CycleTable({ cycles, activeId, onSelect }: { cycles: ReviewCycle
             const active = cycle.id === activeId;
             const days = cycle.status === "aktif" ? daysUntil(cycle.adkDeadline) : null;
             return (
-              <Tr key={cycle.id} className={active ? styles.active : undefined} aria-current={active ? "true" : undefined} onActivate={() => onSelect(cycle.id)}>
+              <Tr key={cycle.id} className={active ? styles.active : undefined} aria-current={active ? "true" : undefined} title={active ? "Siklus aktif" : "Pilih sebagai siklus aktif"} onActivate={() => onSelect(cycle.id)}>
                 <Td>TA {cycle.fiscalYear}</Td>
                 <Td>{stageName(cycle.stage)}</Td>
                 <Td>

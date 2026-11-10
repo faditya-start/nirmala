@@ -32,6 +32,7 @@ export function useImportRunner(onSettled?: () => void) {
   const aliveRef = useRef(true);
   const timerRef = useRef<number | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const startingRef = useRef(false);
   const settledRef = useRef(onSettled);
   settledRef.current = onSettled;
 
@@ -108,7 +109,8 @@ export function useImportRunner(onSettled?: () => void) {
 
   const start = useCallback(
     async (context: RunContext, input: UploadInput) => {
-      if (state.phase === "uploading" || state.phase === "running") return;
+      if (startingRef.current || state.phase === "uploading" || state.phase === "running") return;
+      startingRef.current = true;
       clearTimer();
       abortRef.current?.abort();
       abortRef.current = new AbortController();
@@ -132,6 +134,8 @@ export function useImportRunner(onSettled?: () => void) {
       } catch (error) {
         if (!aliveRef.current || (error instanceof DOMException && error.name === "AbortError")) return;
         setState({ phase: "error", context, message: errorMessage(error, "Berkas tidak dapat diunggah. Coba lagi."), lost: false, jobId: null });
+      } finally {
+        startingRef.current = false;
       }
     },
     [clearTimer, poll, state.phase]

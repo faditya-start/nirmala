@@ -44,7 +44,7 @@ export function ResultView({ cycleId, snapshotId }: { cycleId: string; snapshotI
       .then(setResult)
       .catch((cause) => {
         if (controller.signal.aborted) return;
-        setError({ message: errorMessage(cause, "Hasil impor tidak dapat dimuat."), status: isApiError(cause) ? cause.status : 0 });
+        setError({ message: isApiError(cause) && cause.status === 501 ? "Hasil impor belum tersedia di server ini." : errorMessage(cause, "Hasil impor tidak dapat dimuat."), status: isApiError(cause) ? cause.status : 0 });
       });
     return () => controller.abort();
   }, [cycleId, snapshotId, attempt]);
@@ -64,7 +64,7 @@ export function ResultView({ cycleId, snapshotId }: { cycleId: string; snapshotI
               <ButtonLink to="/siklus" icon={ArrowLeft}>
                 Kembali ke siklus
               </ButtonLink>
-              {error.status !== 404 && error.status !== 403 && <Button onClick={retry}>Coba lagi</Button>}
+              {error.status !== 404 && error.status !== 403 && error.status !== 501 && <Button onClick={retry}>Coba lagi</Button>}
             </div>
           }
         />
