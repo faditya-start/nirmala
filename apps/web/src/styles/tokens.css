@@ -1,0 +1,194 @@
+/*
+ * NIRMALA design tokens.
+ * Source of truth: design/nirmala.pen (frames E7nvf light, qRTuO dark).
+ * Every Pencil variable is a CSS custom property of the same name.
+ * Light is the default; dark follows prefers-color-scheme unless the user
+ * (or the dev catalogue) forces a theme with [data-theme="light" | "dark"].
+ * Components must use these tokens only: no hex values outside this file.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* Surfaces and text */
+  --bg: #f2f4f6;
+  --surface: #ffffff;
+  --surface-sunken: #e7ebef;
+  --border: #d3d9e0;
+  --border-strong: #a9b3be;
+  --ink: #14181c;
+  --ink-muted: #3f4852;
+  --ink-faint: #5a6571;
+  --primary: #22282e;
+  --on-primary: #ffffff;
+  --focus: #2563c9;
+  --overlay: #14181cb3;
+  --shadow: #0f172a2e;
+
+  /* Sidebar */
+  --sidebar: #e6eaee;
+  --sidebar-ink: #14181c;
+  --sidebar-ink-muted: #46515c;
+  --sidebar-active: #ffffff;
+  --sidebar-line: #cfd6dd;
+
+  /* Status: catatan, hasil cek, flag */
+  --st-draf-bg: #e3e7eb;
+  --st-draf-fg: #3f4852;
+  --st-draf-line: #c3cad2;
+  --st-menunggu-bg: #f5e6b0;
+  --st-menunggu-fg: #6a4c00;
+  --st-menunggu-line: #dcc574;
+  --st-verif-bg: #d6e6fa;
+  --st-verif-fg: #0f4a94;
+  --st-verif-line: #a8c6ee;
+  --st-justif-bg: #e3daf3;
+  --st-justif-fg: #4d2c88;
+  --st-justif-line: #c6b6e4;
+  --st-closed-bg: #d1ead9;
+  --st-closed-fg: #145733;
+  --st-closed-line: #a3d3b5;
+  --st-flag-bg: #f5d4cf;
+  --st-flag-fg: #8c1b12;
+  --st-flag-line: #e4a9a1;
+  --st-warn-bg: #f5d4cf;
+  --st-warn-fg: #8c1b12;
+  --st-warn-line: #e4a9a1;
+
+  /* Skor: tinggi >= 70, sedang >= 35, rendah < 35 */
+  --score-high: #c5392b;
+  --score-mid: #d5801f;
+  --score-low: #3b8f5f;
+}
+
+/* Dark palette (qRTuO). Declared twice on purpose: once for the OS
+   preference, once for the explicit override. Keep both blocks identical. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #111418;
+    --surface: #181c21;
+    --surface-sunken: #20252b;
+    --border: #2f353c;
+    --border-strong: #566069;
+    --ink: #e8ebee;
+    --ink-muted: #aeb6bf;
+    --ink-faint: #929ba5;
+    --primary: #e8ebee;
+    --on-primary: #111418;
+    --focus: #7faef5;
+    --overlay: #000000b3;
+    --shadow: #000000a6;
+    --sidebar: #0c0f12;
+    --sidebar-ink: #e8ebee;
+    --sidebar-ink-muted: #9aa3ad;
+    --sidebar-active: #20252b;
+    --sidebar-line: #232930;
+    --st-draf-bg: #262b31;
+    --st-draf-fg: #b3bac2;
+    --st-draf-line: #444b53;
+    --st-menunggu-bg: #3a3216;
+    --st-menunggu-fg: #ebcf70;
+    --st-menunggu-line: #5e5124;
+    --st-verif-bg: #172c48;
+    --st-verif-fg: #9ac0f2;
+    --st-verif-line: #2f4e78;
+    --st-justif-bg: #2e2447;
+    --st-justif-fg: #bba5e8;
+    --st-justif-line: #4d3c78;
+    --st-closed-bg: #16311f;
+    --st-closed-fg: #80cf9f;
+    --st-closed-line: #2c5a3f;
+    --st-flag-bg: #432020;
+    --st-flag-fg: #f2978e;
+    --st-flag-line: #744040;
+    --st-warn-bg: #432020;
+    --st-warn-fg: #f2978e;
+    --st-warn-line: #744040;
+    --score-high: #e8695c;
+    --score-mid: #e39a47;
+    --score-low: #5db583;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #111418;
+  --surface: #181c21;
+  --surface-sunken: #20252b;
+  --border: #2f353c;
+  --border-strong: #566069;
+  --ink: #e8ebee;
+  --ink-muted: #aeb6bf;
+  --ink-faint: #929ba5;
+  --primary: #e8ebee;
+  --on-primary: #111418;
+  --focus: #7faef5;
+  --overlay: #000000b3;
+  --shadow: #000000a6;
+  --sidebar: #0c0f12;
+  --sidebar-ink: #e8ebee;
+  --sidebar-ink-muted: #9aa3ad;
+  --sidebar-active: #20252b;
+  --sidebar-line: #232930;
+  --st-draf-bg: #262b31;
+  --st-draf-fg: #b3bac2;
+  --st-draf-line: #444b53;
+  --st-menunggu-bg: #3a3216;
+  --st-menunggu-fg: #ebcf70;
+  --st-menunggu-line: #5e5124;
+  --st-verif-bg: #172c48;
+  --st-verif-fg: #9ac0f2;
+  --st-verif-line: #2f4e78;
+  --st-justif-bg: #2e2447;
+  --st-justif-fg: #bba5e8;
+  --st-justif-line: #4d3c78;
+  --st-closed-bg: #16311f;
+  --st-closed-fg: #80cf9f;
+  --st-closed-line: #2c5a3f;
+  --st-flag-bg: #432020;
+  --st-flag-fg: #f2978e;
+  --st-flag-line: #744040;
+  --st-warn-bg: #432020;
+  --st-warn-fg: #f2978e;
+  --st-warn-line: #744040;
+  --score-high: #e8695c;
+  --score-mid: #e39a47;
+  --score-low: #5db583;
+}
+
+/* Non-color tokens (same in both themes) */
+:root {
+  --font-ui: "Schibsted Grotesk Variable", "Schibsted Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+
+  --fs-xs: 12px;
+  --fs-base: 13px;
+  --fs-md: 14px;
+  --fs-lg: 16px;
+  --fs-xl: 20px;
+  --fs-2xl: 28px;
+  --fs-3xl: 40px;
+
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
+
+  --r-sm: 2px;
+  --r-md: 4px;
+  --r-lg: 8px;
+  --r-pill: 999px;
+
+  /* Derived helpers (not Pencil variables) */
+  --shadow-sm: 0 4px 6px var(--shadow);
+  --shadow-md: 0 8px 12px var(--shadow);
+  --ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--focus);
+  --control-h: 34px; /* input, select, textarea single line */
+  --control-h-sm: 30px; /* filter controls */
+  --button-h: 32px;
+  --button-h-sm: 28px;
+}

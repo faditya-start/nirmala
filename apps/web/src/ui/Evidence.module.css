@@ -1,0 +1,97 @@
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 12px var(--sp-4);
+  border-bottom: 1px solid var(--border);
+  color: var(--ink);
+}
+
+.headTitle {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-base);
+  font-weight: 600;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--border);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 10px var(--sp-4);
+  font-size: var(--fs-base);
+}
+
+.changed {
+  background: var(--surface-sunken);
+}
+
+.field {
+  flex: none;
+  width: 96px;
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+}
+
+.before {
+  flex: none;
+  width: 120px;
+  color: var(--ink-muted);
+}
+
+.arrow {
+  flex: none;
+  color: var(--ink-muted);
+}
+
+.after {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.valueMuted {
+  color: var(--ink-muted);
+}
+
+.tag {
+  display: inline-flex;
+  margin-left: auto;
+}
+
+.notChanged {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border: 1px solid var(--st-flag-line);
+  border-radius: var(--r-md);
+  background: var(--st-flag-bg);
+  color: var(--st-flag-fg);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+}
+
+.foot {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  padding: 10px var(--sp-4);
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+}
+
+.footIcon {
+  flex: none;
+  margin-top: 2px;
+}
