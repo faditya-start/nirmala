@@ -158,7 +158,7 @@ export function TrackerPage() {
 
   const counts = data?.statusCounts;
   const totalAll = counts ? STATUS_ORDER.reduce((sum, item) => sum + counts[item], 0) : null;
-  const filtered = !!(orgParam || workUnitId || category);
+  const filtered = !!(workUnitId || category);
   const rows = data?.items ?? [];
   const chrs = data?.chrDocuments ?? [];
   const chrNumbers = chrs.map((chr) => chr.documentNumber).filter(Boolean);
