@@ -103,7 +103,7 @@ const USER_NAME: Record<Role, string> = { reviewer: "Reviewer 01", uki: "PIC UKI
 
 function scopeOf(role: Role): string[] | null {
   if (role === "reviewer") return ["org-a", "org-b"];
-  if (role === "uki") return ["org-a"];
+  if (role === "uki") return ["org-b"];
   return null;
 }
 
