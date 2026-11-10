@@ -75,3 +75,12 @@
     grid-template-columns: 1fr;
   }
 }
+
+.exportError {
+  padding: 8px 12px;
+  border: 1px solid var(--st-flag-line);
+  border-radius: var(--r-md);
+  background: var(--st-flag-bg);
+  color: var(--st-flag-fg);
+  font-size: var(--fs-base);
+}

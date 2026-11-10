@@ -1,7 +1,8 @@
 import { NOTE_CATEGORIES, type RuleAdminDto, type RuleResponse } from "@nirmala/shared";
 import { CircleAlert } from "lucide-react";
 import { useState } from "react";
-import { api, errorMessage } from "../../../lib/api";
+import { api } from "../../../lib/api";
+import { failureMessage } from "../errors";
 import { Button, Input, Select, Switch, Textarea } from "../../../ui";
 import { SidePanel } from "../components/SidePanel";
 import { CATEGORY_LABEL } from "../labels";
@@ -63,7 +64,7 @@ export function RuleEditPanel({ rule, open, onClose, onSaved }: RuleEditPanelPro
       const result = await api.put<RuleResponse>(`/admin/rules/${rule.id}`, body);
       onSaved(result.rule);
     } catch (error) {
-      setServerError(errorMessage(error));
+      setServerError(failureMessage(error));
       setBusy(false);
     }
   }

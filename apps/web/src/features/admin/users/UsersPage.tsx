@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useAuth } from "../../../app/auth";
 import { cn } from "../../../lib/cn";
 import density from "../components/density.module.css";
-import { api, errorMessage } from "../../../lib/api";
+import { api } from "../../../lib/api";
+import { failureMessage } from "../errors";
 import { formatNumber } from "../../../lib/format";
 import { Button, ConfirmDialog, EmptyState, IconButton, Loading, PageHeader, Switch, Table, TableFrame, TagChip, TBody, Td, Th, THead, Tr } from "../../../ui";
 import { Alert } from "../components/Alert";
@@ -37,7 +38,7 @@ export function UsersPage() {
       const result = await api.put<UserResponse>(`/users/${user.id}/active`, { active });
       setOverrides((current) => ({ ...current, [user.id]: result.user }));
     } catch (failure) {
-      setError(`Status ${user.username} belum bisa diubah. ${errorMessage(failure)}`);
+      setError(`Status ${user.username} belum bisa diubah. ${failureMessage(failure)}`);
     } finally {
       setToggling(null);
     }
@@ -58,7 +59,7 @@ export function UsersPage() {
       />
 
       {resource.error && !resource.data ? (
-        <EmptyState icon={Users} title="Daftar pengguna belum bisa dimuat" description={errorMessage(resource.error)} action={<Button onClick={resource.reload}>Coba lagi</Button>} />
+        <EmptyState icon={Users} title="Daftar pengguna belum bisa dimuat" description={failureMessage(resource.error)} action={<Button onClick={resource.reload}>Coba lagi</Button>} />
       ) : !resource.data ? (
         <Loading label="Memuat pengguna…" block />
       ) : (
@@ -85,7 +86,7 @@ export function UsersPage() {
                   {users.map((user) => (
                     <Tr key={user.id}>
                       <Td>
-                        <span className="mono" title={user.username}>
+                        <span className={cn("mono", styles.mono)} title={user.username}>
                           {user.username}
                         </span>
                       </Td>

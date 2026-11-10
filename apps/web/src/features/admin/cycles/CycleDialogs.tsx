@@ -1,7 +1,8 @@
 import { CYCLE_STAGES, CYCLE_STATUSES, type CycleResponse, type MarkDipaIssuedResponse, type ReviewCycleDto } from "@nirmala/shared";
 import { Check, Globe, Undo2, X } from "lucide-react";
 import { useState } from "react";
-import { api, errorMessage } from "../../../lib/api";
+import { api } from "../../../lib/api";
+import { failureMessage } from "../errors";
 import { formatDate } from "../../../lib/format";
 import { Button, Dialog, Input, Select } from "../../../ui";
 import { Alert } from "../components/Alert";
@@ -34,7 +35,7 @@ export function CreateCycleDialog({ open, onClose, defaultYear, onDone }: BasePr
       await api.post<CycleResponse>("/cycles", { fiscalYear: Number(form.fiscalYear), stage: form.stage, ...(adkDeadline !== null ? { adkDeadline } : {}) });
       onDone();
     } catch (failure) {
-      setError(errorMessage(failure));
+      setError(failureMessage(failure));
       setBusy(false);
     }
   }
@@ -89,7 +90,7 @@ export function MarkDipaDialog({ cycle, open, onClose, onDone }: BaseProps & { c
       await api.post<MarkDipaIssuedResponse>(`/cycles/${cycle.id}/dipa-issued`, {});
       onDone();
     } catch (failure) {
-      setError(errorMessage(failure));
+      setError(failureMessage(failure));
       setBusy(false);
     }
   }
@@ -143,7 +144,7 @@ export function EditCycleDialog({ cycle, open, onClose, onDone }: BaseProps & { 
       await api.put<CycleResponse>(`/cycles/${cycle.id}`, { name: name.trim(), adkDeadline: fromDateInput(deadline), status });
       onDone();
     } catch (failure) {
-      setError(errorMessage(failure));
+      setError(failureMessage(failure));
       setBusy(false);
     }
   }
@@ -156,7 +157,7 @@ export function EditCycleDialog({ cycle, open, onClose, onDone }: BaseProps & { 
       await api.delete<CycleResponse>(`/cycles/${cycle.id}/dipa-issued`);
       onDone();
     } catch (failure) {
-      setError(errorMessage(failure));
+      setError(failureMessage(failure));
       setBusy(false);
     }
   }

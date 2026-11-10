@@ -4,6 +4,15 @@
   gap: var(--sp-5);
 }
 
+.name,
+.mono {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .name {
   font-weight: 500;
 }

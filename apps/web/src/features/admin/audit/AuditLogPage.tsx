@@ -3,7 +3,8 @@ import { Lock, ScrollText } from "lucide-react";
 import { useState } from "react";
 import { cn } from "../../../lib/cn";
 import density from "../components/density.module.css";
-import { api, errorMessage } from "../../../lib/api";
+import { api } from "../../../lib/api";
+import { failureMessage } from "../errors";
 import { formatDateTime, formatNumber } from "../../../lib/format";
 import { Button, EmptyState, FilterBar, FilterSelect, FilterSummary, Loading, PageHeader, Pagination, Table, TableFrame, TagChip, TBody, Td, Th, THead, Tr } from "../../../ui";
 import { Alert } from "../components/Alert";
@@ -64,10 +65,10 @@ export function AuditLogPage() {
         {data && <FilterSummary>{formatNumber(data.pagination.total)} entri</FilterSummary>}
       </FilterBar>
 
-      {facets.error && <Alert>Pilihan filter belum bisa dimuat. {errorMessage(facets.error)}</Alert>}
+      {facets.error && <Alert>Pilihan filter belum bisa dimuat. {failureMessage(facets.error)}</Alert>}
 
       {list.error && !data ? (
-        <EmptyState icon={ScrollText} title="Audit log belum bisa dimuat" description={errorMessage(list.error)} action={<Button onClick={list.reload}>Coba lagi</Button>} />
+        <EmptyState icon={ScrollText} title="Audit log belum bisa dimuat" description={failureMessage(list.error)} action={<Button onClick={list.reload}>Coba lagi</Button>} />
       ) : !data ? (
         <Loading label="Memuat audit log…" block />
       ) : data.logs.length === 0 ? (
@@ -96,7 +97,11 @@ export function AuditLogPage() {
                     <Td>
                       <span className="mono">{formatDateTime(entry.createdAt)}</span>
                     </Td>
-                    <Td>{entry.actor}</Td>
+                    <Td>
+                      <span className={styles.actor} title={entry.actor}>
+                        {entry.actor}
+                      </span>
+                    </Td>
                     <Td>
                       <span className="mono" title={entry.action}>
                         {auditActionLabel(entry.action)}

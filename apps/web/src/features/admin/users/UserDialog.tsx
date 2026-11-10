@@ -1,7 +1,8 @@
 import { ROLES, type OrganizationUnitDto, type UserAdminDto } from "@nirmala/shared";
 import { Check, UserPlus, UserRoundPen, X } from "lucide-react";
 import { useState } from "react";
-import { api, errorMessage } from "../../../lib/api";
+import { api } from "../../../lib/api";
+import { failureMessage } from "../errors";
 import { ROLE_LABEL } from "../../../lib/roles";
 import { Button, Checkbox, Dialog, Input, Select } from "../../../ui";
 import { Alert } from "../components/Alert";
@@ -68,7 +69,7 @@ export function UserDialog({ user, units, open, selfId, onClose, onSaved }: User
       }
       onSaved(true);
     } catch (failure) {
-      setError(reached && user ? `Sebagian perubahan sudah tersimpan, tetapi ada yang gagal. ${errorMessage(failure)}` : errorMessage(failure));
+      setError(reached && user ? `Sebagian perubahan sudah tersimpan, tetapi ada yang gagal. ${failureMessage(failure)}` : failureMessage(failure));
       if (reached) onSaved(false);
       setBusy(false);
     }

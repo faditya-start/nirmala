@@ -3,7 +3,8 @@ import { Download, FileBarChart } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useAuth } from "../../app/auth";
 import { useCycle } from "../../app/cycle";
-import { api, errorMessage, IS_MOCK, isApiError } from "../../lib/api";
+import { api, ApiError, IS_MOCK, isApiError } from "../../lib/api";
+import { failureMessage } from "./errors";
 import { formatDate, formatNumber } from "../../lib/format";
 import { cycleLabel } from "../../lib/types";
 import {
@@ -56,6 +57,8 @@ export function ReportsPage() {
   const { cycles, active, status: cycleStatus } = useCycle();
   const [cycleOverride, setCycleOverride] = useState<string | null>(null);
   const [unitChoice, setUnitChoice] = useState(ALL_UNITS);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   const cycle = cycles.find((item) => item.id === cycleOverride) ?? active;
   const cycleId = cycle?.id ?? null;
@@ -75,11 +78,31 @@ export function ReportsPage() {
 
   const exportHref = `/api/reports/export.csv?${new URLSearchParams({ cycleId: cycleId ?? "", ...(unitId ? { organizationUnitId: unitId } : {}), dataset: "catatan" })}`;
 
-  function onExport(event: React.MouseEvent) {
-    // Simulated API: there is no server to answer the download, so hand over the summary the page already has.
-    if (!IS_MOCK) return;
+  async function onExport(event: React.MouseEvent) {
+    // A plain link would navigate to a JSON error page on 403/500, so the file is fetched and any error is shown here.
     event.preventDefault();
-    if (summary.data) downloadBlob(`nirmala-ringkasan-${cycle?.fiscalYear}-${cycle?.stage}.csv`, summaryCsv(summary.data));
+    if (exporting) return;
+    setExporting(true);
+    setExportError(null);
+    try {
+      if (IS_MOCK) {
+        // Simulated API: there is no server to answer the download, so hand over the summary the page already has.
+        if (summary.data) downloadBlob(`nirmala-ringkasan-${cycle?.fiscalYear}-${cycle?.stage}.csv`, summaryCsv(summary.data));
+        return;
+      }
+      const response = await fetch(exportHref, { credentials: "include" });
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        throw new ApiError(response.status, payload?.error ?? "Ekspor CSV belum bisa dibuat. Coba lagi.");
+      }
+      const disposition = response.headers.get("content-disposition") ?? "";
+      const name = /filename="?([^";]+)"?/.exec(disposition)?.[1] ?? `nirmala-catatan-${cycle?.fiscalYear}-${cycle?.stage}.csv`;
+      downloadBlob(name, await response.text());
+    } catch (error) {
+      setExportError(error instanceof TypeError ? "Tidak dapat terhubung ke server. Periksa koneksi lalu coba lagi." : failureMessage(error));
+    } finally {
+      setExporting(false);
+    }
   }
 
   if (cycleStatus === "loading" || cycleStatus === "idle") {
@@ -109,11 +132,17 @@ export function ReportsPage() {
         title="Laporan"
         subtitle={`Metrik proses dan validasi engine · ${stageLabel(cycle)} · ${data?.dataAsOf ? `data per ${formatDate(data.dataAsOf)}` : "belum ada data diimpor"}`}
         actions={
-          <ButtonLink to={exportHref} reloadDocument download variant="sekunder" icon={Download} onClick={onExport}>
+          <ButtonLink to={exportHref} reloadDocument download variant="sekunder" icon={Download} loading={exporting} onClick={(event) => void onExport(event)}>
             Ekspor CSV
           </ButtonLink>
         }
       />
+
+      {exportError && (
+        <p role="alert" className={styles.exportError}>
+          {exportError}
+        </p>
+      )}
 
       <div className={styles.filters}>
         <FilterBar label="Filter laporan">
@@ -134,12 +163,12 @@ export function ReportsPage() {
       </div>
 
       {accessError ? (
-        <EmptyState icon={FileBarChart} title="Tidak ada akses" description={errorMessage(accessError)} />
+        <EmptyState icon={FileBarChart} title="Tidak ada akses" description={failureMessage(accessError)} />
       ) : (
         <>
           <section className={styles.block} aria-busy={summary.loading || undefined} data-stale={(summary.loading && data !== null) || undefined}>
             {summary.error && !data ? (
-              <ErrorBlock message={errorMessage(summary.error)} onRetry={summary.reload} />
+              <ErrorBlock message={failureMessage(summary.error)} onRetry={summary.reload} />
             ) : !data ? (
               <Loading label="Memuat metrik laporan…" block />
             ) : (
@@ -153,7 +182,7 @@ export function ReportsPage() {
               description="Berapa banyak item kunci jawaban yang tertangkap aturan. Skor tidak ikut dihitung karena hanya untuk mengurutkan."
             />
             {validation.error && !validation.data ? (
-              <ErrorBlock message={errorMessage(validation.error)} onRetry={validation.reload} />
+              <ErrorBlock message={failureMessage(validation.error)} onRetry={validation.reload} />
             ) : !validation.data ? (
               <Loading label="Memuat validasi engine…" block />
             ) : (

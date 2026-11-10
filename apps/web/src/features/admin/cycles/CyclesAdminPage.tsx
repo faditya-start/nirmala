@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useCycle } from "../../../app/cycle";
 import { cn } from "../../../lib/cn";
 import density from "../components/density.module.css";
-import { api, errorMessage } from "../../../lib/api";
+import { api } from "../../../lib/api";
+import { failureMessage } from "../errors";
 import { formatDate } from "../../../lib/format";
 import { Button, EmptyState, Loading, PageHeader, Table, TableFrame, TagChip, TBody, Td, Th, THead, Tr } from "../../../ui";
 import { InfoNote } from "../components/InfoNote";
@@ -47,7 +48,7 @@ export function CyclesAdminPage() {
       />
 
       {resource.error && !resource.data ? (
-        <EmptyState icon={CalendarDays} title="Daftar siklus belum bisa dimuat" description={errorMessage(resource.error)} action={<Button onClick={resource.reload}>Coba lagi</Button>} />
+        <EmptyState icon={CalendarDays} title="Daftar siklus belum bisa dimuat" description={failureMessage(resource.error)} action={<Button onClick={resource.reload}>Coba lagi</Button>} />
       ) : !resource.data ? (
         <Loading label="Memuat siklus…" block />
       ) : (

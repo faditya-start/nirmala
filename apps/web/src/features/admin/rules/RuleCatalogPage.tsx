@@ -3,7 +3,8 @@ import { BookOpen, SquarePen, TriangleAlert } from "lucide-react";
 import { useState } from "react";
 import { cn } from "../../../lib/cn";
 import density from "../components/density.module.css";
-import { api, errorMessage } from "../../../lib/api";
+import { api } from "../../../lib/api";
+import { failureMessage } from "../errors";
 import { formatNumber } from "../../../lib/format";
 import { cycleLabel } from "../../../lib/types";
 import { Button, CellEmpty, CellTitle, EmptyState, IconButton, Loading, PageHeader, RuleChip, Table, TableFrame, TagChip, TBody, Td, Th, THead, Tr, Switch } from "../../../ui";
@@ -34,7 +35,7 @@ export function RuleCatalogPage() {
       const result = await api.put<RuleResponse>(`/admin/rules/${rule.id}/active`, { active });
       setOverrides((current) => ({ ...current, [rule.id]: result.rule }));
     } catch (failure) {
-      setError(`Status ${rule.code} belum bisa diubah. ${errorMessage(failure)}`);
+      setError(`Status ${rule.code} belum bisa diubah. ${failureMessage(failure)}`);
     } finally {
       setToggling(null);
     }
@@ -60,7 +61,7 @@ export function RuleCatalogPage() {
         <EmptyState
           icon={BookOpen}
           title="Katalog aturan belum bisa dimuat"
-          description={errorMessage(resource.error)}
+          description={failureMessage(resource.error)}
           action={
             <Button onClick={resource.reload}>
               Coba lagi

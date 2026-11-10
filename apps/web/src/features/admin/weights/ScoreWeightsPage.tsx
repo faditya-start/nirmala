@@ -4,7 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useCycle } from "../../../app/cycle";
 import { cn } from "../../../lib/cn";
 import density from "../components/density.module.css";
-import { api, errorMessage, isApiError } from "../../../lib/api";
+import { api, isApiError } from "../../../lib/api";
+import { failureMessage } from "../errors";
 import { formatDate, formatNumber } from "../../../lib/format";
 import { Button, EmptyState, Input, Loading, PageHeader, ProgressBar, SectionHeader, Table, TableFrame, TagChip, TBody, Td, Th, THead, Tr } from "../../../ui";
 import { Alert } from "../components/Alert";
@@ -63,7 +64,7 @@ export function ScoreWeightsPage() {
         }
       } catch (error) {
         stopPolling();
-        setRecalc({ phase: "failed", message: isApiError(error) && error.status === 404 ? "Proses hitung ulang tidak ditemukan. Server mungkin dimulai ulang, jalankan hitung ulang lagi." : errorMessage(error) });
+        setRecalc({ phase: "failed", message: isApiError(error) && error.status === 404 ? "Proses hitung ulang tidak ditemukan. Server mungkin dimulai ulang, jalankan hitung ulang lagi." : failureMessage(error) });
       } finally {
         busy = false;
       }
@@ -78,7 +79,7 @@ export function ScoreWeightsPage() {
       setRecalc({ phase: "running", job: null });
       poll(accepted.jobId);
     } catch (error) {
-      setRecalc({ phase: "failed", message: errorMessage(error) });
+      setRecalc({ phase: "failed", message: failureMessage(error) });
     }
   }
 
@@ -103,7 +104,7 @@ export function ScoreWeightsPage() {
       setSaved(`Versi ${result.config.version} tersimpan dan sekarang aktif. Jalankan Hitung ulang siklus agar skor memakai versi ini.`);
       resource.reload();
     } catch (error) {
-      setSaveError(errorMessage(error));
+      setSaveError(failureMessage(error));
     } finally {
       setSaving(false);
     }
@@ -116,7 +117,7 @@ export function ScoreWeightsPage() {
     return (
       <div className={styles.page}>
         <PageHeader title="Bobot skor" />
-        <EmptyState icon={SlidersHorizontal} title="Bobot skor belum bisa dimuat" description={errorMessage(resource.error)} action={<Button onClick={resource.reload}>Coba lagi</Button>} />
+        <EmptyState icon={SlidersHorizontal} title="Bobot skor belum bisa dimuat" description={failureMessage(resource.error)} action={<Button onClick={resource.reload}>Coba lagi</Button>} />
       </div>
     );
   }
