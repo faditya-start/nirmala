@@ -281,7 +281,7 @@ export function buildSeeds(): MockSeed[] {
       const noProfile = NO_PROFILE.has(workUnitId);
       const targetCap = noProfile ? 78 : 92;
       const targetScore = flagged
-        ? Math.min(targetCap, 30 + Math.floor(rnd() * 62))
+        ? Math.min(targetCap, org.id === "oa" ? 10 + Math.floor(rnd() * 24) : 30 + Math.floor(rnd() * 62))
         : Math.min(targetCap, 5 + Math.floor(rnd() * rnd() * 70));
       seeds.push({
         id,
