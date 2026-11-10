@@ -4,6 +4,10 @@
   gap: var(--sp-5);
 }
 
+.page h1 {
+  overflow-wrap: anywhere;
+}
+
 .meta {
   display: inline-flex;
   flex-wrap: wrap;
@@ -111,7 +115,7 @@
   min-width: 0;
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 1200px) {
   .columns {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -120,4 +124,15 @@
 .valueWithBadge > :last-child {
   flex: none;
   font-family: var(--font-ui);
+}
+
+.columns[aria-busy="true"] {
+  opacity: 0.75;
+  transition: opacity 120ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .columns[aria-busy="true"] {
+    transition: none;
+  }
 }

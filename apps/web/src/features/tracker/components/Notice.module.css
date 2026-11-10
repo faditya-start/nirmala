@@ -56,3 +56,20 @@
 .close:hover {
   background: var(--surface-sunken);
 }
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.notice {
+  animation: enter 160ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notice {
+    animation: none;
+  }
+}

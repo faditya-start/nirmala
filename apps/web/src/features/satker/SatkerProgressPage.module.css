@@ -94,3 +94,9 @@
     gap: var(--sp-4);
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .busy {
+    transition: none;
+  }
+}

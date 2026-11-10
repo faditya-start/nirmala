@@ -98,3 +98,9 @@
   font-size: var(--fs-xs);
   color: var(--ink-muted);
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .tableBlock[aria-busy="true"] {
+    transition: none;
+  }
+}

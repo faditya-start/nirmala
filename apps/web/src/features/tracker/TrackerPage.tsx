@@ -6,7 +6,7 @@ import { usePageBreadcrumb } from "../../app/breadcrumb";
 import { useAuth } from "../../app/auth";
 import { useCycle } from "../../app/cycle";
 import { useNeedsAction } from "../../app/needsAction";
-import { api, errorMessage } from "../../lib/api";
+import { api } from "../../lib/api";
 import { formatDate } from "../../lib/format";
 import {
   Button,
@@ -49,7 +49,7 @@ import {
   type SelectableRow
 } from "./logic";
 import { useOrganizationUnits } from "./useOrganizationUnits";
-import { errorStatus, useRemote } from "./useRemote";
+import { describeError, errorStatus, useRemote } from "./useRemote";
 import styles from "./TrackerPage.module.css";
 
 const PAGE_SIZE = 25;
@@ -101,6 +101,17 @@ export function TrackerPage() {
     const pick = pickDefaultStatus(data.statusCounts);
     if (pick !== status) setAutoStatus(pick);
   }, [data, statusParam, cycleId, status]);
+
+  // A bulk approve can empty the last page; step back instead of showing an empty table with no pagination.
+  const lastPage = data?.pagination.totalPages ?? 1;
+  useEffect(() => {
+    if (data && !list.loading && page > lastPage) {
+      const next = new URLSearchParams(params);
+      if (lastPage <= 1) next.delete("page");
+      else next.set("page", String(lastPage));
+      setParams(next, { replace: true });
+    }
+  }, [data, list.loading, page, lastPage, params, setParams]);
 
   const workUnits = useRemote<{ workUnits: WorkUnitDto[] }>((signal) => api.get("/work-units", { query: { organizationUnitId: orgParam }, signal }), `wu-${orgParam}`);
 
@@ -201,7 +212,7 @@ export function TrackerPage() {
       const result = await api.post<BulkApproveResponse>("/tracker/notes/bulk-approve", { noteIds: selection.approvable.map((row) => row.id) });
       setNotice({ tone: result.approvedNoteIds.length > 0 ? "sukses" : "info", text: bulkResultMessage(result.approvedNoteIds.length, result.skipped, result.completedChrIds.length, user?.name) });
     } catch (error) {
-      setNotice({ tone: "galat", text: `Setujui massal gagal. ${errorMessage(error)}` });
+      setNotice({ tone: "galat", text: `Setujui massal gagal. ${describeError(error)}` });
     } finally {
       setBusy(false);
       setDialogOpen(false);
@@ -217,12 +228,12 @@ export function TrackerPage() {
   let body;
   if (!data && error) {
     body = denied ? (
-      <EmptyState variant="page" icon={Lock} title="Akses ditolak" description={errorMessage(error)} />
+      <EmptyState variant="page" icon={Lock} title="Akses ditolak" description={describeError(error)} />
     ) : (
       <EmptyState
         icon={TriangleAlert}
         title="Daftar catatan tidak dapat dimuat"
-        description={errorMessage(error)}
+        description={describeError(error)}
         action={
           <Button variant="utama" onClick={list.reload}>
             Coba lagi
@@ -297,7 +308,7 @@ export function TrackerPage() {
               </Button>
             }
           >
-            Daftar tidak dapat diperbarui. {errorMessage(error)}
+            Daftar tidak dapat diperbarui. {describeError(error)}
           </Notice>
         )}
 

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { usePageBreadcrumb } from "../../app/breadcrumb";
 import { useNeedsAction } from "../../app/needsAction";
-import { api, errorMessage } from "../../lib/api";
+import { api } from "../../lib/api";
 import { formatDate, formatDateTime } from "../../lib/format";
 import {
   Button,
@@ -25,7 +25,7 @@ import {
 import { ActionPanels } from "./ActionPanels";
 import { Notice, type NoticeProps } from "./components/Notice";
 import { CATEGORY_LABEL, evidenceRowViews, expectationText, timelineViews } from "./logic";
-import { errorStatus, useRemote } from "./useRemote";
+import { describeError, errorStatus, useRemote } from "./useRemote";
 import styles from "./NoteDetailPage.module.css";
 
 /** S9 · Detail catatan (dB0Ae reviewer, x8CopO PIC UKI, W4pDP9 data tidak cukup). Route: /tracker/:noteId. */
@@ -50,12 +50,12 @@ export function NoteDetailPage() {
           {status === 404 ? (
             <EmptyState icon={SearchX} title="Catatan tidak ditemukan" description="Catatan ini tidak ada atau sudah dihapus dari siklus." action={<ButtonLink to={backTo}>Kembali ke daftar</ButtonLink>} />
           ) : status === 403 ? (
-            <EmptyState variant="page" icon={Lock} title="Akses ditolak" description={errorMessage(remote.error)} action={<ButtonLink to={backTo}>Kembali ke daftar</ButtonLink>} />
+            <EmptyState variant="page" icon={Lock} title="Akses ditolak" description={describeError(remote.error)} action={<ButtonLink to={backTo}>Kembali ke daftar</ButtonLink>} />
           ) : (
             <EmptyState
               icon={TriangleAlert}
               title="Catatan tidak dapat dimuat"
-              description={errorMessage(remote.error)}
+              description={describeError(remote.error)}
               action={
                 <Button variant="utama" onClick={remote.reload}>
                   Coba lagi

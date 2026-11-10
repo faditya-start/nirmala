@@ -2,9 +2,10 @@ import type { NoteActionResponse, TrackerNoteDetailResponse } from "@nirmala/sha
 import { Check, FileCheck, Send, Undo2 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../../app/auth";
-import { api, errorMessage, isApiError } from "../../lib/api";
+import { api, isApiError } from "../../lib/api";
 import { formatDateTime } from "../../lib/format";
 import { Button, ConfirmDialog, Textarea } from "../../ui";
+import { describeError } from "./useRemote";
 import { CHECK_TEXT, JUSTIFY_MAX, RETURN_MAX, validateJustification, validateReturnReason } from "./logic";
 import styles from "./ActionPanels.module.css";
 
@@ -57,7 +58,7 @@ export function ActionPanels({ detail, onDone, onFailed }: ActionPanelsProps) {
       setJustification("");
       onDone(success(response));
     } catch (error) {
-      const message = errorMessage(error);
+      const message = describeError(error);
       if (isApiError(error) && error.status === 400 && onFieldError) onFieldError(message);
       else onFailed(message);
     } finally {
@@ -195,7 +196,7 @@ export function ActionPanels({ detail, onDone, onFailed }: ActionPanelsProps) {
           )}
           <p className={styles.hint}>
             {note.status === "closed"
-              ? "Catatan ini sudah ditutup oleh reviewer. Tidak ada tindakan lagi."
+              ? `Catatan ini ditutup oleh reviewer${note.closedAt ? ` pada ${formatDateTime(note.closedAt)}` : ""}. Tidak ada tindakan lagi.`
               : note.status === "dijustifikasi"
                 ? "Justifikasi sudah terkirim. Reviewer yang memutuskan menerima atau mengembalikan."
                 : "Anda dapat melihat catatan ini. Penutupan dan pengembalian dilakukan oleh reviewer."}

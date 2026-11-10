@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { isApiError } from "../../lib/api";
+import { errorMessage, isApiError } from "../../lib/api";
 
 export interface Remote<T> {
   /** Last good answer. Kept while a newer request runs, so tables do not flash empty on filter changes. */
@@ -42,4 +42,13 @@ export function useRemote<T>(load: (signal: AbortSignal) => Promise<T>, key: str
 
 export function errorStatus(error: unknown): number | null {
   return isApiError(error) ? error.status : null;
+}
+
+/** Presentable text for a failed request. 501 (endpoint not built yet) and network loss get their own wording. */
+export function describeError(error: unknown): string {
+  if (isApiError(error)) {
+    if (error.status === 501) return "Fitur ini belum tersedia di server. Hubungi Admin bila seharusnya sudah aktif.";
+    if (error.status === 0) return error.message;
+  }
+  return errorMessage(error);
 }

@@ -1,10 +1,10 @@
 import type { SatkerProgressResponse, SatkerProgressRow, SatkerProgressSort, TrackerStatus } from "@nirmala/shared";
 import { Building2, Circle, Info, Lock, TriangleAlert } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { usePageBreadcrumb } from "../../app/breadcrumb";
 import { useCycle } from "../../app/cycle";
-import { api, errorMessage } from "../../lib/api";
+import { api } from "../../lib/api";
 import { formatDate, formatDateTime, formatNumber } from "../../lib/format";
 import {
   Button,
@@ -29,7 +29,7 @@ import {
   type SortDirection
 } from "../../ui";
 import { useOrganizationUnits } from "../tracker/useOrganizationUnits";
-import { errorStatus, useRemote } from "../tracker/useRemote";
+import { describeError, errorStatus, useRemote } from "../tracker/useRemote";
 import { deadlineText, openNotesHint, READINESS_TEXT, relativeDays } from "./logic";
 import styles from "./SatkerProgressPage.module.css";
 
@@ -60,6 +60,7 @@ function cycleText(year: number, stage: string): string {
 export function SatkerProgressPage() {
   const { active, status: cycleStatus } = useCycle();
   const { units, ready } = useOrganizationUnits();
+  const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const [page, setPage] = useState(1);
 
@@ -109,12 +110,12 @@ export function SatkerProgressPage() {
         <div className={styles.page}>
           <PageHeader title="Progres per Satker" />
           {status === 403 ? (
-            <EmptyState variant="page" icon={Lock} title="Akses ditolak" description={errorMessage(remote.error)} />
+            <EmptyState variant="page" icon={Lock} title="Akses ditolak" description={describeError(remote.error)} />
           ) : (
             <EmptyState
               icon={TriangleAlert}
               title="Progres Satker tidak dapat dimuat"
-              description={errorMessage(remote.error)}
+              description={describeError(remote.error)}
               action={
                 <Button variant="utama" onClick={remote.reload}>
                   Coba lagi
@@ -153,7 +154,7 @@ export function SatkerProgressPage() {
 
       {!!remote.error && (
         <p role="alert" className={styles.stale}>
-          <TriangleAlert size={14} aria-hidden="true" /> Data tidak dapat diperbarui. {errorMessage(remote.error)}{" "}
+          <TriangleAlert size={14} aria-hidden="true" /> Data tidak dapat diperbarui. {describeError(remote.error)}{" "}
           <Button size="sm" onClick={remote.reload}>
             Coba lagi
           </Button>
@@ -207,7 +208,7 @@ export function SatkerProgressPage() {
                 </THead>
                 <TBody>
                   {visible.map((row) => (
-                    <Tr key={row.workUnitId}>
+                    <Tr key={row.workUnitId} onActivate={() => navigate(tracker(row))}>
                       <Td>
                         <TextLink to={tracker(row)}>
                           <span className={styles.name} title={row.workUnitName}>
