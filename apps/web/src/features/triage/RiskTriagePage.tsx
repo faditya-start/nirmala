@@ -56,12 +56,14 @@ export function RiskTriagePage() {
   /** Satu tempat mengubah URL: filter mereset halaman, halaman tidak. */
   const update = useCallback(
     (patch: Partial<TriageUrlState>, options: { replace?: boolean } = {}) => {
-      const next: TriageUrlState = { ...state, ...patch };
+      // Mulai dari URL terbaru (bukan dari render terakhir), jadi dua perubahan beruntun tidak saling menimpa.
+      const current = parseUrlState(new URLSearchParams(window.location.search));
+      const next: TriageUrlState = { ...current, ...patch };
       if (!("page" in patch)) next.page = 1;
-      if ("organizationUnitId" in patch && patch.organizationUnitId !== state.organizationUnitId) next.workUnitId = patch.workUnitId ?? "";
+      if ("organizationUnitId" in patch && patch.organizationUnitId !== current.organizationUnitId) next.workUnitId = patch.workUnitId ?? "";
       setParams(urlStateToParams(next), { replace: options.replace });
     },
-    [state, setParams]
+    [setParams]
   );
 
   // ---- pencarian: teks lokal, URL diperbarui setelah jeda
