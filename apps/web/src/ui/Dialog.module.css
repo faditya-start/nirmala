@@ -18,6 +18,28 @@
   background: var(--overlay);
 }
 
+/* Entrance: a short fade with a 6 px rise, backdrop fades alone. Closing is instant so the page is never blocked. */
+.dialog[open] {
+  animation: dialog-in var(--dur-slow) var(--ease-out);
+}
+
+.dialog[open]::backdrop {
+  animation: fade-in var(--dur-slow) var(--ease-out);
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
 .body {
   display: flex;
   flex-direction: column;

@@ -189,6 +189,12 @@
   --ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--focus);
   --control-h: 34px; /* input, select, textarea single line */
   --control-h-sm: 30px; /* filter controls */
+  /* Motion: state feedback only. Entrances 120-200 ms, exponential ease-out, never on layout properties. */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 100ms; /* hover, press, row and tab color changes */
+  --dur-base: 140ms; /* popover, notice, switch */
+  --dur-slow: 180ms; /* dialog, drawer */
+
   --button-h: 32px;
   --button-h-sm: 28px;
 }

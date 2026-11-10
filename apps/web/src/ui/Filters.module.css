@@ -28,6 +28,11 @@
   font-size: var(--fs-base);
 }
 
+.search,
+.select {
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+
 .search:hover,
 .select:hover {
   border-color: var(--ink);

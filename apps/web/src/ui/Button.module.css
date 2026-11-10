@@ -15,7 +15,7 @@
   line-height: 1;
   white-space: nowrap;
   text-decoration: none;
-  transition: background-color 0.12s ease, border-color 0.12s ease;
+  transition: background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
 }
 
 .sm {
@@ -48,6 +48,12 @@
   border-color: var(--ink-muted);
 }
 
+/* Press: one step darker than hover, no movement. */
+.utama:active:not(:disabled) {
+  background: var(--ink);
+  border-color: var(--ink);
+}
+
 .sekunder {
   background: var(--surface);
   border-color: var(--border-strong);
@@ -58,8 +64,18 @@
   background: var(--surface-sunken);
 }
 
+.sekunder:active:not(:disabled),
+.ghost:active:not(:disabled) {
+  background: var(--border);
+}
+
 .ghost:hover:not(:disabled) {
   background: var(--surface-sunken);
+}
+
+.bahaya:active:not(:disabled) {
+  border-color: var(--st-flag-fg);
+  background: var(--st-flag-line);
 }
 
 .bahaya {
@@ -93,5 +109,19 @@
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+/* Reduced motion: a busy button breathes instead of spinning. */
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    border-right-color: currentColor;
+    animation: pulse 1.4s ease-in-out infinite !important;
+  }
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.35;
   }
 }

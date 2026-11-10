@@ -141,7 +141,14 @@ table {
   top: var(--sp-3);
 }
 
+/* Reduced motion: every transition and entrance becomes instant, so state changes still happen but nothing
+   moves. Busy indicators are the one exception: they breathe (opacity pulse, see Button and Loading) so a
+   running request stays visible without rotation. */
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
   *,
   *::before,
   *::after {

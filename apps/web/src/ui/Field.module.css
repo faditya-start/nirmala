@@ -25,7 +25,7 @@
   color: var(--ink);
   font-family: var(--font-ui);
   font-size: var(--fs-base);
-  transition: border-color 0.12s ease;
+  transition: border-color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
 }
 
 .single {

@@ -9,6 +9,14 @@
   background: var(--surface);
   color: var(--ink);
   font-size: var(--fs-base);
+  animation: notice-in var(--dur-base) var(--ease-out);
+}
+
+@keyframes notice-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
 }
 
 .notice[data-tone="sukses"] {

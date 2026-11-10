@@ -26,3 +26,17 @@
     transform: rotate(360deg);
   }
 }
+
+/* Reduced motion: the spinner breathes instead of rotating. */
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    border-color: var(--ink-muted);
+    animation: pulse 1.4s ease-in-out infinite !important;
+  }
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.35;
+  }
+}

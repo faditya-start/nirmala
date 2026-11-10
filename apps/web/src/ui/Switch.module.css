@@ -21,7 +21,7 @@
   padding: 2px;
   border-radius: var(--r-pill);
   background: var(--border-strong);
-  transition: background-color 0.15s ease;
+  transition: background-color var(--dur-base) var(--ease-out);
 }
 
 .track[data-on] {
@@ -33,7 +33,7 @@
   height: 16px;
   border-radius: var(--r-pill);
   background: var(--surface);
-  transition: transform 0.15s ease;
+  transition: transform var(--dur-base) var(--ease-out), background-color var(--dur-base) var(--ease-out);
 }
 
 .track[data-on] .knob {

@@ -49,12 +49,17 @@
   color: inherit;
 }
 
+.sortButton {
+  transition: color var(--dur-fast) var(--ease-out);
+}
+
 .sortButton:hover {
   color: var(--ink);
 }
 
 .tr {
   background: var(--surface);
+  transition: background-color var(--dur-fast) var(--ease-out);
 }
 
 .tr:hover {

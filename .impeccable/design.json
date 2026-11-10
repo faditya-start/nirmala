@@ -382,19 +382,24 @@
     ],
     "motion": [
       {
-        "name": "state-fast",
-        "value": "120ms ease",
-        "purpose": "Hover background and border colour changes."
+        "name": "dur-fast",
+        "value": "100ms var(--ease-out)",
+        "purpose": "Hover, press, row and tab colour changes."
       },
       {
-        "name": "switch",
-        "value": "150ms ease",
-        "purpose": "Switch track and knob."
+        "name": "dur-base",
+        "value": "140ms var(--ease-out)",
+        "purpose": "Popover and notice entrance, switch."
       },
       {
-        "name": "drawer",
-        "value": "180ms ease",
-        "purpose": "Sidebar drawer below 1024 px."
+        "name": "dur-slow",
+        "value": "180ms var(--ease-out)",
+        "purpose": "Dialog and sidebar drawer."
+      },
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "The only easing. Exponential ease-out, no bounce."
       }
     ],
     "breakpoints": [
@@ -538,6 +543,11 @@
         "name": "The Straight-Line Rule",
         "body": "Hierarchy and state are drawn with thin straight rules and the radius scale above. No side-stripe accents wider than 3 px, no gradients, no glass.",
         "section": "shapes"
+      },
+      {
+        "name": "The Operate-Motion Rule",
+        "body": "Animate colour, opacity and short transforms to explain a change of state. Never animate layout, never loop decoration, never delay a control.",
+        "section": "components"
       }
     ],
     "dos": [

@@ -291,7 +291,9 @@ Square and quiet. Controls, badges and buttons use a 4 px radius (`--r-md`); sma
 
 ## Components
 
-Every component lives in `apps/web/src/ui/` as a CSS module, imported from `ui/index.ts`. Typical interactive feedback is a 120 ms background or border colour change; focus is the global ring.
+Every component lives in `apps/web/src/ui/` as a CSS module, imported from `ui/index.ts`. Motion is state feedback only, on three tokens: `--dur-fast` 100 ms (hover, press, row and tab colour), `--dur-base` 140 ms (popover, notice, switch), `--dur-slow` 180 ms (dialog, drawer), all with `--ease-out` (cubic-bezier(0.22, 1, 0.36, 1)). Dialog and popover enter with a fade and a 4 to 6 px rise; the drawer slides; closing is instant. Press is one tone darker than hover with no movement. Focus appears instantly. Under `prefers-reduced-motion` everything is instant and busy spinners breathe (opacity pulse) instead of rotating.
+
+**The Operate-Motion Rule.** Animate colour, opacity and short transforms to explain a change of state. Never animate layout, never loop decoration, never delay a control.
 
 ### Buttons
 - **Shape:** 4 px radius, 32 px high (28 px small), 13 px / 500, 14 px side padding, 6 px icon gap.
