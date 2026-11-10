@@ -1,4 +1,4 @@
-import { Check, Lock, type LucideIcon } from "lucide-react";
+import { Check, CircleAlert, Lock, type LucideIcon } from "lucide-react";
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { Button, type ButtonVariant } from "./Button";
@@ -19,6 +19,13 @@ export interface DialogProps {
   size?: "md" | "lg";
   /** Close when the backdrop is clicked. Turn off while a request is running. */
   dismissible?: boolean;
+  /**
+   * Error from the last attempt (a failed request, a 4xx message). Shown above the actions with an icon,
+   * announced as an alert, and linked to the dialog with aria-describedby. The dialog stays open.
+   */
+  error?: ReactNode;
+  /** Id of the element in `children` that describes the dialog (linked with aria-describedby). */
+  describedBy?: string;
   className?: string;
 }
 
@@ -26,9 +33,11 @@ export interface DialogProps {
  * Modal dialog on the native <dialog> element: focus is trapped, the page behind is inert,
  * Escape closes, and focus returns to the opener. role="dialog" + aria-modal come with showModal().
  */
-export function Dialog({ open, onClose, title, icon: Icon, children, actions, size = "md", dismissible = true, className }: DialogProps) {
+export function Dialog({ open, onClose, title, icon: Icon, children, actions, size = "md", dismissible = true, error, describedBy, className }: DialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
+  const errorId = useId();
+  const describedByIds = [describedBy, error ? errorId : undefined].filter(Boolean).join(" ") || undefined;
 
   useEffect(() => {
     const dialog = ref.current;
@@ -41,6 +50,7 @@ export function Dialog({ open, onClose, title, icon: Icon, children, actions, si
     <dialog
       ref={ref}
       aria-labelledby={titleId}
+      aria-describedby={describedByIds}
       className={cn(styles.dialog, size === "lg" && styles.lg, className)}
       onCancel={(event) => {
         event.preventDefault();
@@ -62,6 +72,12 @@ export function Dialog({ open, onClose, title, icon: Icon, children, actions, si
               {title}
             </h2>
             {children}
+            {error && (
+              <p id={errorId} role="alert" className={styles.error}>
+                <CircleAlert size={14} aria-hidden="true" className={styles.errorIcon} />
+                <span>{error}</span>
+              </p>
+            )}
           </div>
           {actions && <div className={styles.actions}>{actions}</div>}
         </>
@@ -83,6 +99,8 @@ export interface ConfirmDialogProps {
   cancelLabel?: string;
   /** utama for normal confirms, bahaya for destructive ones. */
   tone?: Extract<ButtonVariant, "utama" | "bahaya">;
+  /** Error from the last attempt, see Dialog. */
+  error?: ReactNode;
   /** Request running: confirm shows a spinner and the dialog cannot be dismissed. */
   busy?: boolean;
   onConfirm: () => void;
@@ -101,9 +119,11 @@ export function ConfirmDialog({
   cancelLabel = "Batal",
   tone = "utama",
   busy,
+  error,
   onConfirm,
   onCancel
 }: ConfirmDialogProps) {
+  const descriptionId = useId();
   return (
     <Dialog
       open={open}
@@ -111,6 +131,8 @@ export function ConfirmDialog({
       title={title}
       icon={icon}
       dismissible={!busy}
+      error={error}
+      describedBy={descriptionId}
       actions={
         <>
           <Button variant="sekunder" onClick={onCancel} disabled={busy}>
@@ -122,7 +144,9 @@ export function ConfirmDialog({
         </>
       }
     >
-      <p className={styles.description}>{description}</p>
+      <p id={descriptionId} className={styles.description}>
+        {description}
+      </p>
       {summary && <div className={cn(styles.summary, "mono")}>{summary}</div>}
     </Dialog>
   );

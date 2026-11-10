@@ -10,12 +10,13 @@
   background: var(--surface);
 }
 
-/* 1120 px content at 1440 px viewport = 160 px gutters, as designed. Gutter shrinks to 16 px at 390 px. */
+/* Content column is 1120 px wide: at 1440 px that is 160 px gutters, as designed (aszmF, rekTU).
+   The 16 px padding is the minimum gutter at narrow widths (390 px frame) and sits outside the 1120 px. */
 .headerInner,
 .container,
 .footerInner {
   width: 100%;
-  max-width: 1120px;
+  max-width: calc(1120px + 2 * var(--sp-4));
   margin: 0 auto;
 }
 

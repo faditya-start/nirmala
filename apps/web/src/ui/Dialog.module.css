@@ -65,3 +65,23 @@
   padding: 14px var(--sp-5);
   border-top: 1px solid var(--border);
 }
+
+.error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  width: 100%;
+  padding: 10px var(--sp-3);
+  border: 1px solid var(--st-warn-line);
+  border-radius: var(--r-md);
+  background: var(--st-warn-bg);
+  color: var(--st-warn-fg);
+  font-size: var(--fs-base);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.errorIcon {
+  flex: none;
+  margin-top: 3px;
+}

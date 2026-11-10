@@ -85,7 +85,6 @@ export function Tr({ selected, onActivate, className, onKeyDown, ...rest }: TrPr
   return (
     <tr
       {...rest}
-      aria-selected={selected === undefined ? undefined : selected}
       tabIndex={onActivate ? 0 : rest.tabIndex}
       onClick={onActivate ? (event) => !(event.target as HTMLElement).closest("a,button,input,select,textarea,label") && onActivate() : undefined}
       onKeyDown={handleKeyDown}
@@ -117,7 +116,7 @@ export function Td({ align, numeric, width, className, style, ...rest }: TdProps
 
 /** Check mark for the first cell of a selected row (selection is never color alone). */
 export function SelectedMark({ selected }: { selected: boolean }) {
-  return selected ? <Check size={14} aria-label="Dipilih" className={styles.mark} /> : <span className={styles.markSpace} aria-hidden="true" />;
+  return selected ? <Check size={14} role="img" aria-label="Dipilih" className={styles.mark} /> : <span className={styles.markSpace} aria-hidden="true" />;
 }
 
 export interface CellTitleProps {

@@ -19,12 +19,15 @@ import {
   FilterSearch,
   FilterSelect,
   FilterSpacer,
+  FieldError,
   FilterSummary,
   IconButton,
   Input,
   KpiCard,
   Loading,
+  Notice,
   PageHeader,
+  Pager,
   Pagination,
   RuleCard,
   RuleChip,
@@ -123,7 +126,7 @@ export function ComponentCatalogue() {
   const [tab, setTab] = useState("verif");
   const [switchOn, setSwitchOn] = useState(true);
   const [checked, setChecked] = useState(true);
-  const [dialog, setDialog] = useState<null | "confirm" | "danger" | "form">(null);
+  const [dialog, setDialog] = useState<null | "confirm" | "danger" | "form" | "error">(null);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [eselon, setEselon] = useState("a");
@@ -464,6 +467,126 @@ export function ComponentCatalogue() {
         </div>
       </Block>
 
+      <Block id="tambahan" title="Tambahan · pesan, halaman, galat, status">
+        <div className={styles.grid2}>
+          <Spec name="Notice · sukses / galat / info">
+            <div className={styles.stack}>
+              <Notice tone="sukses">Catatan disimpan.</Notice>
+              <Notice tone="galat" action={<Button size="sm">Coba lagi</Button>}>
+                Daftar belum dapat dimuat. Server sedang bermasalah.
+              </Notice>
+              <Notice tone="info" onDismiss={() => undefined}>
+                Perubahan setelah terbit hanya lewat adendum.
+              </Notice>
+            </div>
+          </Spec>
+          <Spec name="Pager (oHui1)">
+            <div className={styles.fullWidth}>
+              <TableFrame>
+                <Pager page={page} pageSize={11} total={12702} onPageChange={setPage} />
+              </TableFrame>
+            </div>
+          </Spec>
+          <Spec name="PageHeader status">
+            <PageHeader title="CHR 014/CHR/2026" status={<StatusBadge status="draf" />} subtitle="Ditjen Contoh A · TA 2026 · tahap alokasi" />
+          </Spec>
+          <Spec name="Galat pasangan field (FieldError)">
+            <div className={styles.fullWidth}>
+              <div className={styles.inline}>
+                <Input label="Tanggal mulai" type="date" invalid describedBy="demo-pair-error" />
+                <Input label="Tanggal selesai" type="date" invalid describedBy="demo-pair-error" />
+              </div>
+              <div className={styles.gapTop}>
+                <FieldError id="demo-pair-error">Tanggal selesai harus setelah tanggal mulai.</FieldError>
+              </div>
+            </div>
+          </Spec>
+          <Spec name="EvidenceRow · slot tag">
+            <div className={styles.w480}>
+              <EvidenceRow field="Akun" state="berubah" before="522191" after="521111" tag={<StatusBadge status="closed">Sesuai</StatusBadge>} />
+            </div>
+          </Spec>
+          <Spec name="Dialog · galat">
+            <Button onClick={() => setDialog("error")}>Buka dialog dengan galat</Button>
+          </Spec>
+        </div>
+      </Block>
+
+      <Block id="ekstrem" title="Nilai ekstrem · label panjang, nilai kosong">
+        <div className={styles.grid2}>
+          <Spec name="Table · uraian panjang (title) dan nilai kosong">
+            <div className={styles.fullWidth}>
+              <TableFrame>
+                <Table aria-label="Uji uraian panjang">
+                  <THead>
+                    <tr>
+                      <Th>Uraian (Satker · akun)</Th>
+                      <Th align="right">Total (Rp)</Th>
+                    </tr>
+                  </THead>
+                  <tbody>
+                    <Tr>
+                      <Td>
+                        <CellTitle
+                          title="Belanja jasa konsultan perencanaan, pengawasan, dan manajemen konstruksi pembangunan gedung kantor beserta sarana penunjang dan pengadaan peralatan"
+                          meta={["Satker Contoh dengan Nama Sangat Panjang Untuk Menguji Pemotongan Teks Pada Sel Tabel", <span className="mono" key="a">521211</span>]}
+                        />
+                      </Td>
+                      <Td numeric>{formatNumber(1_250_000_000_000)}</Td>
+                    </Tr>
+                    <Tr>
+                      <Td>
+                        <CellTitle title="Item tanpa nilai" meta={["Satker Contoh 01"]} />
+                      </Td>
+                      <Td numeric>{formatNumber(null)}</Td>
+                    </Tr>
+                  </tbody>
+                </Table>
+              </TableFrame>
+            </div>
+          </Spec>
+          <Spec name="Badge · label panjang dalam kolom sempit">
+            <div className={styles.w280}>
+              <StatusBadge status="menunggu_revisi">Menunggu revisi dari Satker Contoh dengan nama yang sangat panjang sekali</StatusBadge>
+            </div>
+          </Spec>
+          <Spec name="Tabs · banyak tab, layar sempit">
+            <div className={styles.w280}>
+              <Tabs
+                label="Uji tab sempit"
+                idPrefix="ekstrem-tab"
+                value="a"
+                onChange={() => undefined}
+                tabs={[
+                  { value: "a", label: "Menunggu Revisi", count: 12 },
+                  { value: "b", label: "Perlu Verifikasi", count: 1204 },
+                  { value: "c", label: "Dijustifikasi", count: 0 },
+                  { value: "d", label: "Closed", count: 41 }
+                ]}
+              />
+            </div>
+          </Spec>
+          <Spec name="Filter · nilai pilihan panjang">
+            <FilterBar className={styles.w420}>
+              <FilterSelect
+                label="Satker"
+                value="x"
+                onChange={() => undefined}
+                options={[{ value: "x", label: "Satker Contoh Pelaksana Pekerjaan Konstruksi Wilayah Timur Kepulauan" }]}
+              />
+            </FilterBar>
+          </Spec>
+        </div>
+      </Block>
+
+      <ConfirmDialog
+        open={dialog === "error"}
+        title="Terbitkan CHR dan kunci dokumen?"
+        description="Dokumen akan dikunci dan nomor CHR dibuat."
+        error="CHR sudah diterbitkan oleh pengguna lain. Muat ulang halaman untuk melihat versi terbaru."
+        onConfirm={() => setDialog(null)}
+        onCancel={() => setDialog(null)}
+      />
       <ConfirmDialog
         open={dialog === "confirm"}
         title="Terbitkan CHR dan kunci dokumen?"

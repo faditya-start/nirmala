@@ -50,7 +50,8 @@
   outline-offset: 2px;
 }
 
-.box[aria-invalid="true"] {
+.box[aria-invalid="true"],
+.box[aria-invalid="true"]:hover:not(:disabled) {
   border-color: var(--st-flag-fg);
 }
 

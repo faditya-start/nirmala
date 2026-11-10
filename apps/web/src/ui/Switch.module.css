@@ -17,7 +17,7 @@
   width: 36px;
   height: 20px;
   padding: 2px;
-  border-radius: 10px;
+  border-radius: var(--r-pill);
   background: var(--border-strong);
   transition: background-color 0.15s ease;
 }
@@ -29,7 +29,7 @@
 .knob {
   width: 16px;
   height: 16px;
-  border-radius: 8px;
+  border-radius: var(--r-pill);
   background: var(--surface);
   transition: transform 0.15s ease;
 }

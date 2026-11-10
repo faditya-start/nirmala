@@ -20,11 +20,13 @@ export interface EvidenceRowProps {
   value?: ReactNode;
   /** Hide the trailing tag. */
   hideTag?: boolean;
+  /** Replaces the default tag (Berubah / Tetap / Tidak berubah) with your own badge, e.g. a StatusBadge. */
+  tag?: ReactNode;
   className?: string;
 }
 
 /** Bukti/Baris: one field of the before -> after proof. The changed field is highlighted and tagged in text. */
-export function EvidenceRow({ field, state, before, after, value, hideTag, className }: EvidenceRowProps) {
+export function EvidenceRow({ field, state, before, after, value, hideTag, tag, className }: EvidenceRowProps) {
   return (
     <div className={cn(styles.row, state === "berubah" && styles.changed, className)} role="group" aria-label={field}>
       <span className={styles.field}>{field}</span>
@@ -39,9 +41,10 @@ export function EvidenceRow({ field, state, before, after, value, hideTag, class
       )}
       {!hideTag && (
         <span className={styles.tag}>
-          {state === "berubah" && <TagChip>Berubah</TagChip>}
-          {state === "tetap" && <TagChip>Tetap</TagChip>}
-          {state === "tidak_berubah" && (
+          {tag !== undefined && tag}
+          {tag === undefined && state === "berubah" && <TagChip>Berubah</TagChip>}
+          {tag === undefined && state === "tetap" && <TagChip>Tetap</TagChip>}
+          {tag === undefined && state === "tidak_berubah" && (
             <span className={styles.notChanged}>
               <CircleX size={13} aria-hidden="true" />
               Tidak berubah

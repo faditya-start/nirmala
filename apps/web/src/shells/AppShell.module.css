@@ -375,12 +375,16 @@
     position: fixed;
     left: 0;
     transform: translateX(-100%);
-    transition: transform 0.18s ease;
+    /* Closed drawer is also removed from the tab order and the accessibility tree once it has slid out. */
+    visibility: hidden;
+    transition: transform 0.18s ease, visibility 0s linear 0.18s;
     box-shadow: var(--shadow-md);
   }
 
   .sidebarOpen {
     transform: translateX(0);
+    visibility: visible;
+    transition: transform 0.18s ease, visibility 0s;
   }
 
   .menuButton {

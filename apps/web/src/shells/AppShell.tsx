@@ -58,7 +58,7 @@ function Sidebar({ user, open, onNavigate, onLogout }: { user: AuthUser; open: b
   const unit = user.unitLabel ? ` · ${user.unitLabel}` : "";
 
   return (
-    <aside id="app-sidebar" className={cn(styles.sidebar, open && styles.sidebarOpen)} aria-label="Sidebar">
+    <aside id="app-sidebar" className={cn(styles.sidebar, open && styles.sidebarOpen)} aria-label="Bilah samping">
       <Link to="/dashboard" className={styles.brand} onClick={onNavigate}>
         <Monogram />
         <span className={styles.brandText}>
@@ -143,7 +143,14 @@ function NeedsActionMenu() {
   }, [open]);
 
   return (
-    <div className={styles.needs} ref={rootRef}>
+    <div
+      className={styles.needs}
+      ref={rootRef}
+      onBlur={(event) => {
+        // Keyboard: Tab out of the popover closes it. Mouse: handled by the pointer listener.
+        if (open && event.relatedTarget instanceof Node && !event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+      }}
+    >
       <button
         type="button"
         className={styles.needsButton}
@@ -208,13 +215,19 @@ export function AppShell({ user, title, children }: AppShellProps) {
   const location = useLocation();
   const override = useBreadcrumbOverride();
   const [drawer, setDrawer] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => setDrawer(false), [location.pathname]);
 
+  // Drawer (below 1024 px): move focus in when it opens, close on Escape and hand focus back to the menu button.
   useEffect(() => {
     if (!drawer) return;
+    document.querySelector<HTMLElement>("#app-sidebar a[href], #app-sidebar select, #app-sidebar button")?.focus();
     function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") setDrawer(false);
+      if (event.key === "Escape") {
+        setDrawer(false);
+        menuButtonRef.current?.focus();
+      }
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
@@ -243,10 +256,12 @@ export function AppShell({ user, title, children }: AppShellProps) {
       </a>
       <Sidebar user={user} open={drawer} onNavigate={() => setDrawer(false)} onLogout={onLogout} />
       {drawer && <div className={styles.scrim} onClick={() => setDrawer(false)} aria-hidden="true" />}
-      <div className={styles.main}>
+      {/* While the drawer is open the page behind it is inert, so Tab stays in the drawer. */}
+      <div className={styles.main} inert={drawer || undefined}>
         <header className={styles.header}>
           <div className={styles.headerStart}>
             <IconButton
+              ref={menuButtonRef}
               icon={Menu}
               label="Buka navigasi"
               className={styles.menuButton}

@@ -12,6 +12,13 @@ interface FieldChrome {
   error?: ReactNode;
   /** Keeps the label for screen readers only. */
   hideLabel?: boolean;
+  /**
+   * Marks the box red and aria-invalid without rendering a message here. Use it for two fields that share one
+   * error line (render <FieldError id="..."> under the pair and pass the same id as `describedBy` to both).
+   */
+  invalid?: boolean;
+  /** Id of an external element (e.g. a shared <FieldError>) that describes this field; added to aria-describedby. */
+  describedBy?: string;
   /** Adds "(wajib)" to the label and sets aria-required. */
   required?: boolean;
   /** Class for the outer wrapper (set width here). */
@@ -21,6 +28,23 @@ interface FieldChrome {
 interface ShellProps extends FieldChrome {
   id: string;
   children: ReactNode;
+}
+
+export interface FieldErrorProps {
+  /** Give it the same id you pass as `describedBy` to the field(s) it belongs to. */
+  id?: string;
+  children: ReactNode;
+  className?: string;
+}
+
+/** Error line with the field-error icon, for a message shared by several fields ("Tanggal selesai harus setelah tanggal mulai."). */
+export function FieldError({ id, children, className }: FieldErrorProps) {
+  return (
+    <p id={id} role="alert" className={cn(styles.help, styles.error, className)}>
+      <CircleAlert size={12} aria-hidden="true" />
+      <span>{children}</span>
+    </p>
+  );
 }
 
 function FieldShell({ id, label, hint, error, hideLabel, required, className, children }: ShellProps) {
@@ -45,16 +69,16 @@ function FieldShell({ id, label, hint, error, hideLabel, required, className, ch
   );
 }
 
-function describedBy(id: string, hint: ReactNode, error: ReactNode): string | undefined {
-  if (error) return `${id}-error`;
-  if (hint) return `${id}-hint`;
-  return undefined;
+/** aria-describedby: the error (or the hint when there is no error) plus any external id. */
+function describedBy(id: string, hint: ReactNode, error: ReactNode, external?: string): string | undefined {
+  const own = error ? `${id}-error` : hint ? `${id}-hint` : undefined;
+  return [own, external].filter(Boolean).join(" ") || undefined;
 }
 
 export type InputProps = FieldChrome & Omit<ComponentPropsWithRef<"input">, "className" | "id"> & { id?: string; inputClassName?: string };
 
 /** Field/Input. Label above, 34 px box, hint or error below. */
-export function Input({ label, hint, error, hideLabel, required, className, inputClassName, id, ...rest }: InputProps) {
+export function Input({ label, hint, error, invalid, describedBy: describedByExternal, hideLabel, required, className, inputClassName, id, ...rest }: InputProps) {
   const auto = useId();
   const inputId = id ?? auto;
   return (
@@ -63,8 +87,8 @@ export function Input({ label, hint, error, hideLabel, required, className, inpu
         {...rest}
         id={inputId}
         required={required}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={describedBy(inputId, hint, error)}
+        aria-invalid={error || invalid ? true : undefined}
+        aria-describedby={describedBy(inputId, hint, error, describedByExternal)}
         className={cn(styles.box, styles.single, inputClassName)}
       />
     </FieldShell>
@@ -87,7 +111,7 @@ export type SelectProps = FieldChrome &
   };
 
 /** Field/Select. Native <select> so the keyboard and screen readers just work. */
-export function Select({ label, hint, error, hideLabel, required, className, id, placeholder, options, children, ...rest }: SelectProps) {
+export function Select({ label, hint, error, invalid, describedBy: describedByExternal, hideLabel, required, className, id, placeholder, options, children, ...rest }: SelectProps) {
   const auto = useId();
   const selectId = id ?? auto;
   return (
@@ -97,8 +121,8 @@ export function Select({ label, hint, error, hideLabel, required, className, id,
           {...rest}
           id={selectId}
           required={required}
-          aria-invalid={error ? true : undefined}
-          aria-describedby={describedBy(selectId, hint, error)}
+          aria-invalid={error || invalid ? true : undefined}
+          aria-describedby={describedBy(selectId, hint, error, describedByExternal)}
           className={cn(styles.box, styles.single, styles.select)}
         >
           {placeholder !== undefined && (
@@ -122,7 +146,7 @@ export function Select({ label, hint, error, hideLabel, required, className, id,
 export type TextareaProps = FieldChrome & Omit<ComponentPropsWithRef<"textarea">, "className" | "id"> & { id?: string };
 
 /** Field/Textarea. 88 px minimum height, vertical resize. */
-export function Textarea({ label, hint, error, hideLabel, required, className, id, ...rest }: TextareaProps) {
+export function Textarea({ label, hint, error, invalid, describedBy: describedByExternal, hideLabel, required, className, id, ...rest }: TextareaProps) {
   const auto = useId();
   const textareaId = id ?? auto;
   return (
@@ -131,8 +155,8 @@ export function Textarea({ label, hint, error, hideLabel, required, className, i
         {...rest}
         id={textareaId}
         required={required}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={describedBy(textareaId, hint, error)}
+        aria-invalid={error || invalid ? true : undefined}
+        aria-describedby={describedBy(textareaId, hint, error, describedByExternal)}
         className={cn(styles.box, styles.multi)}
       />
     </FieldShell>
