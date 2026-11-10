@@ -30,3 +30,20 @@
   font-size: var(--fs-xs);
   color: var(--ink-muted);
 }
+
+.discard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--st-menunggu-line);
+  border-radius: var(--r-md);
+  background: var(--st-menunggu-bg);
+  color: var(--st-menunggu-fg);
+  font-size: var(--fs-base);
+}
+
+.discardActions {
+  display: flex;
+  gap: var(--sp-2);
+}

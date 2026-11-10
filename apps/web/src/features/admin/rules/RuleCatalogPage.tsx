@@ -121,7 +121,7 @@ export function RuleCatalogPage() {
                           <Switch
                             checked={rule.active}
                             disabled={toggling !== null}
-                            aria-label={`Aturan ${rule.code}`}
+                            aria-label={`${rule.active ? "Aktif" : "Nonaktif"}, aturan ${rule.code}`}
                             label={rule.active ? "Aktif" : "Nonaktif"}
                             onCheckedChange={(checked) => void toggle(rule, checked)}
                           />

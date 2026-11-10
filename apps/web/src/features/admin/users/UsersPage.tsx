@@ -1,12 +1,12 @@
 import type { OrganizationUnitDto, UserAdminDto, UserListResponse, UserResponse } from "@nirmala/shared";
-import { SquarePen, UserPlus, Users } from "lucide-react";
+import { SquarePen, UserPlus, Users, UserX } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../../../app/auth";
 import { cn } from "../../../lib/cn";
 import density from "../components/density.module.css";
 import { api, errorMessage } from "../../../lib/api";
 import { formatNumber } from "../../../lib/format";
-import { Button, EmptyState, IconButton, Loading, PageHeader, Switch, Table, TableFrame, TagChip, TBody, Td, Th, THead, Tr } from "../../../ui";
+import { Button, ConfirmDialog, EmptyState, IconButton, Loading, PageHeader, Switch, Table, TableFrame, TagChip, TBody, Td, Th, THead, Tr } from "../../../ui";
 import { Alert } from "../components/Alert";
 import { InfoNote } from "../components/InfoNote";
 import { useResource } from "../useResource";
@@ -24,6 +24,7 @@ export function UsersPage() {
   const [overrides, setOverrides] = useState<Record<string, UserAdminDto>>({});
   const [toggling, setToggling] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [deactivating, setDeactivating] = useState<UserAdminDto | null>(null);
   const [dialog, setDialog] = useState<{ user: UserAdminDto | null; open: boolean; nonce: number } | null>(null);
 
   const users = (resource.data?.users ?? []).map((user) => overrides[user.id] ?? user);
@@ -103,9 +104,9 @@ export function UsersPage() {
                         <Switch
                           checked={user.active}
                           disabled={toggling !== null}
-                          aria-label={`Akun ${user.username}`}
+                          aria-label={`${user.active ? "Aktif" : "Nonaktif"}, akun ${user.username}`}
                           label={user.active ? "Aktif" : "Nonaktif"}
-                          onCheckedChange={(checked) => void toggleActive(user, checked)}
+                          onCheckedChange={(checked) => (checked ? void toggleActive(user, true) : setDeactivating(user))}
                         />
                       </Td>
                       <Td align="right">
@@ -120,6 +121,23 @@ export function UsersPage() {
           <InfoNote>Reviewer dan PIC UKI hanya melihat eselon I yang diberikan di sini. Pimpinan dan Admin melihat semua eselon I.</InfoNote>
         </>
       )}
+
+      <ConfirmDialog
+        open={deactivating !== null}
+        icon={UserX}
+        confirmIcon={UserX}
+        tone="bahaya"
+        title={`Nonaktifkan ${deactivating?.username ?? ""}?`}
+        description="Pengguna tidak bisa masuk dan semua sesinya yang sedang berjalan diakhiri. Data dan riwayat tindakannya tetap tersimpan. Akun bisa diaktifkan lagi kapan saja."
+        confirmLabel="Nonaktifkan"
+        busy={toggling !== null}
+        onCancel={() => setDeactivating(null)}
+        onConfirm={() => {
+          const target = deactivating;
+          if (!target) return;
+          void toggleActive(target, false).then(() => setDeactivating(null));
+        }}
+      />
 
       {dialog && unitsResource.data && (
         <UserDialog

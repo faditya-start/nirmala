@@ -2,7 +2,7 @@ import { NOTE_CATEGORIES, type RuleAdminDto, type RuleResponse } from "@nirmala/
 import { CircleAlert } from "lucide-react";
 import { useState } from "react";
 import { api, errorMessage } from "../../../lib/api";
-import { Input, Select, Switch, Textarea } from "../../../ui";
+import { Button, Input, Select, Switch, Textarea } from "../../../ui";
 import { SidePanel } from "../components/SidePanel";
 import { CATEGORY_LABEL } from "../labels";
 import {
@@ -35,12 +35,19 @@ export function RuleEditPanel({ rule, open, onClose, onSaved }: RuleEditPanelPro
   const [attempted, setAttempted] = useState(false);
   const [busy, setBusy] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
 
   const errors: RuleFormErrors = attempted ? validateForm(rule.kind, form) : {};
   const dirty = buildBody(rule, form) !== null;
 
   const optional = visibleOptionals(rule);
   const set = <K extends keyof RuleForm>(key: K, value: RuleForm[K]) => setForm((current) => ({ ...current, [key]: value }));
+
+  /** Esc, scrim, X and Batal: unsaved edits ask first. */
+  function requestClose() {
+    if (dirty && !busy) setConfirmDiscard(true);
+    else onClose();
+  }
 
   async function submit() {
     setAttempted(true);
@@ -74,7 +81,7 @@ export function RuleEditPanel({ rule, open, onClose, onSaved }: RuleEditPanelPro
   return (
     <SidePanel
       open={open}
-      onClose={onClose}
+      onClose={requestClose}
       title={`Edit aturan ${rule.code}`}
       subtitle={`Jenis ${rule.kind}`}
       submitLabel="Simpan perubahan"
@@ -82,6 +89,19 @@ export function RuleEditPanel({ rule, open, onClose, onSaved }: RuleEditPanelPro
       dirty={dirty}
       onSubmit={() => void submit()}
     >
+      {confirmDiscard && (
+        <div role="alertdialog" aria-label="Buang perubahan" className={styles.discard}>
+          <p>Perubahan belum disimpan. Buang perubahan dan tutup panel?</p>
+          <div className={styles.discardActions}>
+            <Button variant="bahaya" size="sm" onClick={onClose}>
+              Buang perubahan
+            </Button>
+            <Button size="sm" autoFocus onClick={() => setConfirmDiscard(false)}>
+              Lanjut mengedit
+            </Button>
+          </div>
+        </div>
+      )}
       {serverError && (
         <p role="alert" className={styles.alert}>
           <CircleAlert size={14} aria-hidden="true" />

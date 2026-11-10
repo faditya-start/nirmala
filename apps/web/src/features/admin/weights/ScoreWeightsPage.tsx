@@ -158,7 +158,7 @@ export function ScoreWeightsPage() {
           <span>{saved}</span>
         </p>
       )}
-      <RecalcStatus state={recalc} cycleName={cycle ? `${cycle.fiscalYear} ${cycle.stage}` : ""} onDismiss={() => setRecalc({ phase: "idle" })} />
+      <RecalcStatus state={recalc} cycleName={cycle ? `${cycle.fiscalYear} ${cycle.stage}` : ""} version={config?.active.version ?? ""} onDismiss={() => setRecalc({ phase: "idle" })} />
 
       <div className={styles.columns}>
         <section className={styles.left} aria-label="Bobot faktor">
@@ -326,7 +326,7 @@ function TotalBar({ state, dirty }: { state: ReturnType<typeof totalState>; dirt
 
 const STEP_LABEL: Record<string, string> = { aturan: "Aturan", skor: "Skor" };
 
-function RecalcStatus({ state, cycleName, onDismiss }: { state: Recalc; cycleName: string; onDismiss: () => void }) {
+function RecalcStatus({ state, cycleName, version, onDismiss }: { state: Recalc; cycleName: string; version: string; onDismiss: () => void }) {
   if (state.phase === "idle") return null;
   if (state.phase === "failed") return <Alert onDismiss={onDismiss}>{state.message}</Alert>;
   if (state.phase === "done") {
@@ -348,7 +348,7 @@ function RecalcStatus({ state, cycleName, onDismiss }: { state: Recalc; cycleNam
   return (
     <div className={styles.progress} role="status" aria-live="polite">
       <div className={styles.progressHead}>
-        <strong>Menghitung ulang siklus {cycleName}</strong>
+        <strong>Menghitung ulang siklus {cycleName} dengan bobot versi {version}</strong>
         <span className="num">{percent}%</span>
       </div>
       <ProgressBar value={percent / 100} label="Progres hitung ulang" valueText={`${percent}%`} />
