@@ -136,7 +136,11 @@ export function TransparencyPage() {
             <p className={styles.issued}>DIPA terbit {formatDate(chosen.dipaIssuedAt)}</p>
           </div>
 
-          {detail.status === "loading" && <Loading label="Memuat ringkasan…" block />}
+          {detail.status === "loading" && (
+            <div className={styles.loadingBox}>
+              <Loading label="Memuat ringkasan…" block />
+            </div>
+          )}
           {detail.status === "error" && (
             <FailureState
               failure={detail.failure}
@@ -175,8 +179,9 @@ function FailureState({ failure, action }: { failure: LoadFailure; action: React
 
 function Summary({ data }: { data: PublicTransparencyResponse }) {
   const kpi = useMemo(() => kpiView(data.kpis), [data.kpis]);
-  const rows = data.rows.map((row) => ({ key: `${row.kind}:${row.label}`, label: rowLabel(row), byCategory: row.byCategory, total: row.total }));
-  const totals = { key: "total", label: "Total", byCategory: data.totals.byCategory, total: data.totals.total };
+  // Tolerate a thin payload (missing rows or totals) instead of crashing the public page.
+  const rows = (data.rows ?? []).map((row, index) => ({ key: `${index}:${row.kind}:${row.label}`, label: rowLabel(row), byCategory: row.byCategory, total: row.total }));
+  const totals = { key: "total", label: "Total", byCategory: data.totals?.byCategory, total: data.totals?.total ?? 0 };
   const tableLabel = "Jumlah catatan per eselon I dan kategori";
 
   return (

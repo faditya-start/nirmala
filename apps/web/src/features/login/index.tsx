@@ -125,6 +125,7 @@ export function LoginPage() {
             autoCapitalize="none"
             autoCorrect="off"
             spellCheck={false}
+            maxLength={128}
             readOnly={busy}
             error={usernameError ?? undefined}
           />
@@ -138,6 +139,7 @@ export function LoginPage() {
             onChange={(event) => setPassword(event.target.value)}
             placeholder="Masukkan kata sandi"
             autoComplete="current-password"
+            maxLength={256}
             readOnly={busy}
             error={passwordError ?? undefined}
           />

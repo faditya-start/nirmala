@@ -23,4 +23,5 @@ test("loginFailureMessage maps statuses", () => {
   assert.equal(loginFailureMessage({ status: 503, message: "x" }), LOGIN_SERVER_MESSAGE);
   assert.equal(loginFailureMessage({ status: 400, message: "Username wajib diisi." }), "Username wajib diisi.");
   assert.equal(loginFailureMessage(new TypeError("Failed to fetch")), LOGIN_UNREACHABLE_MESSAGE);
+  assert.equal(loginFailureMessage({ status: 0, message: "Tidak dapat terhubung ke server." }), LOGIN_UNREACHABLE_MESSAGE);
 });

@@ -27,6 +27,6 @@ export function loginFailureMessage(error: unknown): string {
   if (status === 429) return LOGIN_THROTTLED_MESSAGE;
   if (status !== undefined && status >= 500) return LOGIN_SERVER_MESSAGE;
   if (status !== undefined && status >= 400 && message) return message;
-  if (status === undefined && error instanceof TypeError) return LOGIN_UNREACHABLE_MESSAGE;
+  if (status === 0 || (status === undefined && error instanceof TypeError)) return LOGIN_UNREACHABLE_MESSAGE;
   return LOGIN_UNKNOWN_MESSAGE;
 }

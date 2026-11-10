@@ -29,12 +29,14 @@
 /* Cycle picker */
 .cyclePicker {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--sp-3);
 }
 
 .picker {
   position: relative;
+  max-width: 100%;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -178,6 +180,8 @@
 }
 
 .rowName {
+  min-width: 160px;
+  overflow-wrap: anywhere;
   text-align: left;
   font-weight: 500;
   color: var(--ink);
@@ -238,6 +242,8 @@
 }
 
 .cardName {
+  min-width: 0;
+  overflow-wrap: anywhere;
   font-size: var(--fs-base);
   font-weight: 600;
   color: var(--ink);
@@ -392,4 +398,9 @@
   .disclaimer svg {
     margin-top: 1px;
   }
+}
+
+/* Keeps the page from collapsing and jumping while a cycle loads. */
+.loadingBox {
+  min-height: 360px;
 }

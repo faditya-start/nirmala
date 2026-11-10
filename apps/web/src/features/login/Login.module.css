@@ -113,7 +113,8 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 2px;
+  min-height: 32px;
+  padding: 4px;
   border-radius: var(--r-sm);
   color: var(--ink-muted);
   font-size: var(--fs-md);
