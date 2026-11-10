@@ -5,6 +5,18 @@
   background: var(--bg);
 }
 
+/* Side gutter: 16 px on phones (390 frame), 32 px from tablet up. The 1120 px column plus 2 gutters is the max
+   width, so at 1440 px the content edge is 160 px from the viewport edge, as designed. */
+.shell {
+  --gutter: var(--sp-4);
+}
+
+@media (min-width: 640px) {
+  .shell {
+    --gutter: var(--sp-6);
+  }
+}
+
 .header {
   border-bottom: 1px solid var(--border);
   background: var(--surface);
@@ -16,7 +28,7 @@
 .container,
 .footerInner {
   width: 100%;
-  max-width: calc(1120px + 2 * var(--sp-4));
+  max-width: calc(1120px + 2 * var(--gutter));
   margin: 0 auto;
 }
 
@@ -26,7 +38,7 @@
   justify-content: space-between;
   gap: var(--sp-5);
   min-height: 63px;
-  padding: 0 var(--sp-4);
+  padding: 0 var(--gutter);
 }
 
 .brand {
@@ -80,7 +92,7 @@
   display: flex;
   flex-direction: column;
   gap: 64px;
-  padding: 72px var(--sp-4) 56px;
+  padding: 72px var(--gutter) 56px;
 }
 
 .footer {
@@ -91,7 +103,7 @@
   display: flex;
   justify-content: space-between;
   gap: var(--sp-4);
-  padding: var(--sp-5) var(--sp-4);
+  padding: var(--sp-5) var(--gutter);
   font-size: var(--fs-xs);
   color: var(--ink-muted);
 }
@@ -114,6 +126,6 @@
   .footerInner {
     flex-direction: column;
     gap: 6px;
-    padding: 20px var(--sp-4);
+    padding: 20px var(--gutter);
   }
 }

@@ -242,7 +242,13 @@ export function AppShell({ user, title, children }: AppShellProps) {
       }
     }
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
+    // The page behind the drawer must not scroll while it is open.
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = previousOverflow;
+    };
   }, [drawer]);
 
   // Runs after the page behind the drawer is no longer inert, otherwise the focus call is ignored.

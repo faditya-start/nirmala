@@ -381,6 +381,17 @@
   background: var(--overlay);
 }
 
+/* Narrow desktop windows (1024 to 1279 px): give tables back 16 px of width. */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .content {
+    padding: var(--sp-5);
+  }
+
+  .header {
+    padding: 0 var(--sp-5);
+  }
+}
+
 /* ---- Tablet and below: the sidebar becomes a drawer ---- */
 @media (max-width: 1023px) {
   .sidebar {
