@@ -220,7 +220,7 @@ export function toCsv(orgCode: string, items: DetailItem[]) {
           row({
             ID: id++, ...common(item), KODE_AKUN: item.account, HEADER1: 0, HEADER2: 0, KODE_ITEM: String(nomor).padStart(3, "0"), NOMOR_ITEM: nomor, CONS_ITEM: item.cons,
             URAIAN_ITEM: item.description, SUMBER_DANA: "A", VOL_KEG_1: item.quantity, SAT_KEG_1: item.unit, VOLKEG: item.quantity, SATKEG: item.unit,
-            HARGASAT: item.price, TOTAL: Math.round(item.quantity * item.price), KODE_BLOKIR: item.blokir?.code ?? "", NILAI_BLOKIR: item.blokir?.amount ?? 0, KODE_STS_HISTORY: "B00"
+            HARGASAT: item.price, TOTAL: item.quantity === 0 ? item.price : Math.round(item.quantity * item.price) /* volume 0 tetapi ada nilai: kasus R07 */, KODE_BLOKIR: item.blokir?.code ?? "", NILAI_BLOKIR: item.blokir?.amount ?? 0, KODE_STS_HISTORY: "B00"
           });
         }
       }

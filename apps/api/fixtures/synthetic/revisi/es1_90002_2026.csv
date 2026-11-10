@@ -114,7 +114,7 @@ ID,TAHUN,BAES1,KDSATKER,KODE_PROGRAM,KODE_KEGIATAN,KODE_OUTPUT,KDIB,VOLUME_OUTPU
 113,2026,90002,900204,WA,4893,ABC,,,001,,051,C,Pelaksanaan kegiatan,,,,,,1,0,,,,PELAKSANAAN KEGIATAN,,,,,,,,,,0,,0,0,,,,,,,,,,,,,,,
 114,2026,90002,900204,WA,4893,ABC,,,001,,051,C,Pelaksanaan kegiatan,521211,,,,,0,1,,,,Akun 521211,,,,,,,,,,0,,0,0,,,,,,,,,,,,,,,
 115,2026,90002,900204,WA,4893,ABC,,,001,,051,C,Pelaksanaan kegiatan,521211,,,,,0,0,001,1,2040012,Belanja bahan pelatihan,A,6,paket,,,,,,,6,paket,8280000,49680000,,0,B00,,,,,,,,,,,,
-116,2026,90002,900204,WA,4893,ABC,,,001,,051,C,Pelaksanaan kegiatan,521211,,,,,0,0,002,2,2040063,Alokasi kegiatan penunjang,A,0,paket,,,,,,,0,paket,60000000,0,,0,B00,,,,,,,,,,,,
+116,2026,90002,900204,WA,4893,ABC,,,001,,051,C,Pelaksanaan kegiatan,521211,,,,,0,0,002,2,2040063,Alokasi kegiatan penunjang,A,0,paket,,,,,,,0,paket,60000000,60000000,,0,B00,,,,,,,,,,,,
 117,2026,90002,900204,WA,4893,ABC,,,001,,051,C,Pelaksanaan kegiatan,521213,,,,,0,1,,,,Akun 521213,,,,,,,,,,0,,0,0,,,,,,,,,,,,,,,
 118,2026,90002,900204,WA,4893,ABC,,,001,,051,C,Pelaksanaan kegiatan,521213,,,,,0,0,003,3,2040006,Honorarium narasumber,A,27,OJ,,,,,,,27,OJ,1564000,42228000,,0,B00,,,,,,,,,,,,
 119,2026,90002,900204,WA,4893,ABC,,,001,,051,C,Pelaksanaan kegiatan,521213,,,,,0,0,004,4,2040013,Honor tim pelaksana kegiatan,A,36,OB,,,,,,,36,OB,2450000,88200000,,0,B00,,,,,,,,,,,,

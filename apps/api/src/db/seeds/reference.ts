@@ -42,8 +42,23 @@ export const DEFAULT_RISK_PARAMS: RiskConfigParams = {
 };
 
 export const DEMO_USER_SEEDS = [
-  { id: "usr_reviewer", username: "reviewer.demo", displayName: "Rani Reviewer", role: "reviewer", password: "Review123!", scope: ["org_90001"] },
-  { id: "usr_uki", username: "uki.demo", displayName: "Umar UKI", role: "uki", password: "Uki12345!", scope: ["org_90001"] },
-  { id: "usr_leader", username: "pimpinan.demo", displayName: "Pandu Pimpinan", role: "leader", password: "Pimpin123!", scope: [] },
-  { id: "usr_admin", username: "admin.demo", displayName: "Ayu Admin", role: "admin", password: "Admin123!", scope: [] }
+  { id: "usr_reviewer", username: "reviewer.demo", displayName: "Rani Reviewer", role: "reviewer", password: "Review123!", unitLabel: "Itjen", scope: ["org_90001"] },
+  { id: "usr_uki", username: "uki.demo", displayName: "Umar UKI", role: "uki", password: "Uki12345!", unitLabel: null, scope: ["org_90001"] },
+  { id: "usr_leader", username: "pimpinan.demo", displayName: "Pandu Pimpinan", role: "leader", password: "Pimpin123!", unitLabel: "Itjen", scope: [] },
+  { id: "usr_admin", username: "admin.demo", displayName: "Ayu Admin", role: "admin", password: "Admin123!", unitLabel: "Itjen", scope: [] }
+] as const;
+
+/**
+ * Profil riwayat temuan BPK sintetis per kode Satker (satker_finding_stats). Sengaja tidak semua Satker punya profil
+ * (900101, 900202-900204 tidak punya) supaya faktor F3 "Data tidak tersedia" tampil di demo.
+ */
+export const FINDING_STAT_SEEDS = [
+  { workUnitCode: "900102", theme: "penganggaran", countTotal: 12, countOpen: 5, latestYear: 2025 },
+  { workUnitCode: "900102", theme: "perjalanan_dinas", countTotal: 4, countOpen: 1, latestYear: 2024 },
+  { workUnitCode: "900103", theme: "penganggaran", countTotal: 3, countOpen: 0, latestYear: 2023 },
+  { workUnitCode: "900104", theme: "perjalanan_dinas", countTotal: 5, countOpen: 2, latestYear: 2025 },
+  { workUnitCode: "900105", theme: "penganggaran", countTotal: 20, countOpen: 8, latestYear: 2025 },
+  { workUnitCode: "900105", theme: "klasifikasi_belanja", countTotal: 6, countOpen: 2, latestYear: 2025 },
+  { workUnitCode: "900105", theme: "honorarium", countTotal: 3, countOpen: 1, latestYear: 2024 },
+  { workUnitCode: "900201", theme: "penganggaran", countTotal: 9, countOpen: 3, latestYear: 2025 }
 ] as const;

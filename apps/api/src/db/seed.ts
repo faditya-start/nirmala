@@ -4,9 +4,12 @@ import { fileURLToPath } from "node:url";
 import type { Database } from "./client.js";
 import { ingestSnapshot } from "../ingest/ingestService.js";
 import { createCycle, findCycleByYearStage } from "../repositories/cycles.js";
-import { accounts, dismissReasons, organizationUnits, riskConfig, rules, userScopes, users } from "./schema.js";
+import { eq } from "drizzle-orm";
+import { accounts, dismissReasons, organizationUnits, riskAssessments, riskConfig, rkaItems, rules, satkerFindingStats, userScopes, users } from "./schema.js";
+import type { Db } from "./client.js";
+import { detectionHooks, runDetection } from "../services/detectionPipeline.js";
 import { hashPassword } from "../lib/security.js";
-import { ACCOUNT_SEEDS, DEFAULT_RISK_PARAMS, DEFAULT_THRESHOLDS, DEFAULT_WEIGHTS, DEMO_USER_SEEDS, DISMISS_REASON_SEEDS, ORGANIZATION_UNIT_SEEDS } from "./seeds/reference.js";
+import { ACCOUNT_SEEDS, DEFAULT_RISK_PARAMS, DEFAULT_THRESHOLDS, DEFAULT_WEIGHTS, DEMO_USER_SEEDS, DISMISS_REASON_SEEDS, FINDING_STAT_SEEDS, ORGANIZATION_UNIT_SEEDS } from "./seeds/reference.js";
 import { RULE_SEEDS } from "./seeds/rules.js";
 
 /**
@@ -20,7 +23,7 @@ export async function seedMasterData({ db }: Database) {
   await db.insert(dismissReasons).values(DISMISS_REASON_SEEDS.map((reason) => ({ ...reason, active: true }))).onConflictDoNothing();
 
   for (const user of DEMO_USER_SEEDS) {
-    await db.insert(users).values({ id: user.id, username: user.username, displayName: user.displayName, role: user.role, passwordHash: await hashPassword(user.password), createdAt: now }).onConflictDoNothing();
+    await db.insert(users).values({ id: user.id, username: user.username, displayName: user.displayName, role: user.role, passwordHash: await hashPassword(user.password), unitLabel: user.unitLabel, createdAt: now }).onConflictDoNothing();
     if (user.scope.length) await db.insert(userScopes).values(user.scope.map((organizationUnitId) => ({ userId: user.id, organizationUnitId }))).onConflictDoNothing();
   }
 
@@ -30,15 +33,23 @@ export async function seedMasterData({ db }: Database) {
     validYear: null, validationNote: rule.validationNote, updatedAt: now
   }))).onConflictDoNothing();
 
+  await db.insert(satkerFindingStats).values(FINDING_STAT_SEEDS.map((stat) => ({ id: `fstat_${stat.workUnitCode}_${stat.theme}`, ...stat }))).onConflictDoNothing();
+
   await db.insert(riskConfig).values({
-    id: "risk_config_v1", version: "rules-v1", weights: DEFAULT_WEIGHTS, thresholds: DEFAULT_THRESHOLDS, params: DEFAULT_RISK_PARAMS, createdBy: "usr_admin", createdAt: now
+    id: "risk_config_v1", version: "1", weights: DEFAULT_WEIGHTS, thresholds: DEFAULT_THRESHOLDS, params: DEFAULT_RISK_PARAMS, createdBy: "usr_admin", createdAt: now
   }).onConflictDoNothing();
+}
+
+async function hasAssessments(db: Db, documentId: string) {
+  const rows = await db.select({ id: riskAssessments.id }).from(riskAssessments).innerJoin(rkaItems, eq(rkaItems.id, riskAssessments.rkaItemId)).where(eq(rkaItems.documentId, documentId)).limit(1);
+  return rows.length > 0;
 }
 
 const fixtureDir = join(dirname(fileURLToPath(import.meta.url)), "../../fixtures/synthetic");
 
 /**
- * Siklus demo (TA 2026 · Alokasi) + impor snapshot "Awal" dari fixtures sintetis.
+ * Siklus demo (TA 2026 · Alokasi) + impor snapshot "Awal" dari fixtures sintetis, lengkap dengan deteksi aturan dan
+ * skor (pipeline Fase 3 berjalan di dalam impor), sehingga daftar Risk Triage langsung terisi.
  * Snapshot "Revisi" sengaja tidak diimpor di sini: ia dipakai untuk mendemokan loop
  * (triage → CHR → impor revisi → cek tindak lanjut) dan oleh test. Idempoten lewat hash berkas.
  */
@@ -51,8 +62,9 @@ export async function seedSyntheticSnapshots(database: Database) {
   const imported: string[] = [];
   for (const code of Object.keys(manifest.expectedDiff)) {
     const name = `awal/es1_${code}_${manifest.fiscalYear}.csv`;
-    const result = await ingestSnapshot(database, { cycleId, filePath: join(fixtureDir, name), fileName: name.split("/")[1], importedBy: "usr_admin", allowedOrganizationUnitIds: null, satkerNames });
+    const result = await ingestSnapshot(database, { cycleId, filePath: join(fixtureDir, name), fileName: name.split("/")[1], importedBy: "usr_admin", allowedOrganizationUnitIds: null, satkerNames }, detectionHooks());
     if (!result.alreadyImported) imported.push(code);
+    else if (!(await hasAssessments(db, result.snapshot.id))) await database.transaction(() => runDetection(db, result.snapshot.id, { mode: "recalculate" })); // snapshot dari seed Fase 2
   }
   return { cycleId, imported };
 }
