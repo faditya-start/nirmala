@@ -58,9 +58,12 @@ export function RecommendationField({ doc, editable, onSaved }: { doc: ChrDocume
     timer.current = window.setTimeout(() => void flush(), 900);
   }
 
+  // Leaving the page within the debounce window must not lose the last edit: send it now.
+  const flushRef = useRef(flush);
+  flushRef.current = flush;
   useEffect(
     () => () => {
-      if (timer.current !== null) window.clearTimeout(timer.current);
+      if (timer.current !== null) void flushRef.current();
     },
     []
   );

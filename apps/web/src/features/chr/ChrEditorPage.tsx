@@ -1,5 +1,5 @@
 import { Check, CircleAlert, FilePlus, History, ListChecks, Lock, Plus, Printer, Send, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import type { AddendumBody, ChrDetailResponse, ChrNoteDto, CreateNoteBody, UpdateNoteBody } from "@nirmala/shared";
 import { usePageBreadcrumb } from "../../app/breadcrumb";
@@ -47,6 +47,13 @@ function ChrEditor({ detail, reload }: { detail: ChrDetailResponse; reload: () =
   usePageBreadcrumb([{ label: "Reviu" }, { label: "CHR", to: "/chr" }, { label: doc.organizationUnitName }]);
 
   const draft = doc.status === "draft";
+  const bannerRef = useRef<HTMLDivElement>(null);
+  const wasDraft = useRef(draft);
+  // The Terbitkan button disappears when the document locks, so move focus to the lock banner instead of losing it.
+  useEffect(() => {
+    if (wasDraft.current && !draft) bannerRef.current?.focus();
+    wasDraft.current = draft;
+  }, [draft]);
   const locked = !draft;
   const canWrite = permissions.canEditNotes;
   const draftCount = notesByStatus.draf;
@@ -60,7 +67,13 @@ function ChrEditor({ detail, reload }: { detail: ChrDetailResponse; reload: () =
 
   /** Runs a mutation, then re-reads the document so numbers, status and permissions come from the server. */
   async function mutate(run: () => Promise<unknown>, done: string): Promise<void> {
-    await run();
+    try {
+      await run();
+    } catch (error) {
+      // 409 means the document changed under us (for example it was issued elsewhere): show the current state.
+      if (isApiError(error) && error.status === 409) void reload();
+      throw error;
+    }
     await reload();
     setNotice(done);
     close();
@@ -129,6 +142,7 @@ function ChrEditor({ detail, reload }: { detail: ChrDetailResponse; reload: () =
               icon={Send}
               disabled={!permissions.canIssue}
               title={permissions.canIssue ? undefined : "Tambahkan minimal satu catatan sebelum menerbitkan."}
+              aria-describedby={permissions.canIssue ? undefined : "chr-issue-hint"}
               onClick={() => open({ kind: "issue" })}
             >
               Terbitkan
@@ -138,7 +152,7 @@ function ChrEditor({ detail, reload }: { detail: ChrDetailResponse; reload: () =
       </header>
 
       {locked && (
-        <div className={styles.banner} role="note">
+        <div ref={bannerRef} tabIndex={-1} className={styles.banner} role="note">
           <Lock size={18} aria-hidden="true" className={styles.bannerIcon} />
           <div className={styles.bannerText}>
             <p className={styles.bannerTitle}>Dokumen terbit dan terkunci</p>
@@ -161,6 +175,12 @@ function ChrEditor({ detail, reload }: { detail: ChrDetailResponse; reload: () =
           <button type="button" className={styles.noticeClose} onClick={() => setNotice(null)}>
             Tutup
           </button>
+        </p>
+      )}
+
+      {showIssue && !permissions.canIssue && (
+        <p id="chr-issue-hint" className="sr-only">
+          Tombol Terbitkan aktif setelah ada minimal satu catatan.
         </p>
       )}
 
@@ -189,9 +209,9 @@ function ChrEditor({ detail, reload }: { detail: ChrDetailResponse; reload: () =
             groups.map((group) => (
               <section key={group.category} className={styles.group} aria-labelledby={`grp-${group.category}`}>
                 <div className={styles.groupHead}>
-                  <h3 id={`grp-${group.category}`} className={styles.groupTitle}>
+                  <h2 id={`grp-${group.category}`} className={styles.groupTitle}>
                     {group.letter}. {CATEGORY_LABEL[group.category]}
-                  </h3>
+                  </h2>
                   <span className={styles.groupCount}>{noteCountLabel(group.notes.length)}</span>
                 </div>
                 <ol className={styles.list}>

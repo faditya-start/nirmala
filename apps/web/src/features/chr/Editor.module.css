@@ -94,6 +94,21 @@
   font-weight: 500;
 }
 
+@keyframes notice-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.notice {
+  animation: notice-in 160ms ease-out;
+}
+
+.banner:focus-visible {
+  outline-offset: 2px;
+}
+
 .notice svg {
   flex: none;
 }

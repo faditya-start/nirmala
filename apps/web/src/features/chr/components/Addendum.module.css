@@ -66,6 +66,17 @@
   background: var(--surface-sunken);
 }
 
+@keyframes draft-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.draft {
+  animation: draft-in 140ms ease-out;
+}
+
 .draftActions {
   display: flex;
   justify-content: flex-end;
