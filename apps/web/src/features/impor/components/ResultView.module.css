@@ -1,0 +1,127 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.actions {
+  display: flex;
+  gap: var(--sp-2);
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-base);
+  font-weight: 500;
+}
+
+.status svg {
+  flex: none;
+  color: var(--st-closed-fg);
+}
+
+.statusBox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px var(--sp-4);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: var(--fs-base);
+}
+
+.statusBox svg {
+  flex: none;
+  color: var(--st-menunggu-fg);
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--sp-6);
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 520px) minmax(0, 1fr);
+  gap: var(--sp-6);
+  align-items: start;
+}
+
+@media (max-width: 1279px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.table td {
+  padding-block: 12px;
+}
+
+.clip {
+  display: inline-block;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+  white-space: nowrap;
+}
+
+.rule {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.rule > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.note {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.noteTitle {
+  font-weight: 500;
+}
+
+.noteMeta {
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+}
+
+.noteEvidence {
+  font-size: var(--fs-xs);
+}
+
+.footnote {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  font-size: var(--fs-xs);
+  line-height: 17px;
+  color: var(--ink-muted);
+}
+
+.footnote svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+.emptyBox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px var(--sp-4);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: var(--fs-base);
+}

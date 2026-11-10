@@ -1,0 +1,68 @@
+/* S3 tables use 16 px cell padding (ui/Table defaults to 12). */
+.frame th,
+.frame td {
+  padding-inline: var(--sp-4);
+}
+
+.frame td {
+  padding-block: 12px;
+}
+
+.active,
+.active:hover {
+  background: var(--surface-sunken);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.primary,
+.primaryLink {
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.primaryLink {
+  text-decoration: none;
+}
+
+.primaryLink:hover {
+  text-decoration: underline;
+}
+
+.sub {
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+}
+
+.empty {
+  color: var(--ink-faint);
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  color: var(--ink-muted);
+}
+
+.status[data-status="aktif"] {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 50%;
+}
+
+.status[data-status="aktif"] .dot {
+  border-color: var(--score-low);
+  background: var(--score-low);
+}
