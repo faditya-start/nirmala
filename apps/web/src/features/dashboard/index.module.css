@@ -226,3 +226,8 @@
 .chevron {
   color: var(--ink-muted);
 }
+
+/* Inside a numeric (mono) cell the second line stays in the UI font, as designed. */
+.right .sub {
+  font-family: var(--font-ui);
+}
