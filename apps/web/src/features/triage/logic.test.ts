@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { expectationFromForm, formFromExpectation, parseAmount, describeExpectation, EMPTY_EXPECTATION_FORM } from "./expectation.ts";
-import { EMPTY_FILTER, filterToParams, itemPath, pageForPosition, parseUrlState, urlStateToParams } from "./filters.ts";
+import { expectationFromForm, formFromExpectation, parseAmount, describeExpectation, EMPTY_EXPECTATION_FORM } from "./expectation";
+import { EMPTY_FILTER, filterToParams, itemPath, pageForPosition, parseUrlState, urlStateToParams } from "./filters";
 
 test("parseAmount menerima angka bulat dan pemisah ribuan titik", () => {
   assert.equal(parseAmount(""), undefined);
