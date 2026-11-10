@@ -10,6 +10,8 @@ import { AuditLogs, Reports } from "./Reports";
 import { Transparency } from "./Transparency";
 import { AdminSettings, UsersAdmin } from "./Admin";
 
+const roleLabels: Record<SessionUser["role"], string> = { reviewer: "Reviewer", uki: "PIC UKI", leader: "Pimpinan", admin: "Administrator" };
+
 function Landing() {
   return (
     <main className="app-shell">
@@ -76,7 +78,7 @@ function InternalShell({ user, onLogout, children }: { user: SessionUser; onLogo
       <div className="sidebar-brand"><div className="sidebar-mark">N</div><div className="sidebar-brand-copy"><strong>NIRMALA</strong><span>Budget Review &amp; Follow-up Intelligence</span></div><button className="sidebar-collapse" aria-label={collapsed ? "Perluas sidebar" : "Ciutkan sidebar"} onClick={() => setCollapsed(!collapsed)}>{collapsed ? <Menu size={18} /> : <X size={18} />}</button></div>
       <div className="sidebar-context"><span className="sidebar-context-label">Ruang kerja</span><strong>Reviu Anggaran</strong></div>
       <nav className="sidebar-nav" aria-label="Navigasi utama">{navigation.map(({ to, label, icon: Icon }) => <NavLink key={to} to={to} end={to === "/dashboard"} onClick={() => setMobileOpen(false)} className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}><Icon size={18} /><span>{label}</span></NavLink>)}</nav>
-      <div className="sidebar-footer"><div className="sidebar-user"><div className="avatar">{user.name.slice(0, 1)}</div><div className="sidebar-user-copy"><strong>{user.name}</strong><span>{user.role === "leader" ? "Pimpinan" : user.role === "admin" ? "Administrator" : "Reviewer"}</span></div></div><button className="sidebar-logout" onClick={() => void logout()}><LogOut size={17} /><span>Keluar</span></button></div>
+      <div className="sidebar-footer"><div className="sidebar-user"><div className="avatar">{user.name.slice(0, 1)}</div><div className="sidebar-user-copy"><strong>{user.name}</strong><span>{roleLabels[user.role]}</span></div></div><button className="sidebar-logout" onClick={() => void logout()}><LogOut size={17} /><span>Keluar</span></button></div>
     </aside>
     <button className="sidebar-overlay" aria-label="Tutup navigasi" onClick={() => setMobileOpen(false)} />
     <div className="internal-content">{children}</div>
@@ -85,7 +87,7 @@ function InternalShell({ user, onLogout, children }: { user: SessionUser; onLogo
 
 function Dashboard({ user, onLogout }: { user: SessionUser; onLogout: () => void }) {
   const [data, setData] = useState<{ metrics: Record<string, number>; riskDistribution: { category: string; count: number }[]; reviewProgress: { unit: string; total: number; evaluated: number }[]; followUpProgress: { status: string; count: number }[] } | null>(null); const navigate = useNavigate();
-  useEffect(() => { fetch("/api/dashboard/summary", { credentials: "include" }).then((response) => response.json()).then(setData).catch(() => setData(null)); }, []);
+  useEffect(() => { fetch("/api/dashboard/summary", { credentials: "include" }).then((response) => response.ok ? response.json() : null).then(setData).catch(() => setData(null)); }, []);
   async function logout() { await fetch("/api/auth/logout", { method: "POST", credentials: "include" }); onLogout(); navigate("/login"); }
   const metricCards = [["totalItems", "Total Item RKA"], ["highRisk", "Item High Risk"], ["evaluatedItems", "Sudah Dievaluasi"], ["issuedChr", "CHR Diterbitkan"], ["openFollowUps", "Tindak Lanjut Terbuka"], ["resolvedFollowUps", "Tindak Lanjut Selesai"]];
   const colors = { high: "#dc2626", medium: "#d97706", low: "#16a34a" };

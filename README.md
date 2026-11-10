@@ -38,6 +38,7 @@ Status pengembangan mengikuti fase di [docs/plan.md](docs/plan.md). Aplikasi mas
 ```bash
 cp .env.example .env
 npm install
+npm run db:migrate
 npm run db:seed
 npm run dev
 ```
@@ -49,6 +50,7 @@ Akun demo (sintetis, hanya untuk lokal):
 | Peran | Username | Password |
 |---|---|---|
 | Reviewer | `reviewer.demo` | `Review123!` |
+| PIC UKI | `uki.demo` | `Uki12345!` |
 | Pimpinan | `pimpinan.demo` | `Pimpin123!` |
 | Admin | `admin.demo` | `Admin123!` |
 
@@ -62,7 +64,11 @@ Pemeriksaan API: `curl http://localhost:8787/api/health`
 npm run typecheck   # semua workspace
 npm test            # semua workspace
 npm run build
-npm run db:seed
+npm run db:generate   # buat migrasi baru dari apps/api/src/db/schema.ts
+npm run db:migrate    # terapkan migrasi (runner sendiri, node:sqlite)
+npm run db:seed       # master data + akun demo sintetis (idempoten)
 ```
 
-`db:generate` dan `db:migrate` akan dipakai penuh setelah skema Drizzle baru (Fase 1).
+Skema ada di `apps/api/src/db/schema.ts`, migrasi di `apps/api/drizzle/`. Jika muncul "Database lama (skema prototipe) terdeteksi", hapus berkas `apps/api/nirmala.sqlite*` lalu migrasi dan seed ulang.
+
+Beberapa endpoint prototipe (`/api/chr`, `/api/tracker`, `/api/risk-items`, dashboard, laporan) mengembalikan 501 sampai fasenya selesai; lihat [docs/plan.md](docs/plan.md).
