@@ -1,0 +1,102 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sp-4);
+}
+
+.titleBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+.title {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: var(--fs-2xl);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.005em;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.context {
+  font-size: var(--fs-md);
+  color: var(--ink-muted);
+}
+
+.pager {
+  display: flex;
+  flex: none;
+  gap: var(--sp-2);
+}
+
+.inlineError {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 8px var(--sp-3);
+  border: 1px solid var(--st-flag-line);
+  background: var(--st-flag-bg);
+  color: var(--st-flag-fg);
+  font-size: var(--fs-xs);
+}
+
+/* Tiga kolom (Pencil): konteks 280, alasan fleksibel, keputusan 300. */
+.grid {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr) 300px;
+  grid-template-areas: "konteks alasan keputusan";
+  gap: var(--sp-5);
+  align-items: start;
+}
+
+.context_ {
+  grid-area: konteks;
+  min-width: 0;
+}
+
+.reason {
+  grid-area: alasan;
+  min-width: 0;
+}
+
+.decision {
+  grid-area: keputusan;
+  min-width: 0;
+}
+
+/* Panel keputusan tetap terlihat saat menggulir, hanya bila layar cukup tinggi untuk memuatnya. */
+@media (min-height: 900px) {
+  .decision {
+    position: sticky;
+    top: 72px;
+  }
+}
+
+/* Layar sempit (>= 1024): konteks di atas alasan, panel keputusan tetap di kanan. */
+@media (max-width: 1359px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr) 300px;
+    grid-template-areas:
+      "konteks keputusan"
+      "alasan keputusan";
+  }
+}

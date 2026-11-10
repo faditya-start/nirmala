@@ -1,0 +1,25 @@
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding: 10px var(--sp-4);
+  background: var(--surface);
+}
+
+.count {
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+}
+
+.pages {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.position {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+}
