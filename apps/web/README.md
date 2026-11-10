@@ -22,7 +22,7 @@ src/
   lib/                  api.ts (client), mock.ts (+ mock-defaults, mock-loader), format.ts, roles.ts, types.ts, storage.ts
   ui/                   component library (CSS modules). Import from "../../ui"
   shells/               AppShell (sidebar + header), PublicShell
-  app/                  routes.tsx (THE route table), nav.ts, App.tsx, auth.tsx, cycle.tsx, needsAction.tsx, breadcrumb.tsx
+  app/                  routes.tsx (THE route table), nav.ts, App.tsx, auth.tsx, cycle.tsx, needsAction.tsx (needs-action + nav-counts), breadcrumb.tsx
   features/<fitur>/     index.tsx (+ optional mock.ts). One folder per feature agent
   dev/                  component catalogue (dev only)
 ```
@@ -36,7 +36,7 @@ Every screen in `design/SCREENS.md` already has a route in `app/routes.tsx` that
 1. Replace the placeholder component exported from `features/<fitur>/index.tsx` (keep the export name).
    Split into more files inside the folder as needed.
 2. Fetch with `api.get<T>("/path", { query })`, `api.post(...)`. Paths are relative to `/api`.
-3. Use `useAuth()`, `useCycle()` (`active.id` is the selected cycle), `useNeedsAction()` when needed.
+3. Use `useAuth()` (`user` with `unitLabel` and `scopeOrganizationUnitIds`, plus `organizationUnits`), `useCycle()` (`active.id` is the selected cycle), `useNeedsAction()` when needed. After an action that changes a queue (confirm, close, publish), call `useNeedsAction().refresh()` so the header and sidebar counts update.
 4. Compose from `ui/`. Do not write colors, font sizes or radii: use tokens (see rules below).
 5. Detail pages can replace the header breadcrumb with `usePageBreadcrumb([...])` from `app/breadcrumb`.
 6. Ship a `features/<fitur>/mock.ts` (below) so the screen works with `VITE_MOCK=1`.
@@ -58,7 +58,7 @@ route, shared component or token, ask the foundation owner (the table is deliber
 ## Mock mode
 
 `VITE_MOCK=1` makes `lib/api.ts` answer from handlers instead of the network. `main.tsx` loads
-`lib/mock-defaults.ts` (auth, cycles, needs-action) and every `features/*/mock.ts` before rendering.
+`lib/mock-defaults.ts` (auth/me, cycles, needs-action, nav-counts, all shaped like `docs/api-contract.md` 3.1) and every `features/*/mock.ts` before rendering.
 Mocks are not loaded in normal builds.
 
 ```ts
@@ -81,6 +81,15 @@ registerMock("POST", "/triage/items/:id/dismiss", ({ body }) => {
   `__nirmalaMock.failNextMockRequest(500)`, `__nirmalaMock.setMockDelay(2000)`.
 - Later registrations of the same method and path win, so a feature can override a default.
 - All mock data must be synthetic. Never put real Satker names or item values in a mock.
+
+## Shell data
+
+The shell calls `GET /auth/me` (`MeResponse`: user with `unitLabel`, `scopeOrganizationUnitIds`; and `organizationUnits`),
+`GET /cycles`, `GET /needs-action` (`NeedsActionResponse`, header popover) and `GET /nav-counts` (`NavCountsResponse`,
+sidebar badges for Risk Triage and Smart Tracker). Needs-action and nav-counts are sent with the active `cycleId`,
+refresh every 60 s, on window focus and when a feature calls `useNeedsAction().refresh()`. A failed count request hides
+that badge; it never blocks the shell. `POST /auth/login` answers with the short `SessionUser`; the provider then reads
+`/auth/me` to fill in the rest.
 
 ## API client
 

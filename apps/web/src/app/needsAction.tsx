@@ -1,7 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import type { NavCountsResponse } from "@nirmala/shared";
 import { api } from "../lib/api";
 import type { NeedsActionItem, NeedsActionResponse } from "../lib/types";
 import { useAuth } from "./auth";
+import { useCycle } from "./cycle";
 
 export interface NeedsActionValue {
   /** Total "perlu tindakan"; null when unknown (loading or the request failed) so the UI hides the badge. */
@@ -9,9 +11,10 @@ export interface NeedsActionValue {
   items: NeedsActionItem[];
   loading: boolean;
   failed: boolean;
+  /** Re-reads both GET /needs-action and GET /nav-counts. Call it after an action that changes a queue. */
   refresh: () => Promise<void>;
-  /** Sum of item counts whose href is `path` or below it (used for sidebar badges). */
-  countFor: (path: string) => number | null;
+  /** GET /nav-counts for the sidebar badges; null when unknown (loading or failed), so the badge stays hidden. */
+  navCounts: NavCountsResponse | null;
 }
 
 const NeedsActionContext = createContext<NeedsActionValue | null>(null);
@@ -20,29 +23,40 @@ const REFRESH_MS = 60_000;
 
 export function NeedsActionProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  const { active } = useCycle();
   const userId = user?.id ?? null;
+  const cycleId = active ? String(active.id) : null;
   const [data, setData] = useState<NeedsActionResponse | null>(null);
+  const [navCounts, setNavCounts] = useState<NavCountsResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [failed, setFailed] = useState(false);
 
   const refresh = useCallback(async () => {
     setLoading(true);
-    try {
-      const result = await api.get<NeedsActionResponse>("/needs-action");
-      setData({ count: Number(result.count) || 0, items: Array.isArray(result.items) ? result.items : [] });
-      setFailed(false);
-    } catch {
-      // Never crash the shell over a badge: hide the count and keep going.
-      setData(null);
-      setFailed(true);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    const query = { cycleId };
+    // Independent requests: a failing badge must never hide the other one or crash the shell.
+    const needs = api
+      .get<NeedsActionResponse>("/needs-action", { query })
+      .then((result) => {
+        setData({ count: Number(result.count) || 0, items: Array.isArray(result.items) ? result.items : [] });
+        setFailed(false);
+      })
+      .catch(() => {
+        setData(null);
+        setFailed(true);
+      });
+    const counts = api
+      .get<NavCountsResponse>("/nav-counts", { query })
+      .then((result) => setNavCounts({ triageUnreviewed: Number(result.triageUnreviewed) || 0, trackerPending: Number(result.trackerPending) || 0 }))
+      .catch(() => setNavCounts(null));
+    await Promise.all([needs, counts]);
+    setLoading(false);
+  }, [cycleId]);
 
   useEffect(() => {
     if (!userId) {
       setData(null);
+      setNavCounts(null);
       setFailed(false);
       return;
     }
@@ -65,19 +79,15 @@ export function NeedsActionProvider({ children }: { children: ReactNode }) {
       loading,
       failed,
       refresh,
-      countFor: (path) => {
-        if (!data) return null;
-        const matching = data.items.filter((item) => item.href === path || item.href.startsWith(`${path}/`));
-        return matching.length ? matching.reduce((sum, item) => sum + item.count, 0) : null;
-      }
+      navCounts
     }),
-    [data, loading, failed, refresh]
+    [data, navCounts, loading, failed, refresh]
   );
 
   return <NeedsActionContext.Provider value={value}>{children}</NeedsActionContext.Provider>;
 }
 
-/** GET /api/needs-action -> header "Perlu tindakan" badge, popover list and sidebar counts. Failure hides the count. */
+/** GET /api/needs-action -> header "Perlu tindakan" badge and popover list; GET /api/nav-counts -> sidebar badges. Failure hides the count. */
 export function useNeedsAction(): NeedsActionValue {
   const value = useContext(NeedsActionContext);
   if (!value) throw new Error("useNeedsAction harus dipakai di dalam <NeedsActionProvider>.");

@@ -13,6 +13,7 @@ import {
   Users,
   type LucideIcon
 } from "lucide-react";
+import type { NavCountsResponse } from "@nirmala/shared";
 import type { Role } from "../lib/roles";
 
 /**
@@ -24,6 +25,8 @@ export interface NavItem {
   to: string;
   icon: LucideIcon;
   roles: Role[];
+  /** Sidebar count badge: which field of GET /nav-counts to show, and the screen-reader words after the number. */
+  badge?: { key: keyof NavCountsResponse; note: string };
 }
 
 export interface NavGroup {
@@ -40,14 +43,20 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Reviu",
     items: [
       { label: "Siklus & Impor", to: "/siklus", icon: Database, roles: ["reviewer", "admin"] },
-      { label: "Risk Triage", to: "/triage", icon: Table, roles: ["reviewer", "admin"] },
+      { label: "Risk Triage", to: "/triage", icon: Table, roles: ["reviewer", "admin"], badge: { key: "triageUnreviewed", note: "belum ditinjau" } },
       { label: "CHR", to: "/chr", icon: FileText, roles: ["reviewer", "uki", "admin"] }
     ]
   },
   {
     label: "Tindak lanjut",
     items: [
-      { label: "Smart Tracker", to: "/tracker", icon: ListChecks, roles: ["reviewer", "uki", "admin"] },
+      {
+        label: "Smart Tracker",
+        to: "/tracker",
+        icon: ListChecks,
+        roles: ["reviewer", "uki", "admin"],
+        badge: { key: "trackerPending", note: "perlu verifikasi" }
+      },
       { label: "Progres Satker", to: "/satker", icon: Building2, roles: ["reviewer", "uki", "admin"] }
     ]
   },

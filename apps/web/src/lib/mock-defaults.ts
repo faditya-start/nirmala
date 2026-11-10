@@ -1,10 +1,12 @@
 /**
- * Default mocks so the shell works with `VITE_MOCK=1`: auth, cycles, needs-action.
+ * Default mocks so the shell works with `VITE_MOCK=1`: auth, cycles, needs-action, nav-counts.
+ * Shapes follow docs/api-contract.md 3.1 (MeResponse, NeedsActionResponse, NavCountsResponse).
  * All data is synthetic. Features add their own in features/<fitur>/mock.ts.
  *
  * Demo logins (any password): reviewer, uki, pimpinan, admin.
  * Switch role without logging in: open the app with `?as=admin` (mock mode only).
  */
+import type { MeResponse, NavCountsResponse, OrganizationUnitDto } from "@nirmala/shared";
 import { ApiError } from "./api-error";
 import { registerMock, respond } from "./mock";
 import { isRole, type AuthUser, type Role } from "./roles";
@@ -13,12 +15,26 @@ import type { Cycle, NeedsActionResponse } from "./types";
 
 const SESSION_KEY = "nirmala.mock.user";
 
+/** Synthetic eselon I. Features that need more can register their own `/auth/me` or reference these ids. */
+const ORG_UNITS: OrganizationUnitDto[] = [
+  { id: "o-ditjen-a", code: "01", shortName: "Ditjen Contoh A", name: "Direktorat Jenderal Contoh A" },
+  { id: "o-ditjen-b", code: "02", shortName: "Ditjen Contoh B", name: "Direktorat Jenderal Contoh B" },
+  { id: "o-biro-c", code: "03", shortName: "Biro Contoh C", name: "Biro Contoh C" }
+];
+
 const USERS: Record<Role, AuthUser> = {
-  reviewer: { id: "u-reviewer", name: "Reviewer 01", role: "reviewer", unit: "Itjen" },
-  uki: { id: "u-uki", name: "PIC UKI 01", role: "uki", unit: "Ditjen Contoh A" },
-  leader: { id: "u-leader", name: "Pimpinan 01", role: "leader", unit: "Itjen" },
-  admin: { id: "u-admin", name: "Admin 01", role: "admin", unit: null }
+  reviewer: { id: "u-reviewer", name: "Reviewer 01", role: "reviewer", username: "reviewer", unitLabel: "Itjen", scopeOrganizationUnitIds: ["o-ditjen-a", "o-ditjen-b"] },
+  uki: { id: "u-uki", name: "PIC UKI 01", role: "uki", username: "uki", unitLabel: "Ditjen Contoh A", scopeOrganizationUnitIds: ["o-ditjen-a"] },
+  leader: { id: "u-leader", name: "Pimpinan 01", role: "leader", username: "pimpinan", unitLabel: "Itjen", scopeOrganizationUnitIds: null },
+  admin: { id: "u-admin", name: "Admin 01", role: "admin", username: "admin", unitLabel: null, scopeOrganizationUnitIds: null }
 };
+
+/** Eselon I visible to a user, already filtered by scope like the real endpoint. */
+function visibleUnits(user: AuthUser | null): OrganizationUnitDto[] {
+  if (!user) return [];
+  const scope = user.scopeOrganizationUnitIds;
+  return scope ? ORG_UNITS.filter((unit) => scope.includes(unit.id)) : ORG_UNITS;
+}
 
 const USERNAME_TO_ROLE: Record<string, Role> = {
   reviewer: "reviewer",
@@ -87,14 +103,16 @@ export function registerDefaultMocks(): void {
     if (as && isRole(as)) setUser(USERS[as]);
   }
 
-  registerMock("GET", "/auth/me", () => ({ user: currentUser }));
+  registerMock("GET", "/auth/me", (): MeResponse => ({ user: currentUser as MeResponse["user"], organizationUnits: visibleUnits(currentUser) }));
 
   registerMock("POST", "/auth/login", ({ body }) => {
     const { username, password } = (body ?? {}) as { username?: string; password?: string };
     const role = username ? USERNAME_TO_ROLE[username.trim().toLowerCase()] : undefined;
     if (!role || !password) throw new ApiError(401, "Nama pengguna atau kata sandi salah.");
     setUser(USERS[role]);
-    return { user: USERS[role] };
+    // Like the real login: the short SessionUser only (AuthResponse). The client re-reads /auth/me for the rest.
+    const { id, name } = USERS[role];
+    return { user: { id, name, role } };
   });
 
   registerMock("POST", "/auth/logout", () => {
@@ -109,19 +127,30 @@ export function registerDefaultMocks(): void {
 
   registerMock("GET", "/needs-action", (): NeedsActionResponse => {
     if (!currentUser) throw new ApiError(401, "Sesi berakhir. Silakan masuk kembali.");
-    if (currentUser.role === "reviewer") {
-      return {
-        count: 5,
-        items: [
-          { label: "Catatan Perlu Verifikasi", href: "/tracker", count: 3 },
-          { label: "Item kena aturan belum ditinjau", href: "/triage", count: 83 },
-          { label: "CHR draf", href: "/chr", count: 2 }
-        ]
-      };
+    // Items, hrefs and ordering follow docs/api-contract.md 2.9; count is the sum of item counts.
+    let items: NeedsActionResponse["items"] = [];
+    if (currentUser.role === "reviewer" || currentUser.role === "admin") {
+      items = [
+        { label: "Catatan perlu verifikasi", href: "/tracker?status=perlu_verifikasi", count: 3 },
+        { label: "CHR draf yang siap diterbitkan", href: "/chr", count: 2 },
+        { label: "Item kena aturan belum ditinjau", href: "/triage?onlyFlagged=true&decision=belum_ditinjau", count: 83 }
+      ];
+    } else if (currentUser.role === "uki") {
+      items = [
+        { label: "Catatan menunggu revisi", href: "/tracker?status=menunggu_revisi", count: 5 },
+        { label: "Catatan dapat dijustifikasi", href: "/tracker?status=perlu_verifikasi", count: 2 }
+      ];
     }
-    if (currentUser.role === "uki") {
-      return { count: 2, items: [{ label: "Catatan menunggu justifikasi", href: "/tracker", count: 2 }] };
-    }
-    return { count: 0, items: [] };
+    return { count: items.reduce((sum, item) => sum + item.count, 0), items };
+  });
+
+  registerMock("GET", "/nav-counts", (): NavCountsResponse => {
+    if (!currentUser) throw new ApiError(401, "Sesi berakhir. Silakan masuk kembali.");
+    // triageUnreviewed: reviewer/admin only. trackerPending: everyone except leader. 0 hides the badge.
+    const role = currentUser.role;
+    return {
+      triageUnreviewed: role === "reviewer" || role === "admin" ? 83 : 0,
+      trackerPending: role === "leader" ? 0 : 3
+    };
   });
 }

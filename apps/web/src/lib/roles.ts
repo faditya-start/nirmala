@@ -1,4 +1,4 @@
-import { ROLES, type Role } from "@nirmala/shared";
+import { ROLES, type Role, type SessionUserDetail } from "@nirmala/shared";
 
 /** Roles (mvp-scope.md section 3) come from @nirmala/shared, the single source shared with the API. */
 export { ROLES };
@@ -11,13 +11,16 @@ export const ROLE_LABEL: Record<Role, string> = {
   admin: "Admin"
 };
 
-export interface AuthUser {
-  id: string;
-  name: string;
-  role: Role;
-  /** Optional unit shown in the sidebar footer, e.g. "Itjen" or "Ditjen Contoh A". */
-  unit?: string | null;
-}
+/**
+ * The signed-in user as GET /auth/me returns it (`SessionUserDetail`, docs/api-contract.md 3.1):
+ * `id`, `name`, `role`, `username`, `unitLabel` (unit shown after the role in the sidebar footer, e.g. "Itjen")
+ * and `scopeOrganizationUnitIds` (`null` = all eselon I).
+ *
+ * `POST /auth/login` answers with the short `SessionUser`, so those three extra fields can be absent until
+ * the provider has re-read /auth/me. They are optional here for that reason; read them defensively.
+ */
+export type AuthUser = Pick<SessionUserDetail, "id" | "name" | "role"> &
+  Partial<Pick<SessionUserDetail, "username" | "unitLabel" | "scopeOrganizationUnitIds">>;
 
 export function isRole(value: unknown): value is Role {
   return typeof value === "string" && (ROLES as readonly string[]).includes(value);

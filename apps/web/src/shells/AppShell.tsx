@@ -54,8 +54,8 @@ function CyclePicker() {
 
 function Sidebar({ user, open, onNavigate, onLogout }: { user: AuthUser; open: boolean; onNavigate: () => void; onLogout: () => void }) {
   const groups = useMemo(() => navForRole(user.role), [user.role]);
-  const { countFor } = useNeedsAction();
-  const unit = user.unit ? ` · ${user.unit}` : "";
+  const { navCounts } = useNeedsAction();
+  const unit = user.unitLabel ? ` · ${user.unitLabel}` : "";
 
   return (
     <aside id="app-sidebar" className={cn(styles.sidebar, open && styles.sidebarOpen)} aria-label="Sidebar">
@@ -76,7 +76,7 @@ function Sidebar({ user, open, onNavigate, onLogout }: { user: AuthUser; open: b
               {group.label}
             </p>
             {group.items.map((item) => {
-              const count = countFor(item.to);
+              const count = item.badge && navCounts ? navCounts[item.badge.key] : null;
               return (
                 <NavLink key={item.to} to={item.to} className={styles.navItem} onClick={onNavigate}>
                   <item.icon size={16} aria-hidden="true" className={styles.navIcon} />
@@ -84,7 +84,7 @@ function Sidebar({ user, open, onNavigate, onLogout }: { user: AuthUser; open: b
                   {count !== null && count > 0 && (
                     <span className={cn(styles.navCount, "num")}>
                       {count}
-                      <span className="sr-only"> perlu tindakan</span>
+                      <span className="sr-only"> {item.badge?.note}</span>
                     </span>
                   )}
                 </NavLink>
