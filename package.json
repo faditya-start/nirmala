@@ -12,7 +12,7 @@
     "dev": "concurrently \"npm run dev -w @nirmala/api\" \"npm run dev -w @nirmala/web\"",
     "build": "npm run build -w @nirmala/shared && npm run build -w @nirmala/web && npm run build -w @nirmala/api",
     "typecheck": "npm run typecheck -w @nirmala/shared && npm run typecheck -w @nirmala/web && npm run typecheck -w @nirmala/api",
-    "test": "npm run test -ws",
+    "test": "npm run test --workspaces --if-present",
     "db:generate": "npm run db:generate -w @nirmala/api",
     "db:migrate": "npm run db:migrate -w @nirmala/api",
     "db:seed": "npm run db:seed -w @nirmala/api"

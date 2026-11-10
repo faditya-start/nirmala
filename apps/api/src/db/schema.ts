@@ -141,14 +141,6 @@ export const trackerChecks = sqliteTable("tracker_checks", {
   checkedAt: integer("checked_at", { mode: "timestamp_ms" }).notNull()
 }, (table) => [index("tracker_checks_task_idx").on(table.taskId)]);
 
-export const integrationLogs = sqliteTable("integration_logs", {
-  id: text("id").primaryKey(),
-  chrId: text("chr_id").notNull().references(() => chrDocuments.id),
-  status: text("status").notNull(),
-  message: text("message").notNull(),
-  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull()
-}, (table) => [index("integration_logs_chr_idx").on(table.chrId)]);
-
 export const auditLogs = sqliteTable("audit_logs", {
   id: text("id").primaryKey(),
   actorUserId: text("actor_user_id").references(() => users.id),

@@ -31,8 +31,6 @@ CREATE INDEX IF NOT EXISTS follow_up_tasks_status_idx ON follow_up_tasks(status)
 CREATE TABLE IF NOT EXISTS rka_revisions (id TEXT PRIMARY KEY, task_id TEXT NOT NULL REFERENCES follow_up_tasks(id), revision_number INTEGER NOT NULL, proposed_unit_price INTEGER NOT NULL, note TEXT NOT NULL, created_at INTEGER NOT NULL, UNIQUE(task_id, revision_number));
 CREATE TABLE IF NOT EXISTS tracker_checks (id TEXT PRIMARY KEY, task_id TEXT NOT NULL REFERENCES follow_up_tasks(id), revision_id TEXT NOT NULL REFERENCES rka_revisions(id), result TEXT NOT NULL CHECK(result IN ('compliant','not_compliant')), reason TEXT NOT NULL, checked_at INTEGER NOT NULL);
 CREATE INDEX IF NOT EXISTS tracker_checks_task_idx ON tracker_checks(task_id);
-CREATE TABLE IF NOT EXISTS integration_logs (id TEXT PRIMARY KEY, chr_id TEXT NOT NULL REFERENCES chr_documents(id), status TEXT NOT NULL, message TEXT NOT NULL, created_at INTEGER NOT NULL);
-CREATE INDEX IF NOT EXISTS integration_logs_chr_idx ON integration_logs(chr_id);
 CREATE TABLE IF NOT EXISTS audit_logs (id TEXT PRIMARY KEY, actor_user_id TEXT REFERENCES users(id), action TEXT NOT NULL, entity_type TEXT NOT NULL, entity_id TEXT NOT NULL, detail TEXT NOT NULL, created_at INTEGER NOT NULL);
 CREATE TABLE IF NOT EXISTS risk_config (id TEXT PRIMARY KEY, version TEXT NOT NULL, weights_json TEXT NOT NULL, thresholds_json TEXT NOT NULL, updated_by_user_id TEXT REFERENCES users(id), updated_at INTEGER NOT NULL);
 CREATE TABLE IF NOT EXISTS historical_findings (id TEXT PRIMARY KEY, rka_item_id TEXT NOT NULL REFERENCES rka_items(id), finding_year INTEGER NOT NULL, category TEXT NOT NULL, summary TEXT NOT NULL, reference TEXT NOT NULL, similarity REAL, limitation TEXT NOT NULL, created_at INTEGER NOT NULL);
@@ -49,7 +47,6 @@ function ensureWorkflowColumns(connection: Database) {
   ensureColumn(connection, "rka_revisions", "proposed_quantity", "REAL");
   ensureColumn(connection, "rka_revisions", "proposed_unit", "TEXT");
   ensureColumn(connection, "rka_revisions", "proposed_total_amount", "INTEGER");
-  ensureColumn(connection, "integration_logs", "attempt", "INTEGER NOT NULL DEFAULT 1");
 }
 export function id(prefix: string) { return `${prefix}_${randomBytes(12).toString("hex")}`; }
 export async function hashPassword(password: string) { const salt = randomBytes(16).toString("hex"); const derived = await scrypt(password, salt, 64) as Buffer; return `${salt}:${derived.toString("hex")}`; }

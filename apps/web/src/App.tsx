@@ -24,21 +24,21 @@ function Landing() {
         </Link>
         <Link className="public-home-link" to="/transparansi">Lihat transparansi publik demo</Link>
       </section>
-      <section className="status-panel" aria-label="Status fondasi aplikasi">
+      <section className="status-panel" aria-label="Alur kerja NIRMALA">
         <div className="panel-heading">
           <div>
-            <p className="eyebrow">Initial foundation</p>
-            <h2>Fondasi aplikasi siap dikembangkan</h2>
+            <p className="eyebrow">Alur kerja reviu</p>
+            <h2>Dari catatan sampai bukti perbaikan</h2>
           </div>
           <ShieldCheck className="status-icon" size={28} />
         </div>
         <div className="status-list">
-          <div><Activity size={18} /><span>React + Vite frontend</span><strong>Siap</strong></div>
-          <div><Activity size={18} /><span>Hono API service</span><strong>Siap</strong></div>
-          <div><Activity size={18} /><span>Shared TypeScript contracts</span><strong>Siap</strong></div>
-          <div><Activity size={18} /><span>Cookie session authentication</span><strong>Aktif</strong></div>
+          <div><Activity size={18} /><span>Risk Triage: item RKA diurutkan dengan aturan dan skor yang bisa dijelaskan</span></div>
+          <div><Activity size={18} /><span>CHR: catatan reviu, terkunci saat diterbitkan</span></div>
+          <div><Activity size={18} /><span>Smart Tracker: tindak lanjut dipantau sampai reviewer menutupnya</span></div>
+          <div><Activity size={18} /><span>Audit log: setiap keputusan tercatat</span></div>
         </div>
-        <p className="notice">Fondasi data dan autentikasi demo telah aktif. Workflow reviu, CHR, dan Smart Tracker akan dibangun pada tahap berikutnya.</p>
+        <p className="notice">Skor hanya membantu memprioritaskan peninjauan; keputusan tetap di tangan reviewer. Data pada demo ini sintetis.</p>
       </section>
     </main>
   );
@@ -76,7 +76,7 @@ function InternalShell({ user, onLogout, children }: { user: SessionUser; onLogo
       <div className="sidebar-brand"><div className="sidebar-mark">N</div><div className="sidebar-brand-copy"><strong>NIRMALA</strong><span>Budget Review &amp; Follow-up Intelligence</span></div><button className="sidebar-collapse" aria-label={collapsed ? "Perluas sidebar" : "Ciutkan sidebar"} onClick={() => setCollapsed(!collapsed)}>{collapsed ? <Menu size={18} /> : <X size={18} />}</button></div>
       <div className="sidebar-context"><span className="sidebar-context-label">Ruang kerja</span><strong>Reviu Anggaran</strong></div>
       <nav className="sidebar-nav" aria-label="Navigasi utama">{navigation.map(({ to, label, icon: Icon }) => <NavLink key={to} to={to} end={to === "/dashboard"} onClick={() => setMobileOpen(false)} className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}><Icon size={18} /><span>{label}</span></NavLink>)}</nav>
-      <div className="sidebar-footer"><div className="sidebar-user"><div className="avatar">{user.name.slice(0, 1)}</div><div className="sidebar-user-copy"><strong>{user.name}</strong><span>{user.role === "leader" ? "Pimpinan" : user.role === "admin" ? "Administrator" : "Reviewer"}</span></div></div><button className="sidebar-logout" onClick={() => void logout}><LogOut size={17} /><span>Keluar</span></button></div>
+      <div className="sidebar-footer"><div className="sidebar-user"><div className="avatar">{user.name.slice(0, 1)}</div><div className="sidebar-user-copy"><strong>{user.name}</strong><span>{user.role === "leader" ? "Pimpinan" : user.role === "admin" ? "Administrator" : "Reviewer"}</span></div></div><button className="sidebar-logout" onClick={() => void logout()}><LogOut size={17} /><span>Keluar</span></button></div>
     </aside>
     <button className="sidebar-overlay" aria-label="Tutup navigasi" onClick={() => setMobileOpen(false)} />
     <div className="internal-content">{children}</div>
@@ -89,7 +89,7 @@ function Dashboard({ user, onLogout }: { user: SessionUser; onLogout: () => void
   async function logout() { await fetch("/api/auth/logout", { method: "POST", credentials: "include" }); onLogout(); navigate("/login"); }
   const metricCards = [["totalItems", "Total Item RKA"], ["highRisk", "Item High Risk"], ["evaluatedItems", "Sudah Dievaluasi"], ["issuedChr", "CHR Diterbitkan"], ["openFollowUps", "Tindak Lanjut Terbuka"], ["resolvedFollowUps", "Tindak Lanjut Selesai"]];
   const colors = { high: "#dc2626", medium: "#d97706", low: "#16a34a" };
-  return <main className="dashboard"><header><div><p className="eyebrow">NIRMALA · Dashboard</p><h1>Selamat datang, {user.name}</h1><p>Peran aktif: {user.role}</p></div><button className="logout" onClick={logout}><LogOut size={16} /> Keluar</button></header><section className="kpis">{metricCards.map(([key, label]) => <article key={key}><span>{label}</span><strong>{data?.metrics[key] ?? "—"}</strong></article>)}</section>{data && <section className="dashboard-charts"><article className="assessment chart-card"><h2>Distribusi risiko</h2><ResponsiveContainer width="100%" height={240}><PieChart><Pie data={data.riskDistribution} dataKey="count" nameKey="category" cx="50%" cy="50%" outerRadius={80} label>{data.riskDistribution.map((row) => <Cell key={row.category} fill={colors[row.category as keyof typeof colors] ?? "#0284c7"} />)}</Pie><Tooltip /><Legend /></PieChart></ResponsiveContainer></article><article className="assessment chart-card"><h2>Progres per satuan kerja</h2><ResponsiveContainer width="100%" height={240}><BarChart data={data.reviewProgress}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="unit" hide /><YAxis allowDecimals={false} /><Tooltip /><Legend /><Bar dataKey="total" name="Total item" fill="#94a3b8" /><Bar dataKey="evaluated" name="Dievaluasi" fill="#0284c7" /></BarChart></ResponsiveContainer></article></section>}<div className="dashboard-actions"><Link className="dashboard-link" to="/risk-triage">Buka Risk Triage <ArrowRight size={16} /></Link><Link className="dashboard-link" to="/tracker">Buka Smart Tracker <ArrowRight size={16} /></Link><Link className="dashboard-link secondary-link" to="/reports">Lihat Laporan <ArrowRight size={16} /></Link>{user.role === "admin" && <><Link className="dashboard-link secondary-link" to="/audit-logs">Audit Log <ArrowRight size={16} /></Link><Link className="dashboard-link secondary-link" to="/admin/risk-config">Risk Config <ArrowRight size={16} /></Link><Link className="dashboard-link secondary-link" to="/admin/users">Users <ArrowRight size={16} /></Link></>}</div><p className="notice">Data dashboard berasal dari seed sintetis lokal. Integrasi SAKTI dan pemeriksaan tindak lanjut diberi label simulasi.</p></main>;
+  return <main className="dashboard"><header><div><p className="eyebrow">NIRMALA · Dashboard</p><h1>Selamat datang, {user.name}</h1><p>Peran aktif: {user.role}</p></div><button className="logout" onClick={logout}><LogOut size={16} /> Keluar</button></header><section className="kpis">{metricCards.map(([key, label]) => <article key={key}><span>{label}</span><strong>{data?.metrics[key] ?? "—"}</strong></article>)}</section>{data && <section className="dashboard-charts"><article className="assessment chart-card"><h2>Distribusi risiko</h2><ResponsiveContainer width="100%" height={240}><PieChart><Pie data={data.riskDistribution} dataKey="count" nameKey="category" cx="50%" cy="50%" outerRadius={80} label>{data.riskDistribution.map((row) => <Cell key={row.category} fill={colors[row.category as keyof typeof colors] ?? "#0284c7"} />)}</Pie><Tooltip /><Legend /></PieChart></ResponsiveContainer></article><article className="assessment chart-card"><h2>Progres per satuan kerja</h2><ResponsiveContainer width="100%" height={240}><BarChart data={data.reviewProgress}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="unit" hide /><YAxis allowDecimals={false} /><Tooltip /><Legend /><Bar dataKey="total" name="Total item" fill="#94a3b8" /><Bar dataKey="evaluated" name="Dievaluasi" fill="#0284c7" /></BarChart></ResponsiveContainer></article></section>}<div className="dashboard-actions"><Link className="dashboard-link" to="/risk-triage">Buka Risk Triage <ArrowRight size={16} /></Link><Link className="dashboard-link" to="/tracker">Buka Smart Tracker <ArrowRight size={16} /></Link><Link className="dashboard-link secondary-link" to="/reports">Lihat Laporan <ArrowRight size={16} /></Link>{user.role === "admin" && <><Link className="dashboard-link secondary-link" to="/audit-logs">Audit Log <ArrowRight size={16} /></Link><Link className="dashboard-link secondary-link" to="/admin/risk-config">Risk Config <ArrowRight size={16} /></Link><Link className="dashboard-link secondary-link" to="/admin/users">Users <ArrowRight size={16} /></Link></>}</div><p className="notice">Data dashboard pada demo ini berasal dari seed sintetis lokal.</p></main>;
 }
 
 function App() {
