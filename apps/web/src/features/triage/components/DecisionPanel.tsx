@@ -168,6 +168,7 @@ function DecisionForms({ detail, reasons, reasonsFailed, onChanged }: Pick<Decis
         <>
           <Select
             label="Kategori catatan"
+            title={CATEGORY_LABEL[category]}
             options={CATEGORY_OPTIONS}
             value={category}
             disabled={busy}

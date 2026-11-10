@@ -162,3 +162,27 @@
   align-self: flex-start;
   color: var(--ink-muted);
 }
+
+/* Umpan balik masuk: pudar singkat, dimatikan bila pengguna meminta gerak dikurangi. */
+.decided,
+.error {
+  animation: appear 0.16s ease-out;
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .decided,
+  .error {
+    animation: none;
+  }
+}

@@ -292,7 +292,7 @@ export function RiskTriagePage() {
                         <Td>
                           <CellTitle
                             title={
-                              <Link to={href} className={styles.rowLink} title={row.description}>
+                              <Link to={href} tabIndex={-1} className={styles.rowLink} title={row.description}>
                                 {row.description}
                               </Link>
                             }
