@@ -81,6 +81,8 @@
 }
 
 .title {
+  min-width: 0;
+  overflow-wrap: anywhere;
   font-size: var(--fs-base);
   font-weight: 600;
 }
@@ -92,6 +94,7 @@
 }
 
 .description {
+  overflow-wrap: anywhere;
   font-size: var(--fs-xs);
   color: var(--ink-muted);
 }

@@ -33,8 +33,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setOrganizationUnits(Array.isArray(result.organizationUnits) ? result.organizationUnits : []);
       return result.user ?? null;
     } catch {
-      setUser(null);
-      setOrganizationUnits([]);
+      // A network or server error says nothing about the session: keep whoever is signed in rather than
+      // bouncing them to /login. (A real "signed out" answer is 200 with `user: null`, handled above.)
       return null;
     }
   }, []);

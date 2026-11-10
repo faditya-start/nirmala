@@ -57,6 +57,14 @@ export function CycleProvider({ children }: { children: ReactNode }) {
     void reload();
   }, [userId, reload]);
 
+  // A failed load is retried when the window regains focus, so one network blip does not leave the sidebar empty.
+  useEffect(() => {
+    if (status !== "error" || !userId) return;
+    const retry = () => void reload();
+    window.addEventListener("focus", retry);
+    return () => window.removeEventListener("focus", retry);
+  }, [status, userId, reload]);
+
   const setActiveId = useCallback((id: string) => {
     setActiveIdState(id);
     writeStorage(STORAGE_KEY, id);

@@ -2,6 +2,10 @@
   display: flex;
   gap: 20px;
   border-bottom: 1px solid var(--border);
+  /* Many or long tabs scroll sideways instead of breaking the layout. */
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
 
 .tab {
@@ -15,6 +19,7 @@
   background: transparent;
   color: var(--ink-muted);
   font-size: var(--fs-base);
+  flex: none;
   white-space: nowrap;
 }
 

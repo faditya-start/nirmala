@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { NavCountsResponse } from "@nirmala/shared";
 import { api } from "../lib/api";
 import type { NeedsActionItem, NeedsActionResponse } from "../lib/types";
@@ -31,30 +31,38 @@ export function NeedsActionProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
   const [failed, setFailed] = useState(false);
 
+  const ticket = useRef(0);
+
   const refresh = useCallback(async () => {
+    // Only the newest refresh may write state, so a slow older answer (or one that lands after sign-out) is dropped.
+    const mine = ++ticket.current;
+    const current = () => mine === ticket.current;
     setLoading(true);
     const query = { cycleId };
     // Independent requests: a failing badge must never hide the other one or crash the shell.
     const needs = api
       .get<NeedsActionResponse>("/needs-action", { query })
       .then((result) => {
+        if (!current()) return;
         setData({ count: Number(result.count) || 0, items: Array.isArray(result.items) ? result.items : [] });
         setFailed(false);
       })
       .catch(() => {
+        if (!current()) return;
         setData(null);
         setFailed(true);
       });
     const counts = api
       .get<NavCountsResponse>("/nav-counts", { query })
-      .then((result) => setNavCounts({ triageUnreviewed: Number(result.triageUnreviewed) || 0, trackerPending: Number(result.trackerPending) || 0 }))
-      .catch(() => setNavCounts(null));
+      .then((result) => current() && setNavCounts({ triageUnreviewed: Number(result.triageUnreviewed) || 0, trackerPending: Number(result.trackerPending) || 0 }))
+      .catch(() => current() && setNavCounts(null));
     await Promise.all([needs, counts]);
-    setLoading(false);
+    if (current()) setLoading(false);
   }, [cycleId]);
 
   useEffect(() => {
     if (!userId) {
+      ticket.current += 1;
       setData(null);
       setNavCounts(null);
       setFailed(false);

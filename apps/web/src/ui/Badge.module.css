@@ -15,6 +15,17 @@
   flex: none;
 }
 
+/* A very long label (Satker name in a custom badge) is cut with an ellipsis instead of overflowing its cell. */
+.pill {
+  max-width: 100%;
+}
+
+.pillLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .draf {
   background: var(--st-draf-bg);
   color: var(--st-draf-fg);

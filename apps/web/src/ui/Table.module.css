@@ -108,7 +108,14 @@
   min-width: 0;
 }
 
+/* Long item descriptions: two lines at most, full text in the title attribute. */
 .title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
   font-weight: 500;
   color: var(--ink);
 }
@@ -116,6 +123,7 @@
 .meta {
   display: flex;
   flex-wrap: wrap;
+  min-width: 0;
   align-items: center;
   gap: 6px;
   font-size: var(--fs-xs);
@@ -124,8 +132,15 @@
 
 .metaPart {
   display: inline-flex;
+  min-width: 0;
   align-items: center;
   gap: 6px;
+}
+
+/* Meta may wrap at its dot separators; a single very long word breaks instead of widening the column. */
+.metaText {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .metaDot {

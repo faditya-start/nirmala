@@ -17,6 +17,7 @@ import { handleMockRequest, type HttpMethod } from "./mock";
 export { ApiError, isApiError, errorMessage } from "./api-error";
 
 export const API_BASE = "/api";
+const DEFAULT_TIMEOUT_MS = 60_000;
 export const IS_MOCK = import.meta.env.VITE_MOCK === "1";
 
 export type QueryValue = string | number | boolean | null | undefined;
@@ -26,6 +27,8 @@ export interface RequestOptions {
   signal?: AbortSignal;
   /** Do not treat a 401 as "session ended" (used by the login call itself). */
   skipUnauthorized?: boolean;
+  /** Give up after this many ms (default 60 000). 0 = no timeout, for long uploads. */
+  timeoutMs?: number;
 }
 
 type UnauthorizedListener = () => void;
@@ -73,11 +76,13 @@ export async function request<T>(method: HttpMethod, path: string, body?: unknow
     }
   } else {
     let response: Response;
+    const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+    const signals = [options.signal, timeoutMs > 0 ? AbortSignal.timeout(timeoutMs) : undefined].filter((item): item is AbortSignal => Boolean(item));
     try {
       response = await fetch(`${API_BASE}${target}`, {
         method,
         credentials: "include",
-        signal: options.signal,
+        signal: signals.length > 1 ? AbortSignal.any(signals) : signals[0],
         headers: {
           accept: "application/json",
           ...(body !== undefined ? { "content-type": "application/json" } : {})
@@ -86,6 +91,9 @@ export async function request<T>(method: HttpMethod, path: string, body?: unknow
       });
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") throw error;
+      if (error instanceof DOMException && error.name === "TimeoutError") {
+        throw new ApiError(0, "Server terlalu lama menjawab. Coba lagi sebentar lagi.");
+      }
       throw new ApiError(0, "Tidak dapat terhubung ke server. Periksa koneksi lalu coba lagi.");
     }
     status = response.status;
@@ -93,6 +101,8 @@ export async function request<T>(method: HttpMethod, path: string, body?: unknow
     try {
       data = text ? JSON.parse(text) : undefined;
     } catch {
+      // A 2xx that is not JSON is almost always a proxy or SPA fallback page, not the API: do not hand HTML to a screen.
+      if (status >= 200 && status < 300 && text) throw new ApiError(502, "Respons server tidak dikenali. Hubungi Admin bila terus terjadi.");
       data = text || undefined;
     }
   }

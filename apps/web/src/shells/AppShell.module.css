@@ -84,11 +84,18 @@
 }
 
 .cycleName {
+  min-width: 0;
+  overflow: hidden;
   font-size: var(--fs-base);
   font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .cycleDeadline {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: var(--fs-xs);
   color: var(--sidebar-ink-muted);
 }
@@ -168,6 +175,9 @@
 .navLabel {
   flex: 1;
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .navCount {
@@ -329,6 +339,7 @@
 }
 
 .needsItem {
+  overflow-wrap: anywhere;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -345,6 +356,7 @@
 }
 
 .needsItemCount {
+  flex: none;
   padding: 1px 6px;
   border-radius: var(--r-sm);
   background: var(--surface-sunken);

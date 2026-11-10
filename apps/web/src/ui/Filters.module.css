@@ -68,17 +68,23 @@
 
 .select {
   gap: 6px;
+  max-width: 100%;
   padding: 0 10px;
   cursor: pointer;
 }
 
 .selectLabel {
+  flex: none;
   color: var(--ink-muted);
 }
 
 .selectValue {
+  min-width: 0;
+  overflow: hidden;
   font-weight: 500;
   color: var(--ink);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .selectChevron {

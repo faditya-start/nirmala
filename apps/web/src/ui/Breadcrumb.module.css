@@ -27,6 +27,7 @@
 }
 
 .current {
+  overflow-wrap: anywhere;
   font-weight: 600;
   color: var(--ink);
 }

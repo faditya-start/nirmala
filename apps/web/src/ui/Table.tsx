@@ -131,7 +131,9 @@ export function CellTitle({ title, meta }: CellTitleProps) {
   const parts = (meta ?? []).filter((part) => part !== null && part !== undefined && part !== false);
   return (
     <div className={styles.cellTitle}>
-      <div className={styles.title}>{title}</div>
+      <div className={styles.title} title={typeof title === "string" ? title : undefined}>
+        {title}
+      </div>
       {parts.length > 0 && (
         <div className={styles.meta}>
           {parts.map((part, index) => (
@@ -141,7 +143,13 @@ export function CellTitle({ title, meta }: CellTitleProps) {
                   ·
                 </span>
               )}
-              {part}
+              {typeof part === "string" ? (
+                <span className={styles.metaText} title={part}>
+                  {part}
+                </span>
+              ) : (
+                part
+              )}
             </span>
           ))}
         </div>

@@ -34,7 +34,9 @@ function Pill({ tone, icon: Icon, children, className }: PillProps) {
   return (
     <span className={cn(styles.pill, styles[tone], className)}>
       {Icon && <Icon size={13} aria-hidden="true" className={styles.icon} />}
-      <span>{children}</span>
+      <span className={styles.pillLabel} title={typeof children === "string" ? children : undefined}>
+        {children}
+      </span>
     </span>
   );
 }
