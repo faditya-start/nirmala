@@ -215,7 +215,7 @@ function ChrEditor({ detail, reload }: { detail: ChrDetailResponse; reload: () =
               </Button>
             </div>
           )}
-          <p className={styles.total} aria-live="polite">
+          <p className="sr-only" aria-live="polite">
             {formatNumber(notesTotal)} catatan di dokumen ini
           </p>
         </div>

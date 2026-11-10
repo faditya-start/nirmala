@@ -298,8 +298,6 @@ function seed(): void {
   store.set(p, pEntry);
 }
 
-seed();
-
 /* ------------------------------------------------------------------ helpers */
 
 const categoryIndex = (category: NoteCategory) => NOTE_CATEGORIES.indexOf(category);
@@ -638,3 +636,5 @@ registerMock("GET", "/references/accounts", ({ query }: MockContext) => {
   const limit = Number(query.limit) || 50;
   return { accounts: ACCOUNTS.filter((account) => !q || account.code.startsWith(q) || account.name.toLowerCase().includes(q)).slice(0, limit) };
 });
+
+seed();

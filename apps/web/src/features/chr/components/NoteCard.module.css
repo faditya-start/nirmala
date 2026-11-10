@@ -41,6 +41,9 @@
 }
 
 .meta {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0 4px;
   font-size: var(--fs-xs);
   color: var(--ink-muted);
   overflow-wrap: anywhere;

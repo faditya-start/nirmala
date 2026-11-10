@@ -13,14 +13,19 @@ import styles from "./Print.module.css";
  * `@page` is document-wide, so it is injected only while this page is mounted. Margins replace the sheet padding
  * when printing; the footer (identity and "Halaman N dari M") uses page margin boxes, which Chromium fills per page.
  */
-const PAGE_CSS = `
+function pageCss(identity: string): string {
+  return `
 @page {
   size: A4;
   margin: 13mm 15mm 18mm;
-  @bottom-left { content: var(--chr-footer-identity); font-family: var(--font-ui); font-size: 9pt; color: var(--ink-muted); vertical-align: top; padding-top: 3mm; }
+  @bottom-left { content: ${JSON.stringify(identity)}; font-family: var(--font-ui); font-size: 9pt; color: var(--ink-muted); vertical-align: top; padding-top: 3mm; }
   @bottom-right { content: "Halaman " counter(page) " dari " counter(pages); font-family: var(--font-ui); font-size: 9pt; color: var(--ink-muted); vertical-align: top; padding-top: 3mm; }
 }
+@media print {
+  html, body { background: var(--surface) !important; }
+}
 `;
+}
 
 /** S7 · Cetak CHR A4 (Bko3K). Route: /chr/:chrId/cetak (shell "none"). Always light, data from GET /chr/:id/print. */
 export function ChrPrintPage() {
@@ -69,8 +74,8 @@ export function ChrPrintPage() {
   const empty = data.groups.every((group) => group.rows.length === 0);
 
   return (
-    <div className={styles.screen} style={{ "--chr-footer-identity": JSON.stringify(identity) } as React.CSSProperties}>
-      <style>{PAGE_CSS}</style>
+    <div className={styles.screen}>
+      <style>{pageCss(identity)}</style>
       <div className={styles.toolbar}>
         <ButtonLink to={`/chr/${encodeURIComponent(chrId)}`} icon={ArrowLeft} variant="ghost">
           Kembali ke dokumen
