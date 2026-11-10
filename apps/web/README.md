@@ -2,6 +2,7 @@
 
 React 19 + Vite + react-router 7. Visual source of truth is the Pencil file `design/nirmala.pen`
 (node map in `design/SCREENS.md`). UI copy is formal, plain Indonesian.
+The visual system is written down in `DESIGN.md` at the repo root (tokens, type scale, components, do and don't): read it before adding UI.
 
 ```
 npm run dev -w @nirmala/web                 # proxies /api to the API on :8787
@@ -94,7 +95,8 @@ that badge; it never blocks the shell. `POST /auth/login` answers with the short
 ## API client
 
 `api.get/post/put/patch/delete` (`credentials: "include"`, JSON). Non-2xx throws `ApiError { status, message, payload }`
-where `message` is the server's `error` string. `errorMessage(err)` gives presentable text. A 401 clears the session
+where `message` is the server's `error` string. Requests time out after 60 s (`{ timeoutMs }`, 0 = never, for long uploads) and a 2xx
+answer that is not JSON (proxy or SPA fallback page) throws `ApiError(502)`. `errorMessage(err)` gives presentable text. A 401 clears the session
 (AuthProvider) and the route guard redirects to `/login`; pass `{ skipUnauthorized: true }` for calls where 401 is an
 expected answer (login).
 
@@ -117,7 +119,7 @@ expected answer (login).
 |---|---|
 | `Button`, `ButtonLink` | `variant` utama / sekunder (default) / ghost / bahaya, `size` md / sm, `icon`, `iconRight` (lucide), `loading`; `disabled` = Nonaktif. ButtonLink takes `to` |
 | `IconButton` | `icon`, `label` (required, aria-label + tooltip), `pressed`, `disabled` |
-| `Input`, `Select`, `Textarea` | `label`, `hint`, `error`, `hideLabel`, `required`, `className` (wrapper), native props. Select also `placeholder`, `options` or `<option>` children |
+| `Input`, `Select`, `Textarea` | `label`, `hint`, `error`, `hideLabel`, `required`, `className` (wrapper), native props. Select also `placeholder`, `options` or `<option>` children. `invalid` + `describedBy` mark a field red and link it to an external message, for two fields that share one error line: render `<FieldError id="x">` under the pair and pass `describedBy="x"` to both |
 | `Checkbox` | `label`, `indeterminate`, native input props |
 | `Switch` | `checked`, `onCheckedChange`, `label` (role switch) |
 | `Tabs`, `TabPanel` | `tabs [{value,label,count}]`, `value`, `onChange`, `idPrefix`, `label`; arrow/Home/End keys |
@@ -127,19 +129,48 @@ expected answer (login).
 | `ScoreBadge` | `score` 0-100 (tinggi >= 70, sedang >= 35), optional `category` |
 | `RuleChip`, `TagChip` | `code` (R01..R08) / `children` |
 | `TableFrame`, `Table`, `THead`, `TBody`, `Th`, `Tr`, `Td` | Th: `align`, `width`, `sort` + `onSort`. Tr: `selected`, `onActivate`. Td: `align`, `numeric`, `width`. Helpers `CellTitle`, `CellEmpty`, `SelectedMark` |
-| `Pagination` | `page`, `pageSize`, `total`, `onPageChange`, `noun` |
+| `Pagination` | `page`, `pageSize`, `total`, `onPageChange`, `noun`. Numbered pages, for short lists |
+| `Pager` | "Menampilkan 1-11 dari 12.702 item" + "Halaman x dari y" + Sebelumnya / Berikutnya (frame oHui1), for very long lists. `page`, `pageSize`, `total`, `pageCount?`, `onPageChange`, `noun` |
 | `FilterBar`, `FilterSearch`, `FilterSelect`, `FilterSpacer`, `FilterSummary` | Search: `value`, `onChange`, `placeholder`. Select: `label`, `value`, `onChange`, `options` |
 | `KpiCard`, `ProgressBar` | `label`, `value`, `hint`, `progress` (0-1) / `value` (0-1), `label` |
 | `RuleCard` | `code`, `name`, `category`, `reason`, `details [{label,value,mono}]` |
 | `FactorRow`, `ScoreBreakdown` | `code`, `name`, `value`, `weight`, `contribution?`, `explanation`, `na` / `title`, `score`, children |
-| `EvidenceCard`, `EvidenceRow` | Card: `title`, `result`, `footnote`. Row: `field`, `state` berubah / tetap / tidak_berubah, `before`, `after`, `value` |
+| `EvidenceCard`, `EvidenceRow` | Card: `title`, `result`, `footnote`. Row: `field`, `state` berubah / tetap / tidak_berubah, `before`, `after`, `value`, `tag` (replaces the default Berubah/Tetap badge), `hideTag` |
 | `Timeline`, `TimelineItem` | `title`, `time`, `description`, `tone`, `pending`, `last` |
-| `Dialog`, `ConfirmDialog` | Dialog: `open`, `onClose`, `title`, `icon`, `actions`, `size`. Confirm: `description`, `summary`, `confirmLabel`, `tone` utama / bahaya, `busy`, `onConfirm`, `onCancel` |
+| `Dialog`, `ConfirmDialog` | Dialog: `open`, `onClose`, `title`, `icon`, `actions`, `size`, `dismissible`, `error` (message from the last attempt: alert role, linked with aria-describedby, dialog stays open), `describedBy` (id of an element in `children`). Confirm: `description`, `summary`, `confirmLabel`, `tone` utama / bahaya, `busy`, `error`, `onConfirm`, `onCancel` |
+| `Notice` | Inline message: `tone` sukses / galat / info, `onDismiss`, `action`. Galat is `role="alert"`, the others `role="status"` |
 | `EmptyState` | `icon`, `title`, `description`, `action`, `variant` card / page |
 | `Breadcrumb`, `Crumb` | `items [{label,to?}]`, last is current |
 | `TextLink` | router link with underline and arrow |
-| `PageHeader`, `SectionHeader` | `title`, `subtitle`/`description`, `actions` |
+| `PageHeader`, `SectionHeader` | `title`, `subtitle`/`description`, `actions`. PageHeader also `status` (inline badge next to the title, e.g. `<StatusBadge status="draf" />`) |
 | `Loading` | `label`, `block` |
 
+Long text: `CellTitle` clamps the title to two lines (full text in `title`); badges, buttons and filter selects cut long
+labels with an ellipsis; dialogs, cards and breadcrumbs wrap anywhere. Add your own `title` attribute for text you truncate.
+
 Shells: `shells/AppShell` (used by the route frame, not by features) and `shells/PublicShell`. Public pages render
-their own sections inside it (it provides header, footer, 1120 px container and the vertical rhythm).
+their own sections inside it (it provides header, footer, a 1120 px content column with 160 px gutters at 1440 px and the
+vertical rhythm). The footer line "Data pada demo ini sintetis." is **not** shown by default: a public page whose data
+is synthetic calls `useSyntheticDataNotice()` (from `shells/PublicShell`) while mounted, or `useSyntheticDataNotice(flag)`.
+Below 1024 px the AppShell sidebar becomes a drawer: hidden and inert when closed, focus moves in on open and back to the
+menu button on Escape, the page behind is inert. On every route change focus moves to `<main>`.
+
+## Shared helpers (`lib/`)
+
+- `useRequest(key, load, { keepPreviousData? })` returns `{ data, error, loading, reload }`. Race safe: a new `key` aborts
+  the previous request and a late answer for an old key is ignored (`key = null` stays idle). `load` receives an
+  `AbortSignal`; pass it to `api.get(path, { signal })`. Use `keepPreviousData` for filterable tables.
+- `describeError(error, fallback?)` (`lib/api-error`) gives presentable text per status (501 not built, 0 network, 5xx).
+  `errorMessage` still returns only the server message.
+- `lib/paging`: `pageCountFor`, `pageRange`, `clampPage` (pure, tested).
+- `lib/format` is id-ID and null safe (missing or NaN values render "–", never "NaN"): `formatNumber`, `formatDecimal(v, digits)`,
+  `formatDecimal1`, `formatRupiah`, `formatPercent(ratio, digits)`, `formatDate` ("3 Nov 2026"), `formatDateLong`
+  ("3 November 2026"), `formatTime` ("14.20"), `formatDateTime`, `formatDayMonth`, `toDateInput` (epoch to `YYYY-MM-DD`),
+  `daysUntil`, `formatCountdown`.
+
+## Motion
+
+Tokens `--dur-fast` 100 ms, `--dur-base` 140 ms, `--dur-slow` 180 ms and `--ease-out` (tokens.css). Motion is state feedback
+only: hover and press color changes, dialog / popover / notice entrance, drawer slide. Never animate layout. With
+`prefers-reduced-motion` everything is instant and busy spinners pulse instead of rotating (base.css). Use the tokens for
+any motion in a feature.
