@@ -142,7 +142,7 @@ export function ScoreWeightsPage() {
         subtitle={`Konfigurasi aktif: versi ${config.active.version} · dibuat ${formatDate(config.active.createdAt)}${config.active.createdByName ? ` oleh ${config.active.createdByName}` : ""}`}
         actions={
           <>
-            <Button icon={RefreshCw} onClick={() => void startRecalculate()} loading={recalcBusy} disabled={!cycle}>
+            <Button icon={RefreshCw} onClick={() => void startRecalculate()} loading={recalcBusy} disabled={!cycle} title={cycle ? undefined : "Belum ada siklus. Buat siklus di menu Siklus lebih dulu."}>
               Hitung ulang siklus
             </Button>
             <Button variant="utama" icon={Save} onClick={() => void save()} loading={saving} disabled={!canSave}>

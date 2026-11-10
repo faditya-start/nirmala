@@ -122,7 +122,7 @@ export function RuleEditPanel({ rule, open, onClose, onSaved }: RuleEditPanelPro
 
       {rule.kind === "keyword_wrong_account" && (
         <>
-          <Textarea label="Pola uraian (mengandung salah satu)" value={form.include} onChange={(event) => set("include", event.target.value)} error={errors.include} hint={errors.include ? undefined : "Pisahkan kata dengan tanda |."} rows={3} />
+          <Textarea label="Pola uraian (mengandung salah satu)" value={form.include} onChange={(event) => set("include", event.target.value)} error={errors.include} hint={errors.include ? undefined : "Pisahkan kata dengan tanda |. Huruf besar dan kecil dianggap sama."} rows={3} />
           {optional.exclude && <Textarea label="Pola pengecualian (tidak boleh ada)" value={form.exclude} onChange={(event) => set("exclude", event.target.value)} error={errors.exclude} rows={2} />}
           <div className={styles.pair}>
             <Input label="Akun salah" value={form.akunSalah} onChange={(event) => set("akunSalah", event.target.value)} error={errors.akunSalah} hint={errors.akunSalah ? undefined : "Pisahkan dengan koma."} />
