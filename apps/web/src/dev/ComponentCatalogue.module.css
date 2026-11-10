@@ -1,0 +1,155 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 48px 64px 96px;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-5);
+}
+
+.h1 {
+  font-size: var(--fs-3xl);
+  font-weight: 500;
+  line-height: 1.15;
+}
+
+.lede {
+  max-width: 720px;
+  margin-top: var(--sp-2);
+  font-size: var(--fs-md);
+  color: var(--ink-muted);
+}
+
+.themeBox {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: 3px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+
+.themeButton {
+  padding: 5px 12px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: var(--fs-base);
+}
+
+.themeButton[aria-pressed="true"] {
+  background: var(--primary);
+  color: var(--on-primary);
+  font-weight: 600;
+}
+
+.themeLink {
+  padding: 5px 12px;
+  color: var(--ink);
+  font-size: var(--fs-base);
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--border-strong);
+}
+
+.blockTitle {
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 28px 32px;
+}
+
+.inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.spec {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-2);
+}
+
+.specName {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 560px));
+  gap: 32px 48px;
+  align-items: start;
+}
+
+.grid4 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--sp-6);
+}
+
+.w280 {
+  width: 280px;
+}
+
+.w420 {
+  width: 420px;
+}
+
+.w480 {
+  width: 480px;
+  max-width: 100%;
+}
+
+.w560 {
+  width: 560px;
+  max-width: 100%;
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+.gapTop {
+  margin-top: var(--sp-4);
+}
+
+.tabsDemo {
+  min-width: 480px;
+}
+
+.panel {
+  padding: var(--sp-3) 0;
+  font-size: var(--fs-base);
+  color: var(--ink-muted);
+}
+
+.note {
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+}
