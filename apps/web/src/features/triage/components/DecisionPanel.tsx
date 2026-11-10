@@ -310,7 +310,7 @@ function Decided({ detail, nextHref, onChanged }: { detail: TriageItemDetailResp
         <Detail label="Diputuskan oleh">{decision.reviewerName}</Detail>
       </dl>
       {decision.decision === "confirm" && chr && (
-        <ButtonLink to={`/chr/${encodeURIComponent(chr.id)}`} variant="utama" iconRight={ArrowRight} className={styles.wide}>
+        <ButtonLink to={`/chr/${encodeURIComponent(chr.id)}`} variant="utama" icon={ArrowRight} className={styles.wide}>
           Buka CHR {chr.organizationUnitName}
         </ButtonLink>
       )}

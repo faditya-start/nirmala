@@ -1,6 +1,6 @@
 import type { DismissReasonDto, TriageItemDetailResponse } from "@nirmala/shared";
 import { ChevronLeft, ChevronRight, CircleAlert, SearchX } from "lucide-react";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { usePageBreadcrumb } from "../../app/breadcrumb";
 import { useCycle } from "../../app/cycle";
@@ -41,7 +41,11 @@ export function ItemDetailPage() {
   const reasonsReq = useRequest<{ reasons: DismissReasonDto[] }>("reasons", (signal) => api.get("/references/dismiss-reasons", { signal }));
   const detail = detailReq.data;
 
-  const nav = detail?.navigation ?? null;
+  // Setelah keputusan, item bisa keluar dari daftar ber-filter (mis. "belum ditinjau") sehingga server menjawab
+  // navigation null. Pakai navigasi terakhir untuk item yang sama supaya "Item berikutnya" tetap ada.
+  const navMemo = useRef<{ id: string; nav: NonNullable<TriageItemDetailResponse["navigation"]> } | null>(null);
+  if (detail?.navigation) navMemo.current = { id: detail.item.id, nav: detail.navigation };
+  const nav = detail ? (detail.navigation ?? (navMemo.current?.id === detail.item.id ? navMemo.current.nav : null)) : null;
   const prevHref = nav?.previousItemId ? itemPath(nav.previousItemId, filter) : null;
   const nextHref = nav?.nextItemId ? itemPath(nav.nextItemId, filter) : null;
   const backTo = listPath(filter, nav ? pageForPosition(nav.position) : 1);

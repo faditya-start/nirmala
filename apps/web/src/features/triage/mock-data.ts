@@ -367,7 +367,7 @@ export function peerFor(seed: MockSeed, factor1: number | null): PeerComparisonD
   return {
     itemUnitPrice: seed.unitPrice,
     median: seed.peerRatio === 1.9 ? 184000 : median,
-    satkerCount: 5 + (seed.index % 8),
+    satkerCount: seed.peerRatio === 1.9 ? 9 : 5 + (seed.index % 8),
     ratio: Math.round((seed.unitPrice / (seed.peerRatio === 1.9 ? 184000 : median)) * 10) / 10,
     min: seed.peerRatio === 1.9 ? 120000 : Math.round((median * 0.65) / 1000) * 1000,
     max: seed.peerRatio === 1.9 ? 360000 : Math.max(seed.unitPrice, Math.round((median * 1.5) / 1000) * 1000),

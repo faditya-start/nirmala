@@ -107,32 +107,29 @@ function show(field: PreviousVersionFieldDiff["field"], value: string | number |
 }
 
 function Diff({ previous }: { previous: PreviousVersionDto }) {
-  const changed = previous.fields.filter((field) => field.changed).length;
+  const changed = previous.fields.filter((field) => field.changed);
+  const same = previous.fields.filter((field) => !field.changed);
   return (
     <div className={styles.diff}>
       <p className={styles.note}>
-        Dibandingkan dengan v{previous.versionNo} {previous.label}: {changed === 0 ? "tidak ada bidang yang berubah." : `${changed} bidang berubah.`}
+        Dibandingkan dengan v{previous.versionNo} {previous.label}: {changed.length === 0 ? "tidak ada bidang yang berubah." : `${changed.length} bidang berubah.`}
       </p>
-      <ul className={styles.diffList} role="list">
-        {previous.fields.map((field) => (
-          <li key={field.field} className={field.changed ? styles.changed : undefined}>
-            <span className={styles.diffLabel}>{FIELD_LABEL[field.field]}</span>
-            {field.changed ? (
+      {changed.length > 0 && (
+        <ul className={styles.diffList} role="list">
+          {changed.map((field) => (
+            <li key={field.field} className={styles.changed}>
+              <span className={styles.diffLabel}>{FIELD_LABEL[field.field]}</span>
               <span className={styles.diffValue}>
                 <span className={`${styles.before} num`}>{show(field.field, field.before)}</span>
                 <span aria-label="menjadi"> → </span>
                 <span className="num">{show(field.field, field.after)}</span>
                 <TagChip>Berubah</TagChip>
               </span>
-            ) : (
-              <span className={styles.diffValue}>
-                <span className={`${styles.same} ${field.field === "description" ? "" : "num"}`}>{show(field.field, field.after)}</span>
-                <TagChip>Tetap</TagChip>
-              </span>
-            )}
-          </li>
-        ))}
-      </ul>
+            </li>
+          ))}
+        </ul>
+      )}
+      {same.length > 0 && changed.length > 0 && <p className={styles.note}>Tetap: {same.map((field) => FIELD_LABEL[field.field].toLowerCase()).join(", ")}.</p>}
     </div>
   );
 }

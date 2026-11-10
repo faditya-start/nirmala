@@ -80,3 +80,10 @@
     transition: none;
   }
 }
+
+.emptyCard {
+  align-self: center;
+  width: 520px;
+  max-width: 100%;
+  margin-top: var(--sp-5);
+}

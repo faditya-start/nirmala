@@ -251,6 +251,7 @@ export function RiskTriagePage() {
               />
             ) : emptyFlagged ? (
               <EmptyState
+                className={styles.emptyCard}
                 icon={CircleCheck}
                 title="Tidak ada item yang kena aturan"
                 description="Tidak ada item di snapshot ini yang cocok dengan aturan aktif. Item tetap diurutkan menurut skor kalau filter dimatikan."
