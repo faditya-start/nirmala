@@ -1,0 +1,79 @@
+.notes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.heading {
+  font-size: var(--fs-base);
+  font-weight: 600;
+}
+
+.empty {
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: 10px var(--sp-3);
+  border-bottom: 1px solid var(--border);
+}
+
+.item:last-child {
+  border-bottom: 0;
+}
+
+.itemText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.itemTitle {
+  font-size: var(--fs-base);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.itemMeta {
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+  overflow-wrap: anywhere;
+}
+
+.draft {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  background: var(--surface-sunken);
+}
+
+.draftActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+}
+
+.versionRow {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-3);
+}

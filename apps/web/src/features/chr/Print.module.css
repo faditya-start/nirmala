@@ -1,0 +1,273 @@
+/* A4 sheet (794 x 1123 px reference). Colors come from the light tokens; the page forces data-theme="light". */
+.screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+  min-height: 100vh;
+  padding: var(--sp-4) var(--sp-4) var(--sp-6);
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  width: 794px;
+  max-width: 100%;
+}
+
+.toolbarHint {
+  flex: 1;
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+  text-align: right;
+}
+
+.sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 794px;
+  min-height: 1123px;
+  padding: 48px 56px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: var(--fs-xs);
+}
+
+.kop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  text-align: center;
+}
+
+.org {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.unit {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.address {
+  color: var(--ink-muted);
+}
+
+.rule {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rule span:first-child {
+  height: 2px;
+  background: var(--ink);
+}
+
+.rule span:last-child {
+  height: 1px;
+  background: var(--ink);
+}
+
+.docTitle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding-top: 6px;
+  text-align: center;
+}
+
+.docTitle h1 {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+}
+
+.number {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.identity {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+}
+
+.idRow {
+  display: flex;
+  gap: 8px;
+}
+
+.idRow dt {
+  flex: none;
+  width: 130px;
+}
+
+.idRow dd {
+  margin: 0;
+  font-weight: 500;
+}
+
+.table {
+  width: 100%;
+  table-layout: fixed;
+  border: 1px solid var(--ink);
+  border-collapse: collapse;
+  line-height: 16px;
+}
+
+.table th,
+.table td {
+  padding: 7px 8px;
+  border-bottom: 1px solid var(--ink);
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.table thead th {
+  background: var(--surface-sunken);
+  font-weight: 700;
+}
+
+.groupRow th {
+  padding: 6px 8px;
+  background: var(--surface-sunken);
+  font-weight: 700;
+}
+
+.no {
+  font-variant-numeric: tabular-nums;
+}
+
+.text {
+  white-space: pre-line;
+}
+
+.none {
+  color: var(--ink-muted);
+  text-align: center;
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  break-inside: avoid;
+}
+
+.block h2 {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}
+
+.block p {
+  line-height: 17px;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.response {
+  min-height: 54px;
+  padding: 8px;
+  border: 1px solid var(--ink);
+  line-height: 17px;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.placeholder {
+  color: var(--ink-muted);
+}
+
+.fill {
+  flex: 1;
+}
+
+.signature {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  break-inside: avoid;
+}
+
+.signTitle {
+  font-weight: 600;
+}
+
+.signSpace {
+  height: 48px;
+}
+
+.signName {
+  font-weight: 600;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-strong);
+  color: var(--ink-muted);
+}
+
+@media print {
+  .screen {
+    display: block;
+    min-height: 0;
+    padding: 0;
+    background: var(--surface);
+  }
+
+  .toolbar,
+  .footer {
+    display: none;
+  }
+
+  .sheet {
+    width: auto;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    gap: 16px;
+  }
+
+  .fill {
+    display: none;
+  }
+
+  .signature {
+    margin-top: 24px;
+  }
+
+  .table thead {
+    display: table-header-group;
+  }
+
+  .table tr {
+    break-inside: avoid;
+  }
+
+  .groupRow {
+    break-after: avoid;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
