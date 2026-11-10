@@ -1,0 +1,245 @@
+/* P1 Beranda. Desktop is the designed 1440 frame (1120 px content). Below 900 px the hero stacks;
+   below 640 px it follows the 390 px mobile frame (full width buttons, stacked cards). */
+
+.hero {
+  display: flex;
+  align-items: center;
+  gap: 64px;
+}
+
+.heroText {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+  width: 560px;
+  max-width: 100%;
+  flex: none;
+}
+
+.eyebrow {
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--ink-muted);
+}
+
+.heroTitle {
+  font-size: var(--fs-3xl);
+  font-weight: 600;
+  line-height: 46px;
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+.lead {
+  font-size: var(--fs-md);
+  line-height: 21px;
+  color: var(--ink-muted);
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+}
+
+.journey {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: var(--sp-4);
+  min-width: 0;
+  padding: var(--sp-5);
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.journeyTitle {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.step:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.stepText {
+  font-size: var(--fs-base);
+  line-height: 19px;
+  color: var(--ink-muted);
+}
+
+.pillars {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pillar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-5);
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.iconBox {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  color: var(--ink);
+}
+
+.pillarBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.pillarTitle {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.pillarText {
+  font-size: var(--fs-md);
+  line-height: 21px;
+  color: var(--ink-muted);
+}
+
+.cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-5);
+  padding: var(--sp-5);
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.ctaText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  max-width: 560px;
+}
+
+.ctaTitle {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.ctaBody {
+  font-size: var(--fs-base);
+  line-height: 20px;
+  color: var(--ink-muted);
+}
+
+/* Tablet: hero stacks, pillars become a list of rows (icon left, text right) */
+@media (max-width: 899px) {
+  .hero {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--sp-6);
+  }
+
+  .heroText {
+    width: 100%;
+    max-width: 640px;
+  }
+
+  .pillars {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sp-4);
+  }
+
+  .pillar {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: var(--sp-4);
+  }
+
+  .pillarBody {
+    gap: 6px;
+  }
+}
+
+/* Phone (390 frame) */
+@media (max-width: 639px) {
+  .heroText {
+    gap: var(--sp-4);
+  }
+
+  .heroTitle {
+    font-size: var(--fs-2xl);
+    line-height: 32px;
+  }
+
+  .hero {
+    gap: var(--sp-5);
+  }
+
+  .actions {
+    flex-direction: column;
+    align-self: stretch;
+  }
+
+  .actions > a {
+    width: 100%;
+  }
+
+  .journey {
+    padding: 20px;
+  }
+
+  .pillar {
+    flex-direction: column;
+    gap: var(--sp-3);
+  }
+
+  .pillarBody {
+    gap: var(--sp-3);
+  }
+
+  .cta {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    padding: 20px;
+  }
+
+  .ctaText {
+    max-width: none;
+  }
+}
