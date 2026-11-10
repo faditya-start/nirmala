@@ -288,7 +288,7 @@ export function TrackerPage() {
           </div>
         )}
 
-        {error && data && (
+        {!!error && (
           <Notice
             tone="galat"
             action={
