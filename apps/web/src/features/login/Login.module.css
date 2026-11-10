@@ -89,6 +89,24 @@
   line-height: 20px;
 }
 
+@keyframes alert-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+/* The error appears with a short fade so the change is noticed; reduced motion shows it instantly. */
+.alert {
+  animation: alert-in 150ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alert {
+    animation: none;
+  }
+}
+
 .alert svg {
   flex: none;
   margin-top: 2px;

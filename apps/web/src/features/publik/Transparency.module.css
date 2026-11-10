@@ -404,3 +404,22 @@
 .loadingBox {
   min-height: 360px;
 }
+
+/* Results fade in when a cycle's data arrives (feedback that the view changed). */
+@keyframes results-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.kpis,
+.breakdown {
+  animation: results-in 150ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kpis,
+  .breakdown {
+    animation: none;
+  }
+}
