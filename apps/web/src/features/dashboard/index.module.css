@@ -1,0 +1,228 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--sp-6);
+  align-items: start;
+}
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: var(--sp-5);
+  align-items: start;
+}
+
+@media (max-width: 1199px) {
+  .split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  min-width: 0;
+}
+
+.side {
+  min-width: 0;
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+/* Strip of five status cells */
+.strip {
+  display: flex;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.cell {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  min-width: 0;
+  padding: var(--sp-4);
+}
+
+.cell + .cell {
+  border-left: 1px solid var(--border);
+}
+
+.count {
+  font-size: 30px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.count[data-zero],
+.barCount[data-zero] {
+  color: var(--ink-faint);
+}
+
+/* Category bars (plain markup, no chart library: the design is a list of horizontal bars) */
+.bars {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 20px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  list-style: none;
+}
+
+.barRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.barLabel {
+  flex: none;
+  width: 140px;
+}
+
+.barTrack {
+  display: block;
+  flex: 1;
+  height: 12px;
+  max-width: 420px;
+  background: var(--surface-sunken);
+}
+
+.barFill {
+  display: block;
+  height: 100%;
+  background: var(--ink);
+}
+
+.barCount {
+  min-width: 2ch;
+  font-weight: 600;
+}
+
+.barCount[data-zero] {
+  font-weight: 400;
+}
+
+/* Right column panels */
+.panel {
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: var(--sp-4);
+}
+
+.action + .action {
+  border-top: 1px solid var(--border);
+}
+
+.actionHead {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.actionCount {
+  font-weight: 600;
+}
+
+.actionBody,
+.scope p {
+  font-size: var(--fs-md);
+  line-height: 20px;
+  color: var(--ink-muted);
+}
+
+.actionButton {
+  margin-top: 0;
+}
+
+.panelEmpty {
+  padding: var(--sp-4);
+  font-size: var(--fs-md);
+  line-height: 20px;
+  color: var(--ink-muted);
+}
+
+.scope {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: var(--sp-4);
+  color: var(--ink-muted);
+}
+
+/* Per eselon I table: 16 px cell padding as designed */
+.orgTable th,
+.orgTable td {
+  padding-inline: var(--sp-4);
+}
+
+.orgTable td {
+  padding-block: 12px;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.right {
+  align-items: flex-end;
+}
+
+.orgName {
+  font-weight: 500;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.orgName:hover {
+  text-decoration: underline;
+}
+
+.sub {
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+}
+
+.faint {
+  color: var(--ink-faint);
+}
+
+.progress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.progressBar {
+  width: 160px;
+}
+
+.chevron {
+  color: var(--ink-muted);
+}
