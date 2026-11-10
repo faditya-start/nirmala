@@ -26,6 +26,8 @@ import {
   THead,
   Tr
 } from "../../ui";
+import { cn } from "../../lib/cn";
+import density from "./components/density.module.css";
 import { BarList } from "./components/BarList";
 import { InfoNote } from "./components/InfoNote";
 import { closedHint, issuedHint } from "./hints";
@@ -188,7 +190,7 @@ function SummaryBlock({ data }: { data: ReportSummaryResponse }) {
         <KpiCard label="Catatan terbit" value={formatNumber(data.notesIssued)} hint={issuedHint(data.chrDocuments)} />
         <KpiCard
           label="Closed sebelum diajukan"
-          value={formatRatio(data.percentClosed)}
+          value={formatRatio(data.percentClosed === null ? null : data.percentClosed / 100)}
           hint={closedHint(data)}
           progress={data.percentClosed === null ? undefined : data.percentClosed / 100}
           progressLabel="Catatan closed dari catatan terbit"
@@ -250,7 +252,7 @@ function ValidationBlock({ data }: { data: EngineValidationResponse }) {
       {data.sets.length === 0 ? (
         <EmptyState title="Belum ada kunci jawaban" description="Validasi engine tampil setelah kunci jawaban untuk eselon I ini dimuat di server." />
       ) : (
-        <TableFrame>
+        <TableFrame className={cn(density.roomy, density.rows14)}>
           <Table aria-label="Validasi engine terhadap kunci jawaban">
             <THead>
               <tr>

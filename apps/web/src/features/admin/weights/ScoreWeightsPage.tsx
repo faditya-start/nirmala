@@ -2,6 +2,8 @@ import type { RecalculateAcceptedResponse, RecalculateJobDto, RiskConfigCreatedR
 import { CircleCheck, CircleDashed, CircleAlert, Info, RefreshCw, Save, SlidersHorizontal } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useCycle } from "../../../app/cycle";
+import { cn } from "../../../lib/cn";
+import density from "../components/density.module.css";
 import { api, errorMessage, isApiError } from "../../../lib/api";
 import { formatDate, formatNumber } from "../../../lib/format";
 import { Button, EmptyState, Input, Loading, PageHeader, ProgressBar, SectionHeader, Table, TableFrame, TagChip, TBody, Td, Th, THead, Tr } from "../../../ui";
@@ -161,15 +163,15 @@ export function ScoreWeightsPage() {
       <div className={styles.columns}>
         <section className={styles.left} aria-label="Bobot faktor">
           <SectionHeader title="Bobot faktor" description="Skor 0-100 hanya untuk mengurutkan. Total bobot harus 100%." />
-          <TableFrame>
+          <TableFrame className={cn(density.roomy, density.rows14)}>
             <Table aria-label="Bobot faktor skor">
               <THead>
                 <tr>
-                  <Th width={80}>Kode</Th>
+                  <Th width={64}>Kode</Th>
                   <Th>Faktor</Th>
-                  <Th align="right" width={130}>{`Versi ${config.active.version} (aktif)`}</Th>
-                  <Th align="right" width={150}>Bobot baru</Th>
-                  <Th align="right" width={90}>Selisih</Th>
+                  <Th align="right" width={120}>{`Versi ${config.active.version} (aktif)`}</Th>
+                  <Th align="right" width={130}>Bobot baru</Th>
+                  <Th align="right" width={80}>Selisih</Th>
                 </tr>
               </THead>
               <TBody>

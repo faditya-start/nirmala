@@ -2,6 +2,8 @@ import type { CycleListResponse, ReviewCycleDto } from "@nirmala/shared";
 import { CalendarDays, Globe, Plus, SquarePen } from "lucide-react";
 import { useState } from "react";
 import { useCycle } from "../../../app/cycle";
+import { cn } from "../../../lib/cn";
+import density from "../components/density.module.css";
 import { api, errorMessage } from "../../../lib/api";
 import { formatDate } from "../../../lib/format";
 import { Button, EmptyState, Loading, PageHeader, Table, TableFrame, TagChip, TBody, Td, Th, THead, Tr } from "../../../ui";
@@ -53,7 +55,7 @@ export function CyclesAdminPage() {
           {cycles.length === 0 ? (
             <EmptyState icon={CalendarDays} title="Belum ada siklus" description="Buat siklus pertama untuk mulai mengimpor data RKA." action={<Button variant="utama" icon={Plus} onClick={() => show({ kind: "create" })}>Buat siklus</Button>} />
           ) : (
-            <TableFrame>
+            <TableFrame className={cn(density.roomy, density.rows16)}>
               <Table aria-label="Daftar siklus">
                 <THead>
                   <tr>

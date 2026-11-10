@@ -1,6 +1,8 @@
 import type { RuleAdminDto, RuleListResponse, RuleResponse } from "@nirmala/shared";
 import { BookOpen, SquarePen, TriangleAlert } from "lucide-react";
 import { useState } from "react";
+import { cn } from "../../../lib/cn";
+import density from "../components/density.module.css";
 import { api, errorMessage } from "../../../lib/api";
 import { formatNumber } from "../../../lib/format";
 import { cycleLabel } from "../../../lib/types";
@@ -74,7 +76,7 @@ export function RuleCatalogPage() {
           {rules.length === 0 ? (
             <EmptyState icon={BookOpen} title="Belum ada aturan" description="Katalog terisi saat server pertama kali dijalankan. Hubungi pengelola sistem bila daftar ini kosong." />
           ) : (
-            <TableFrame>
+            <TableFrame className={cn(density.roomy, density.rows14)}>
               <Table aria-label="Katalog aturan">
                 <THead>
                   <tr>

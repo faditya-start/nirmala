@@ -1,6 +1,8 @@
 import type { AuditLogFacetsResponse, AuditLogListResponse } from "@nirmala/shared";
 import { Lock, ScrollText } from "lucide-react";
 import { useState } from "react";
+import { cn } from "../../../lib/cn";
+import density from "../components/density.module.css";
 import { api, errorMessage } from "../../../lib/api";
 import { formatDateTime, formatNumber } from "../../../lib/format";
 import { Button, EmptyState, FilterBar, FilterSelect, FilterSummary, Loading, PageHeader, Pagination, Table, TableFrame, TagChip, TBody, Td, Th, THead, Tr } from "../../../ui";
@@ -77,7 +79,7 @@ export function AuditLogPage() {
         />
       ) : (
         <div className={styles.table} aria-busy={list.loading || undefined} data-stale={list.loading || undefined}>
-          <TableFrame>
+          <TableFrame className={cn(density.roomy, density.rows16)}>
             <Table aria-label="Entri audit log">
               <THead>
                 <tr>

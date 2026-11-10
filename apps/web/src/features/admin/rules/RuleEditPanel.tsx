@@ -89,7 +89,7 @@ export function RuleEditPanel({ rule, open, onClose, onSaved }: RuleEditPanelPro
         </p>
       )}
 
-      <Input label="Nama aturan" value={form.name} onChange={(event) => set("name", event.target.value)} error={errors.name} required maxLength={200} />
+      <Input label="Nama aturan" value={form.name} onChange={(event) => set("name", event.target.value)} error={errors.name} maxLength={200} />
       <Select
         label="Kategori"
         value={form.category}

@@ -2,6 +2,8 @@ import type { OrganizationUnitDto, UserAdminDto, UserListResponse, UserResponse 
 import { SquarePen, UserPlus, Users } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../../../app/auth";
+import { cn } from "../../../lib/cn";
+import density from "../components/density.module.css";
 import { api, errorMessage } from "../../../lib/api";
 import { formatNumber } from "../../../lib/format";
 import { Button, EmptyState, IconButton, Loading, PageHeader, Switch, Table, TableFrame, TagChip, TBody, Td, Th, THead, Tr } from "../../../ui";
@@ -64,7 +66,7 @@ export function UsersPage() {
           {users.length === 0 ? (
             <EmptyState icon={Users} title="Belum ada pengguna" description="Tambahkan pengguna pertama dengan tombol Tambah pengguna." />
           ) : (
-            <TableFrame>
+            <TableFrame className={cn(density.roomy, density.rows18)}>
               <Table aria-label="Daftar pengguna">
                 <THead>
                   <tr>

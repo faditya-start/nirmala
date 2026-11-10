@@ -163,7 +163,7 @@
   gap: var(--sp-3);
 }
 
-.versions {
+ul.versions {
   display: flex;
   flex-direction: column;
   margin: 0;
