@@ -11,3 +11,6 @@ dist/
 
 data/private/
 *.tsbuildinfo
+
+# Ekspor Pencil (bisa dibangkitkan ulang dari design/nirmala.pen)
+design/export/
