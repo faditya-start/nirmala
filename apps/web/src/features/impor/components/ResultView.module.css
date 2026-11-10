@@ -125,3 +125,9 @@
   background: var(--surface);
   font-size: var(--fs-base);
 }
+
+/* Designed tables use 16 px cell padding (ui/Table defaults to 12). */
+.page th,
+.page td {
+  padding-inline: var(--sp-4);
+}

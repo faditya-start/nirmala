@@ -120,7 +120,7 @@ function CycleImportList() {
   const snapshotNote =
     maxVersion >= 2
       ? `Snapshot v${maxVersion} ${versionLabel(maxVersion)} dicek terhadap catatan CHR yang sudah terbit.`
-      : !canImport
+      : data && !canImport
         ? "Impor snapshot hanya bisa dilakukan Reviewer dan Admin pada siklus yang aktif."
         : undefined;
 

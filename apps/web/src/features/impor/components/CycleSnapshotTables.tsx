@@ -65,7 +65,7 @@ export interface SnapshotTableProps {
 export function SnapshotTable({ cycleId, rows, canImport, onImport }: SnapshotTableProps) {
   const columns = versionColumns(rows.map((row) => row.snapshots));
   return (
-    <TableFrame className={styles.frame}>
+    <TableFrame className={`${styles.frame} ${styles.tall}`}>
       <Table aria-label="Snapshot per eselon I">
         <THead>
           <tr>

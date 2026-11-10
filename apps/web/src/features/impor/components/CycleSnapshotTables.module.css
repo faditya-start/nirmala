@@ -8,6 +8,10 @@
   padding-block: 12px;
 }
 
+.tall td {
+  padding-block: 15px;
+}
+
 .active,
 .active:hover {
   background: var(--surface-sunken);
