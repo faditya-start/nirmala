@@ -40,7 +40,9 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 0;
+  /* Extra vertical padding grows the hit area to 24 px without moving the header text. */
+  padding: 5px 0;
+  margin: -5px 0;
   border: 0;
   background: transparent;
   font: inherit;

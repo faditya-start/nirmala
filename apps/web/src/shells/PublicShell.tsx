@@ -1,6 +1,6 @@
 import { ChartColumn, LogIn } from "lucide-react";
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../app/auth";
 import { ButtonLink } from "../ui";
 import { Monogram } from "./Brand";
@@ -31,6 +31,18 @@ export function useSyntheticDataNotice(show = true): void {
 export function PublicShell({ children, syntheticData = false }: { children: ReactNode; syntheticData?: boolean }) {
   const { user } = useAuth();
   const [pageSynthetic, setPageSynthetic] = useState(false);
+  const mainRef = useRef<HTMLElement>(null);
+  const firstRender = useRef(true);
+  const { pathname } = useLocation();
+
+  // Single-page navigation: move focus to <main> so keyboard and screen reader users start at the new page.
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    mainRef.current?.focus({ preventScroll: true });
+  }, [pathname]);
   const showSynthetic = syntheticData || pageSynthetic;
   return (
     <SyntheticNoticeContext.Provider value={setPageSynthetic}>
@@ -58,7 +70,7 @@ export function PublicShell({ children, syntheticData = false }: { children: Rea
           </div>
         </header>
 
-        <main id="main" tabIndex={-1} className={styles.main}>
+        <main id="main" ref={mainRef} tabIndex={-1} className={styles.main}>
           <div className={styles.container}>{children}</div>
         </main>
 

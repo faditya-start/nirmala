@@ -216,6 +216,18 @@ export function AppShell({ user, title, children }: AppShellProps) {
   const override = useBreadcrumbOverride();
   const [drawer, setDrawer] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const mainRef = useRef<HTMLElement>(null);
+  const restoreFocus = useRef(false);
+  const firstRender = useRef(true);
+
+  // Single-page navigation: move focus to <main> so keyboard and screen reader users start at the new page.
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    mainRef.current?.focus({ preventScroll: true });
+  }, [location.pathname]);
 
   useEffect(() => setDrawer(false), [location.pathname]);
 
@@ -225,12 +237,20 @@ export function AppShell({ user, title, children }: AppShellProps) {
     document.querySelector<HTMLElement>("#app-sidebar a[href], #app-sidebar select, #app-sidebar button")?.focus();
     function onKey(event: KeyboardEvent) {
       if (event.key === "Escape") {
+        restoreFocus.current = true;
         setDrawer(false);
-        menuButtonRef.current?.focus();
       }
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
+  }, [drawer]);
+
+  // Runs after the page behind the drawer is no longer inert, otherwise the focus call is ignored.
+  useEffect(() => {
+    if (!drawer && restoreFocus.current) {
+      restoreFocus.current = false;
+      menuButtonRef.current?.focus();
+    }
   }, [drawer]);
 
   const crumbs = useMemo<BreadcrumbItem[]>(() => {
@@ -255,7 +275,14 @@ export function AppShell({ user, title, children }: AppShellProps) {
         Lewati ke konten
       </a>
       <Sidebar user={user} open={drawer} onNavigate={() => setDrawer(false)} onLogout={onLogout} />
-      {drawer && <div className={styles.scrim} onClick={() => setDrawer(false)} aria-hidden="true" />}
+      {drawer && <div
+          className={styles.scrim}
+          onClick={() => {
+            restoreFocus.current = true;
+            setDrawer(false);
+          }}
+          aria-hidden="true"
+        />}
       {/* While the drawer is open the page behind it is inert, so Tab stays in the drawer. */}
       <div className={styles.main} inert={drawer || undefined}>
         <header className={styles.header}>
@@ -273,7 +300,7 @@ export function AppShell({ user, title, children }: AppShellProps) {
           </div>
           <NeedsActionMenu />
         </header>
-        <main id="main" tabIndex={-1} className={styles.content}>
+        <main id="main" ref={mainRef} tabIndex={-1} className={styles.content}>
           {children}
         </main>
       </div>

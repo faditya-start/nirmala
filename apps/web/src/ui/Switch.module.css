@@ -5,6 +5,8 @@
   padding: 0;
   border: 0;
   background: transparent;
+  /* 24 px minimum hit area (WCAG 2.5.8); the 20 px track stays as designed. */
+  min-height: 24px;
   font-size: var(--fs-base);
   color: var(--ink);
   text-align: left;

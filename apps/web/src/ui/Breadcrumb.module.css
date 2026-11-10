@@ -15,6 +15,7 @@
 }
 
 .crumb {
+  padding: 4px 0;
   font-size: var(--fs-base);
   color: var(--ink-muted);
   text-decoration: none;
