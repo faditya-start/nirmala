@@ -7,6 +7,7 @@ import { loadScope } from "./middleware/scope.js";
 import { publicTransparency } from "./publicData.js";
 import { auditLogRoutes } from "./routes/auditLogs.js";
 import { authRoutes } from "./routes/auth.js";
+import { cycleRoutes } from "./routes/cycles.js";
 import { legacyRoutes } from "./routes/legacy.js";
 import { organizationUnitRoutes } from "./routes/organizationUnits.js";
 import { userRoutes } from "./routes/users.js";
@@ -36,6 +37,7 @@ export function createApp({ database, sessionSecret, webOrigin = "http://localho
   app.route("/api/auth", authRoutes(database.db, signer, secureCookies));
   app.route("/api/users", userRoutes(database));
   app.route("/api/organization-units", organizationUnitRoutes(database));
+  app.route("/api/cycles", cycleRoutes(database));
   app.route("/api/audit-logs", auditLogRoutes(database));
 
   // Halaman publik masih memakai konstanta sintetis sampai Fase 6 (public_metrics).

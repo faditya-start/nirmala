@@ -1,5 +1,9 @@
+import { readFile } from "node:fs/promises";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Database } from "./client.js";
+import { ingestSnapshot } from "../ingest/ingestService.js";
+import { createCycle, findCycleByYearStage } from "../repositories/cycles.js";
 import { accounts, dismissReasons, organizationUnits, riskConfig, rules, userScopes, users } from "./schema.js";
 import { hashPassword } from "../lib/security.js";
 import { ACCOUNT_SEEDS, DEFAULT_RISK_PARAMS, DEFAULT_THRESHOLDS, DEFAULT_WEIGHTS, DEMO_USER_SEEDS, DISMISS_REASON_SEEDS, ORGANIZATION_UNIT_SEEDS } from "./seeds/reference.js";
@@ -31,6 +35,28 @@ export async function seedMasterData({ db }: Database) {
   }).onConflictDoNothing();
 }
 
+const fixtureDir = join(dirname(fileURLToPath(import.meta.url)), "../../fixtures/synthetic");
+
+/**
+ * Siklus demo (TA 2026 · Alokasi) + impor snapshot "Awal" dari fixtures sintetis.
+ * Snapshot "Revisi" sengaja tidak diimpor di sini: ia dipakai untuk mendemokan loop
+ * (triage → CHR → impor revisi → cek tindak lanjut) dan oleh test. Idempoten lewat hash berkas.
+ */
+export async function seedSyntheticSnapshots(database: Database) {
+  const { db } = database;
+  const manifest = JSON.parse(await readFile(join(fixtureDir, "manifest.json"), "utf8")) as { fiscalYear: number; expectedDiff: Record<string, unknown> };
+  const satkerNames = JSON.parse(await readFile(join(fixtureDir, "satker.json"), "utf8")) as Record<string, string>;
+  const cycleId = (await findCycleByYearStage(db, manifest.fiscalYear, "alokasi"))?.id
+    ?? await createCycle(db, { fiscalYear: manifest.fiscalYear, stage: "alokasi", name: `TA ${manifest.fiscalYear} · Alokasi`, adkDeadline: Date.UTC(manifest.fiscalYear, 10, 12), dipaIssuedAt: null, createdBy: "usr_admin" });
+  const imported: string[] = [];
+  for (const code of Object.keys(manifest.expectedDiff)) {
+    const name = `awal/es1_${code}_${manifest.fiscalYear}.csv`;
+    const result = await ingestSnapshot(database, { cycleId, filePath: join(fixtureDir, name), fileName: name.split("/")[1], importedBy: "usr_admin", allowedOrganizationUnitIds: null, satkerNames });
+    if (!result.alreadyImported) imported.push(code);
+  }
+  return { cycleId, imported };
+}
+
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   await import("dotenv/config");
   const { getDatabase } = await import("./client.js");
@@ -38,5 +64,6 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const database = getDatabase();
   migrate(database);
   await seedMasterData(database);
-  console.log("Seed sintetis NIRMALA selesai dibuat.");
+  const { imported } = await seedSyntheticSnapshots(database);
+  console.log(`Seed sintetis NIRMALA selesai dibuat${imported.length ? ` (snapshot awal diimpor: eselon I ${imported.join(", ")})` : " (snapshot sudah ada)"}.`);
 }

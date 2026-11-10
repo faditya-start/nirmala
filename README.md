@@ -71,4 +71,14 @@ npm run db:seed       # master data + akun demo sintetis (idempoten)
 
 Skema ada di `apps/api/src/db/schema.ts`, migrasi di `apps/api/drizzle/`. Jika muncul "Database lama (skema prototipe) terdeteksi", hapus berkas `apps/api/nirmala.sqlite*` lalu migrasi dan seed ulang.
 
+## Data sintetis dan impor CSV
+
+`npm run db:seed` membuat master data, akun demo, siklus **TA 2026 · Alokasi**, dan mengimpor snapshot **Awal** dari `apps/api/fixtures/synthetic/awal/` (dua eselon I fiktif, sembilan Satker fiktif). Snapshot **Revisi** di `fixtures/synthetic/revisi/` sengaja tidak di-seed: unggah lewat API untuk mendemokan loop impor → cek tindak lanjut.
+
+- Format impor: CSV berformat SIPEKA `es1_<BAES1>_<tahun>.csv`, satu eselon I per berkas. Impor idempoten berdasarkan hash berkas; baris judul kelompok (`HEADER1` / `HEADER2`) disaring; item dicocokkan dengan snapshot sebelumnya (lihat [docs/data-model.md](docs/data-model.md) §4).
+- API: `POST /api/cycles/:id/snapshots` (multipart, field `file`; Reviewer dan Admin, dibatasi eselon I yang ditugaskan). Siklus dikelola Admin lewat `/api/cycles`.
+- Fixtures dibangkitkan deterministik dan tidak membaca `data/private`: `npm run generate:synthetic -w @nirmala/api`. `fixtures/synthetic/manifest.json` memuat angka diff yang diharapkan dan daftar kasus R01–R08.
+- Impor data asli untuk demo lokal (tidak di-commit, hanya di server sendiri):
+  `npm run import:private -w @nirmala/api -- <folder-csv> --cycle 2026:alokasi`. Keluarannya hanya agregat. Impor dari dump `d_dipa_awal` dan profil temuan BPK (PTL) belum diimplementasikan.
+
 Beberapa endpoint prototipe (`/api/chr`, `/api/tracker`, `/api/risk-items`, dashboard, laporan) mengembalikan 501 sampai fasenya selesai; lihat [docs/plan.md](docs/plan.md).

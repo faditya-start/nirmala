@@ -1,0 +1,124 @@
+{
+  "fiscalYear": 2026,
+  "expectedDiff": {
+    "90001": {
+      "baru": 2,
+      "berubah": 7,
+      "tetap": 77,
+      "hilang": 3
+    },
+    "90002": {
+      "baru": 1,
+      "berubah": 2,
+      "tetap": 61,
+      "hilang": 2
+    }
+  },
+  "ruleCases": [
+    {
+      "rule": "R01",
+      "satker": "900101",
+      "description": "Pengadaan kaos seragam peringatan HUT Kemerdekaan 17 Agustus",
+      "account": "521211",
+      "expectation": "hapus_item"
+    },
+    {
+      "rule": "R01",
+      "satker": "900201",
+      "description": "Seragam batik hari bakti",
+      "account": "521211",
+      "expectation": "hapus_item"
+    },
+    {
+      "rule": "R02",
+      "satker": "900102",
+      "description": "Honor satpam dan pengemudi kantor",
+      "account": "521213",
+      "expectation": "ganti_akun 521111"
+    },
+    {
+      "rule": "R02",
+      "satker": "900103",
+      "description": "Jasa kebersihan kantor (cleaning service)",
+      "account": "522191",
+      "expectation": "ganti_akun 521111"
+    },
+    {
+      "rule": "R02",
+      "satker": "900201",
+      "description": "Jasa pengemudi kendaraan dinas",
+      "account": "521119",
+      "expectation": "ganti_akun 521111"
+    },
+    {
+      "rule": "R03",
+      "satker": "900101",
+      "description": "Langganan internet kantor",
+      "account": "522191",
+      "expectation": "ganti_akun 521111"
+    },
+    {
+      "rule": "R03",
+      "satker": "900202",
+      "description": "Paket data internet untuk operasional kantor",
+      "account": "522191",
+      "expectation": "ganti_akun 521111"
+    },
+    {
+      "rule": "R04",
+      "satker": "900104",
+      "description": "Cetak kop surat dan amplop dinas",
+      "account": "521111",
+      "expectation": "ganti_akun 521211"
+    },
+    {
+      "rule": "R05",
+      "satker": "900105",
+      "description": "Rehabilitasi masjid binaan desa",
+      "account": "533111",
+      "expectation": "ganti_akun 526113"
+    },
+    {
+      "rule": "R06",
+      "satker": "900102",
+      "description": "Pengadaan laptop untuk staf",
+      "account": "521211",
+      "expectation": "ganti_akun 532111"
+    },
+    {
+      "rule": "R06",
+      "satker": "900203",
+      "description": "Pengadaan komputer PC desktop",
+      "account": "521211",
+      "expectation": "ganti_akun 532111"
+    },
+    {
+      "rule": "R07",
+      "satker": "900103",
+      "description": "Biaya koordinasi lain-lain",
+      "account": "521211",
+      "expectation": "rinci_item"
+    },
+    {
+      "rule": "R07",
+      "satker": "900204",
+      "description": "Alokasi kegiatan penunjang",
+      "account": "521211",
+      "expectation": "rinci_item"
+    },
+    {
+      "rule": "R08",
+      "satker": "900105",
+      "description": "Paket meeting evaluasi kinerja",
+      "account": "524114",
+      "expectation": "manual (di snapshot revisi)"
+    },
+    {
+      "rule": "R08",
+      "satker": "900104",
+      "description": "Perjalanan dinas koordinasi pusat daerah",
+      "account": "524111",
+      "expectation": "manual (padanan di awal berblokir)"
+    }
+  ]
+}

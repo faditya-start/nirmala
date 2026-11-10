@@ -23,3 +23,8 @@ export const DEMO = {
   leader: ["pimpinan.demo", "Pimpin123!"],
   admin: ["admin.demo", "Admin123!"]
 } as const;
+
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+export const fixturePath = (name: string) => join(dirname(fileURLToPath(import.meta.url)), "../fixtures/synthetic", name);
