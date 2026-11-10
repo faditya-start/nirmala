@@ -47,3 +47,20 @@
   display: flex;
   gap: var(--sp-2);
 }
+
+/* The discard prompt appears in place: a short fade tells the eye where the change happened. */
+.discard {
+  animation: discard-in 120ms ease-out;
+}
+
+@keyframes discard-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .discard {
+    animation: none;
+  }
+}
