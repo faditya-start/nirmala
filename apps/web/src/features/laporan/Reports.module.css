@@ -1,0 +1,77 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.scopeNote {
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  min-width: 0;
+}
+
+/* Previous numbers stay visible while a new filter loads, but read as not current. */
+.block[data-stale] {
+  opacity: 0.6;
+  transition: opacity 0.12s ease;
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-6);
+  align-items: start;
+}
+
+.charts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-5);
+  align-items: start;
+}
+
+.chart {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.setTitle {
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.setDescription {
+  margin-top: 2px;
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+}
+
+.recallBar {
+  width: 140px;
+}
+
+@media (max-width: 1100px) {
+  .kpis {
+    grid-template-columns: 1fr;
+    gap: var(--sp-4);
+  }
+
+  .charts {
+    grid-template-columns: 1fr;
+  }
+}
