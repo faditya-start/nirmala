@@ -4,8 +4,9 @@
  */
 import type {
   ChangeType, CheckResult, ChrStatus, CycleStage, CycleStatus, DiffSummary, Evidence,
-  Expectation, NoteCategory, NoteStatus, Role, RuleKind
+  Expectation, ImportRowError, NoteCategory, NoteStatus, Role, RuleKind
 } from "@nirmala/shared";
+import { isNotNull } from "drizzle-orm";
 import { index, integer, primaryKey, real, sqliteTable, text, uniqueIndex, type AnySQLiteColumn } from "drizzle-orm/sqlite-core";
 
 const ms = (name: string) => integer(name);
@@ -18,6 +19,10 @@ export const users = sqliteTable("users", {
   displayName: text("display_name").notNull(),
   role: text("role").$type<Role>().notNull(),
   passwordHash: text("password_hash").notNull(),
+  /** Pengguna nonaktif tidak bisa masuk (D1). */
+  active: integer("active", { mode: "boolean" }).notNull().default(true),
+  /** Teks setelah peran di footer sidebar, mis. "Itjen" (D1). */
+  unitLabel: text("unit_label"),
   createdAt: ms("created_at").notNull()
 });
 
@@ -84,11 +89,18 @@ export const rkaDocuments = sqliteTable("rka_documents", {
   headerRowsSkipped: integer("header_rows_skipped").notNull().default(0),
   importedBy: text("imported_by").references(() => users.id),
   importedAt: ms("imported_at").notNull(),
-  diffSummary: text("diff_summary", { mode: "json" }).$type<DiffSummary>()
+  diffSummary: text("diff_summary", { mode: "json" }).$type<DiffSummary>(),
+  /** Lama proses impor (ms); null untuk snapshot lama (D2). */
+  importDurationMs: integer("import_duration_ms"),
+  /** Jumlah baris yang dilewati karena tidak valid; rinciannya (maks. 1000) di `rowErrors` (D2). */
+  rowErrorCount: integer("row_error_count").notNull().default(0),
+  rowErrors: text("row_errors", { mode: "json" }).$type<ImportRowError[]>()
 }, (table) => [
   uniqueIndex("rka_documents_version_idx").on(table.cycleId, table.organizationUnitId, table.versionNo),
   index("rka_documents_org_idx").on(table.organizationUnitId)
 ]);
+
+export interface HierarchyNames { program?: string; activity?: string; output?: string; suboutput?: string; component?: string }
 
 export const rkaItems = sqliteTable("rka_items", {
   id: text("id").primaryKey(),
@@ -101,6 +113,8 @@ export const rkaItems = sqliteTable("rka_items", {
   componentCode: text("component_code").notNull(),
   subcomponentCode: text("subcomponent_code").notNull(),
   subcomponentName: text("subcomponent_name"),
+  /** Nama tingkat hierarki dari baris judul CSV bila ada (D4). */
+  hierarchyNames: text("hierarchy_names", { mode: "json" }).$type<HierarchyNames>(),
   accountCode: text("account_code").notNull(),
   description: text("description").notNull(),
   consItem: text("cons_item"),
@@ -148,6 +162,8 @@ export const ruleHits = sqliteTable("rule_hits", {
   rkaItemId: text("rka_item_id").notNull().references(() => rkaItems.id),
   ruleId: text("rule_id").notNull().references(() => rules.id),
   reason: text("reason").notNull(),
+  /** Kata/pola yang cocok pada uraian, mis. ["kaos", "hut"] (D3). */
+  matchedTerms: text("matched_terms", { mode: "json" }).$type<string[]>(),
   createdAt: ms("created_at").notNull()
 }, (table) => [uniqueIndex("rule_hits_item_rule_idx").on(table.rkaItemId, table.ruleId), index("rule_hits_rule_idx").on(table.ruleId)]);
 
@@ -182,6 +198,9 @@ export interface StoredFactor {
   dataAvailable: boolean;
 }
 
+/** Bentuk `risk_assessments.peer_stats` (D9). */
+export interface StoredPeerStats { median: number; satkerCount: number; ratio: number; min: number; max: number; unit: string | null }
+
 export const riskAssessments = sqliteTable("risk_assessments", {
   id: text("id").primaryKey(),
   rkaItemId: text("rka_item_id").notNull().references(() => rkaItems.id),
@@ -189,7 +208,7 @@ export const riskAssessments = sqliteTable("risk_assessments", {
   score: integer("score").notNull(),
   category: text("category").notNull(),
   factors: text("factors", { mode: "json" }).$type<StoredFactor[]>().notNull(),
-  peerStats: text("peer_stats", { mode: "json" }).$type<{ median: number; satkerCount: number; ratio: number } | null>(),
+  peerStats: text("peer_stats", { mode: "json" }).$type<StoredPeerStats | null>(),
   dataCompleteness: text("data_completeness").notNull(),
   assessedAt: ms("assessed_at").notNull()
 }, (table) => [uniqueIndex("risk_assessments_item_config_idx").on(table.rkaItemId, table.riskConfigId), index("risk_assessments_score_idx").on(table.score)]);
@@ -246,6 +265,8 @@ export const chrNotes = sqliteTable("chr_notes", {
   itemKey: text("item_key"),
   workUnitId: text("work_unit_id").references(() => workUnits.id),
   ruleId: text("rule_id").references(() => rules.id),
+  /** Judul catatan (uraian item saat konfirmasi); wajib untuk catatan manual tanpa item (D5). */
+  title: text("title"),
   category: text("category").$type<NoteCategory>().notNull(),
   text: text("text").notNull(),
   expectation: text("expectation", { mode: "json" }).$type<Expectation>().notNull(),
@@ -257,7 +278,11 @@ export const chrNotes = sqliteTable("chr_notes", {
   createdBy: text("created_by").notNull().references(() => users.id),
   createdAt: ms("created_at").notNull(),
   updatedAt: ms("updated_at").notNull()
-}, (table) => [index("chr_notes_doc_idx").on(table.chrDocumentId), index("chr_notes_status_idx").on(table.status), index("chr_notes_work_unit_idx").on(table.workUnitId)]);
+}, (table) => [
+  /** Satu catatan per item (D12). Catatan manual tanpa item (NULL) tidak dibatasi. */
+  uniqueIndex("chr_notes_item_idx").on(table.rkaItemId).where(isNotNull(table.rkaItemId)),
+  index("chr_notes_doc_idx").on(table.chrDocumentId), index("chr_notes_status_idx").on(table.status), index("chr_notes_work_unit_idx").on(table.workUnitId)
+]);
 
 export const chrVersions = sqliteTable("chr_versions", {
   id: text("id").primaryKey(),
@@ -296,7 +321,12 @@ export const auditLogs = sqliteTable("audit_logs", {
   before: text("before", { mode: "json" }).$type<unknown>(),
   after: text("after", { mode: "json" }).$type<unknown>(),
   createdAt: ms("created_at").notNull()
-}, (table) => [index("audit_logs_created_idx").on(table.createdAt)]);
+}, (table) => [
+  index("audit_logs_created_idx").on(table.createdAt),
+  index("audit_logs_entity_idx").on(table.entityType, table.entityId),
+  index("audit_logs_actor_idx").on(table.actorUserId, table.createdAt),
+  index("audit_logs_action_idx").on(table.action, table.createdAt)
+]);
 
 export const publicMetrics = sqliteTable("public_metrics", {
   id: text("id").primaryKey(),

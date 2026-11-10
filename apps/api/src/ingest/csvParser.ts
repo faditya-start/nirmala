@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
 import { z } from "zod";
+import type { ImportRowError, ImportRowErrorReason } from "@nirmala/shared";
 
 /**
  * Pembaca CSV streaming (RFC 4180: kutip ganda, `""`, newline di dalam kutip, CRLF, BOM).
@@ -59,6 +60,8 @@ const optionalText = text.transform((value) => (value === "" ? null : value));
 const amount = text.transform((value) => (value === "" ? 0 : Number(value.replace(/,/g, ""))))
   .refine((value) => Number.isFinite(value), "Bukan angka.");
 const integerAmount = amount.transform((value) => Math.round(value));
+const nonNegative = (value: number) => value >= 0;
+const NEGATIVE_MESSAGE = "Tidak boleh bernilai negatif.";
 const flag = text.transform((value) => value === "1");
 const code = (name: string) => text.refine((value) => value !== "", `${name} wajib diisi.`);
 
@@ -84,10 +87,10 @@ export const sipekaRowSchema = z.object({
   VOL_KEG_2: amount, SAT_KEG_2: optionalText,
   VOL_KEG_3: amount, SAT_KEG_3: optionalText,
   VOL_KEG_4: amount, SAT_KEG_4: optionalText,
-  VOLKEG: amount,
+  VOLKEG: amount.refine(nonNegative, NEGATIVE_MESSAGE),
   SATKEG: optionalText,
-  HARGASAT: integerAmount,
-  TOTAL: integerAmount,
+  HARGASAT: integerAmount.refine(nonNegative, NEGATIVE_MESSAGE),
+  TOTAL: integerAmount.refine(nonNegative, NEGATIVE_MESSAGE),
   KODE_BLOKIR: optionalText,
   NILAI_BLOKIR: integerAmount,
   ID_ITEM: optionalText
@@ -104,11 +107,35 @@ export class CsvFormatError extends Error {
 
 export interface ParsedRow { line: number; row: SipekaRow }
 
+/** Batas jumlah galat baris yang disimpan di `rka_documents.row_errors` (jumlah sebenarnya tetap dihitung). */
+export const MAX_STORED_ROW_ERRORS = 1000;
+
+export interface ParseStats {
+  /** Baris data yang dibaca (di luar baris header kolom), termasuk baris judul dan baris galat. */
+  totalRows: number;
+  headerRowsSkipped: number;
+  /** Baris yang dilewati karena tidak valid. */
+  rowErrorCount: number;
+  /** Galat baris pertama per baris, maks. `MAX_STORED_ROW_ERRORS`. */
+  rowErrors: ImportRowError[];
+}
+
+export const newParseStats = (): ParseStats => ({ totalRows: 0, headerRowsSkipped: 0, rowErrorCount: 0, rowErrors: [] });
+
+function rowErrorReason(message: string): ImportRowErrorReason {
+  if (message.startsWith("Bukan angka")) return "bukan_angka";
+  if (message.endsWith("wajib diisi.")) return "wajib_diisi";
+  if (message === NEGATIVE_MESSAGE) return "bernilai_negatif";
+  return "format_tidak_valid";
+}
+
 /**
  * Membaca berkas ekspor SIPEKA/SAKTI. Memvalidasi header dan setiap baris dengan zod.
- * Baris judul kelompok (HEADER1 / HEADER2 = 1) tidak dihasilkan, hanya dihitung di `stats`.
+ * - Header kolom wajib: kolom hilang -> `CsvFormatError` (impor dibatalkan).
+ * - Baris tidak valid **dilewati** dan dicatat di `stats.rowErrors` (satu galat per baris), tidak membatalkan impor.
+ * - Baris judul kelompok (HEADER1 / HEADER2 = 1) tidak dihasilkan; dihitung di `stats` dan diberikan ke `onHeaderRow`.
  */
-export async function* readSnapshotRows(path: string, stats = { totalRows: 0, headerRowsSkipped: 0 }): AsyncGenerator<ParsedRow> {
+export async function* readSnapshotRows(path: string, stats: ParseStats = newParseStats(), onHeaderRow?: (row: SipekaRow) => void): AsyncGenerator<ParsedRow> {
   let columns: string[] | null = null;
   let line = 0;
   for await (const record of readCsvRecords(path)) {
@@ -124,10 +151,17 @@ export async function* readSnapshotRows(path: string, stats = { totalRows: 0, he
     for (let i = 0; i < columns.length; i++) raw[columns[i]] = record[i] ?? "";
     const parsed = sipekaRowSchema.safeParse(raw);
     if (!parsed.success) {
-      const issue = parsed.error.issues[0];
-      throw new CsvFormatError(`Data tidak valid pada kolom ${String(issue?.path[0] ?? "?")}: ${issue?.message ?? "tidak valid"}`, line);
+      stats.rowErrorCount++;
+      if (stats.rowErrors.length < MAX_STORED_ROW_ERRORS) {
+        const issue = parsed.error.issues[0];
+        const column = String(issue?.path[0] ?? "?");
+        const message = issue?.message ?? "Data tidak valid.";
+        const value = raw[column]?.trim();
+        stats.rowErrors.push({ line, column, value: value ? value : null, reason: rowErrorReason(message), message });
+      }
+      continue;
     }
-    if (parsed.data.HEADER1 || parsed.data.HEADER2) { stats.headerRowsSkipped++; continue; }
+    if (parsed.data.HEADER1 || parsed.data.HEADER2) { stats.headerRowsSkipped++; onHeaderRow?.(parsed.data); continue; }
     yield { line, row: parsed.data };
   }
   if (!columns) throw new CsvFormatError("Berkas kosong.");
