@@ -1,0 +1,44 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  width: 100%;
+}
+
+.description {
+  margin-top: -8px;
+  font-size: var(--fs-base);
+  color: var(--ink-muted);
+}
+
+.consequence {
+  font-size: var(--fs-base);
+  line-height: 1.55;
+  color: var(--ink-muted);
+}
+
+.summary {
+  width: 100%;
+  padding: 10px var(--sp-3);
+  border-radius: var(--r-md);
+  background: var(--surface-sunken);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+}
+
+.retract {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--border);
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+}
+
+.retractActions {
+  display: flex;
+  gap: var(--sp-2);
+}

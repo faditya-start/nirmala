@@ -1,0 +1,13 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+.name {
+  font-weight: 500;
+}
+
+.muted {
+  color: var(--ink-faint);
+}
