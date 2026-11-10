@@ -1,0 +1,89 @@
+.row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-4);
+  padding: 14px var(--sp-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.row:last-child {
+  border-bottom: 0;
+}
+
+.number {
+  flex: none;
+  width: 18px;
+  padding-top: 2px;
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+.item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px var(--sp-2);
+}
+
+.title {
+  font-size: var(--fs-base);
+  font-weight: 600;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+  overflow-wrap: anywhere;
+}
+
+.text {
+  font-size: var(--fs-base);
+  line-height: 19px;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.marks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) 10px;
+}
+
+.expectation {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px var(--sp-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface-sunken);
+  font-size: var(--fs-xs);
+  overflow-wrap: anywhere;
+}
+
+.expectationLabel {
+  color: var(--ink-muted);
+}
+
+.expectationValue {
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.actions {
+  display: flex;
+  flex: none;
+  gap: 2px;
+}
