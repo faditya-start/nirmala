@@ -202,6 +202,14 @@ function Summary({ data }: { data: PublicTransparencyResponse }) {
             <div className={styles.tableFrame}>
               <div className={styles.tableScroll}>
                 <table className={styles.table} aria-label={tableLabel}>
+                  <colgroup>
+                    <col />
+                    <col className={styles.colWide} />
+                    <col className={styles.colWide} />
+                    <col className={styles.colMid} />
+                    <col className={styles.colNarrow} />
+                    <col className={styles.colNarrow} />
+                  </colgroup>
                   <thead>
                     <tr>
                       <th scope="col" className={styles.thName}>
