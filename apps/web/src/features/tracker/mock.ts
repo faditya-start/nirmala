@@ -54,7 +54,7 @@ function at(daysAgo: number, hour: number, minute: number): number {
 const ISSUED_AT = at(5, 9, 5);
 const CREATED_AT = at(6, 14, 20);
 
-const WORK_UNITS: WorkUnitDto[] = Array.from({ length: 8 }, (_, index) => {
+const WORK_UNITS: WorkUnitDto[] = Array.from({ length: 10 }, (_, index) => {
   const n = String(index + 1).padStart(2, "0");
   return { id: `wu-${n}`, code: `9100${n}`, name: `Satker Contoh ${n}`, organizationUnitId: ORG_A.id };
 });

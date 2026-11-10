@@ -116,3 +116,8 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.valueWithBadge > :last-child {
+  flex: none;
+  font-family: var(--font-ui);
+}

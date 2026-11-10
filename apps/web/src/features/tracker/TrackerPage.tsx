@@ -199,7 +199,7 @@ export function TrackerPage() {
     setBusy(true);
     try {
       const result = await api.post<BulkApproveResponse>("/tracker/notes/bulk-approve", { noteIds: selection.approvable.map((row) => row.id) });
-      setNotice({ tone: result.approvedNoteIds.length > 0 ? "sukses" : "info", text: bulkResultMessage(result.approvedNoteIds.length, result.skipped, result.completedChrIds.length) });
+      setNotice({ tone: result.approvedNoteIds.length > 0 ? "sukses" : "info", text: bulkResultMessage(result.approvedNoteIds.length, result.skipped, result.completedChrIds.length, user?.name) });
     } catch (error) {
       setNotice({ tone: "galat", text: `Setujui massal gagal. ${errorMessage(error)}` });
     } finally {

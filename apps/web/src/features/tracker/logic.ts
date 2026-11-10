@@ -163,9 +163,9 @@ export function summarizeSelection(rows: Iterable<SelectableRow>): SelectionSumm
   return { total: approvable.length + skipped.length, approvable, skipped };
 }
 
-export function bulkResultMessage(approved: number, skipped: { reason: BulkSkipReason }[], completedChr: number): string {
+export function bulkResultMessage(approved: number, skipped: { reason: BulkSkipReason }[], completedChr: number, actorName = "Anda"): string {
   const parts: string[] = [];
-  parts.push(approved === 0 ? "Tidak ada catatan yang ditutup." : `${formatNum(approved)} catatan ditutup atas nama Anda.`);
+  parts.push(approved === 0 ? "Tidak ada catatan yang ditutup." : `${formatNum(approved)} catatan ditutup atas nama ${actorName}.`);
   if (skipped.length > 0) {
     const reasons = [...new Set(skipped.map((item) => SKIP_REASON_TEXT[item.reason]))].join(", ");
     parts.push(`${formatNum(skipped.length)} dilewati (${reasons}).`);
