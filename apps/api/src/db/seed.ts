@@ -17,14 +17,17 @@ import { RULE_SEEDS } from "./seeds/rules.js";
 /**
  * Seed master data + akun demo. Idempoten: baris yang sudah ada dibiarkan.
  * Semua data sintetis. Dipanggil setelah migrasi.
+ *
+ * `demo: false` (produksi, `npm run bootstrap:production`): hanya master data nyata (akun BAS, alasan dismiss, katalog aturan,
+ * bobot skor); tanpa eselon I fiktif, akun demo (kata sandinya publik di repo), dan profil temuan sintetis.
  */
-export async function seedMasterData({ db }: Database) {
+export async function seedMasterData({ db }: Database, { demo = true }: { demo?: boolean } = {}) {
   const now = Date.now();
-  await db.insert(organizationUnits).values(ORGANIZATION_UNIT_SEEDS.map((unit) => ({ ...unit, createdAt: now }))).onConflictDoNothing();
+  if (demo) await db.insert(organizationUnits).values(ORGANIZATION_UNIT_SEEDS.map((unit) => ({ ...unit, createdAt: now }))).onConflictDoNothing();
   await db.insert(accounts).values([...ACCOUNT_SEEDS]).onConflictDoNothing();
   await db.insert(dismissReasons).values(DISMISS_REASON_SEEDS.map((reason) => ({ ...reason, active: true }))).onConflictDoNothing();
 
-  for (const user of DEMO_USER_SEEDS) {
+  for (const user of demo ? DEMO_USER_SEEDS : []) {
     await db.insert(users).values({ id: user.id, username: user.username, displayName: user.displayName, role: user.role, passwordHash: await hashPassword(user.password), unitLabel: user.unitLabel, createdAt: now }).onConflictDoNothing();
     if (user.scope.length) await db.insert(userScopes).values(user.scope.map((organizationUnitId) => ({ userId: user.id, organizationUnitId }))).onConflictDoNothing();
   }
@@ -35,10 +38,10 @@ export async function seedMasterData({ db }: Database) {
     validYear: null, validationNote: rule.validationNote, updatedAt: now
   }))).onConflictDoNothing();
 
-  await db.insert(satkerFindingStats).values(FINDING_STAT_SEEDS.map((stat) => ({ id: `fstat_${stat.workUnitCode}_${stat.theme}`, ...stat }))).onConflictDoNothing();
+  if (demo) await db.insert(satkerFindingStats).values(FINDING_STAT_SEEDS.map((stat) => ({ id: `fstat_${stat.workUnitCode}_${stat.theme}`, ...stat }))).onConflictDoNothing();
 
   await db.insert(riskConfig).values({
-    id: "risk_config_v1", version: "1", weights: DEFAULT_WEIGHTS, thresholds: DEFAULT_THRESHOLDS, params: DEFAULT_RISK_PARAMS, createdBy: "usr_admin", createdAt: now
+    id: "risk_config_v1", version: "1", weights: DEFAULT_WEIGHTS, thresholds: DEFAULT_THRESHOLDS, params: DEFAULT_RISK_PARAMS, createdBy: demo ? "usr_admin" : null, createdAt: now
   }).onConflictDoNothing();
 }
 

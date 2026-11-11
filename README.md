@@ -26,7 +26,10 @@ Konteks produk untuk alat desain ada di [PRODUCT.md](PRODUCT.md). Desain UI ada 
 - **Data masuk:** impor CSV berformat SIPEKA. Tidak ada integrasi SAKTI (D-03).
 - **Data:** demo dan seed memakai data sintetis. Data asli hanya di server sendiri (`data/private/`, tidak masuk git) (D-07).
 
-Status pengembangan mengikuti fase di [docs/plan.md](docs/plan.md). Aplikasi masih dalam proses rombak dari prototipe awal ke MVP; beberapa layar dan endpoint lama bertahan sementara sampai fase penggantinya selesai.
+- **Produksi:** satu proses Node. `npm run build` lalu `npm start`: API menyajikan hasil build web (`apps/web/dist`, fallback SPA untuk rute non-`/api`) dan, di belakang Cloudflare Tunnel, itulah satu-satunya yang berjalan. Panduan lengkap (systemd, tunnel, cadangan harian SQLite, pemulihan, rotasi rahasia, impor data asli) ada di [docs/deploy.md](docs/deploy.md); contoh berkas di [`deploy/`](deploy).
+- **Halaman publik:** hanya membaca tabel agregat `public_metrics`, diisi saat admin menandai DIPA terbit; eselon I dengan catatan < k (default 5) digabung ke "Lainnya".
+
+Status pengembangan mengikuti fase di [docs/plan.md](docs/plan.md). Backend Fase 0-6 selesai (dashboard, laporan, validasi engine, publik, admin, deploy); kontrak endpoint ada di [docs/api-contract.md](docs/api-contract.md). Tidak ada lagi endpoint prototipe 501.
 
 ## Prasyarat
 
@@ -54,7 +57,7 @@ Akun demo (sintetis, hanya untuk lokal):
 | Pimpinan | `pimpinan.demo` | `Pimpin123!` |
 | Admin | `admin.demo` | `Admin123!` |
 
-Ganti `SESSION_SECRET` di `.env` sebelum penggunaan selain demo lokal.
+Ganti `SESSION_SECRET` di `.env` sebelum penggunaan selain demo lokal. Akun demo dan `db:seed` hanya untuk lokal; di produksi pakai `bootstrap:production` dan `create-admin` ([docs/deploy.md](docs/deploy.md)).
 
 Pemeriksaan API: `curl http://localhost:8787/api/health`
 
@@ -66,8 +69,13 @@ npm test            # semua workspace
 npm run build
 npm run db:generate   # buat migrasi baru dari apps/api/src/db/schema.ts
 npm run db:migrate    # terapkan migrasi (runner sendiri, node:sqlite)
-npm run db:seed       # master data + akun demo sintetis (idempoten)
+npm run db:seed       # master data + akun demo sintetis + snapshot Awal + kunci jawaban sintetis (idempoten)
+npm run db:seed:demo -w @nirmala/api   # (opsional) demo loop: konfirmasi, terbit CHR, impor Revisi
+npm start             # produksi: NODE_ENV=production, API + web build (butuh SESSION_SECRET dan npm run build)
+npm run backup        # cadangan SQLite online (BACKUP_DIR, BACKUP_KEEP_DAYS)
 ```
+
+Skrip produksi: `bootstrap:production` (master data tanpa akun demo), `create-admin`, `import:private -- --production --actor <admin>`, `import:answer-key` (kunci jawaban asli buatan lokal). Semua dijelaskan di [docs/deploy.md](docs/deploy.md).
 
 Skema ada di `apps/api/src/db/schema.ts`, migrasi di `apps/api/drizzle/`. Jika muncul "Database lama (skema prototipe) terdeteksi", hapus berkas `apps/api/nirmala.sqlite*` lalu migrasi dan seed ulang.
 
@@ -81,4 +89,4 @@ Skema ada di `apps/api/src/db/schema.ts`, migrasi di `apps/api/drizzle/`. Jika m
 - Impor data asli untuk demo lokal (tidak di-commit, hanya di server sendiri):
   `npm run import:private -w @nirmala/api -- <folder-csv> --cycle 2026:alokasi`. Keluarannya hanya agregat. Impor dari dump `d_dipa_awal` dan profil temuan BPK (PTL) belum diimplementasikan.
 
-Beberapa endpoint prototipe (`/api/chr`, `/api/tracker`, `/api/risk-items`, dashboard, laporan) mengembalikan 501 sampai fasenya selesai; lihat [docs/plan.md](docs/plan.md).
+Validasi engine (S11) memakai kunci jawaban: `db:seed` mengisi versi sintetis dari `manifest.json`; kunci jawaban data asli dibuat lokal dan diimpor dengan `import:answer-key` (tidak pernah membaca `data/private`).
