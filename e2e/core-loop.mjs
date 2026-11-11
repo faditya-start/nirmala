@@ -355,6 +355,26 @@ async function run() {
     assert(/\d+ item kena aturan · 2 belum ditinjau/.test(await main(page)), "tersisa 2 belum ditinjau (kop surat R04 dan laptop R06)");
   });
 
+  await step("S5 detail: Sebelumnya/Berikutnya mengikuti daftar terfilter, dan membatalkan keputusan draf menghapus catatan CHR", async () => {
+    const { page } = await session("reviewer");
+    await page.goto(`${BASE}/triage?onlyFlagged=true&decision=confirm`);
+    await waitText(page, /Honor satpam/);
+    await page.locator("table a").first().click();
+    await waitText(page, /item 1 dari 5/);
+    await page.getByRole("link", { name: "Berikutnya", exact: true }).click();
+    await waitText(page, /item 2 dari 5/);
+    assert(page.url().includes("decision=confirm"), "filter terbawa ke detail berikutnya");
+    await page.getByRole("link", { name: "Sebelumnya", exact: true }).click();
+    await waitText(page, /item 1 dari 5/);
+    // batalkan keputusan konfirmasi (CHR masih draf): catatan CHR ikut hilang, lalu konfirmasi ulang
+    const title = (await page.locator("h1").first().innerText()).trim();
+    await page.getByRole("button", { name: /Ubah keputusan/ }).click();
+    await page.locator("dialog[open]").getByRole("button", { name: /Ya, batalkan keputusan/ }).click();
+    await waitText(page, /Konfirmasi dan masukkan ke CHR/);
+    await confirmDefault(page);
+    assert(new RegExp(title.slice(0, 20)).test(await main(page)), "item yang sama dikonfirmasi ulang");
+  });
+
   // ---- S6 CHR editor
   async function chrPage(page) {
     await page.goto(`${BASE}/chr`);
@@ -482,6 +502,8 @@ async function run() {
     const versions = page.locator("dialog[open]");
     await versions.waitFor();
     assert(/2/.test(await versions.innerText()), "riwayat versi memuat versi 2");
+    await versions.getByLabel("Versi", { exact: true }).selectOption({ index: 0 });
+    await waitText(page, /Jumlah catatan/, "dialog[open]");
     await page.keyboard.press("Escape");
   });
 
@@ -518,13 +540,24 @@ async function run() {
     return Number(/(\d+)\s*$/.exec(text.replace(/\n/g, " "))?.[1] ?? NaN);
   }
 
+  async function expectTabCount(page, name, expected) {
+    const deadline = Date.now() + 10_000;
+    let last = NaN;
+    while (Date.now() < deadline) {
+      last = await tabCount(page, name).catch(() => NaN);
+      if (last === expected) return;
+      await page.waitForTimeout(250);
+    }
+    throw new Error(`Assertion gagal: tab ${name} = ${expected} (dapat ${last})`);
+  }
+
   await step("S8 tracker: tab per status, 7 Perlu Verifikasi, status di URL", async () => {
     const { page } = await session("reviewer");
     await page.goto(`${BASE}/tracker`);
     await waitText(page, /Smart Tracker/);
     await page.getByRole("tab", { name: /Perlu Verifikasi/ }).waitFor();
-    assert((await tabCount(page, "Perlu Verifikasi")) === 7, "7 Perlu Verifikasi");
-    assert((await tabCount(page, "Menunggu Revisi")) === 0, "0 Menunggu Revisi");
+    await expectTabCount(page, "Perlu Verifikasi", 7);
+    await expectTabCount(page, "Menunggu Revisi", 0);
     await page.getByRole("tab", { name: /Closed/ }).click();
     await page.waitForURL(/status=closed/);
     await waitText(page, /Belum ada|Tidak ada/);
@@ -547,8 +580,8 @@ async function run() {
     await dialog.getByRole("button", { name: "Setujui dan tutup" }).click();
     await dialog.waitFor({ state: "hidden" });
     await waitGone(page, /Pengadaan kaos seragam/);
-    assert((await tabCount(page, "Perlu Verifikasi")) === 5, "tab Perlu Verifikasi = 5");
-    assert((await tabCount(page, "Closed")) === 2, "tab Closed = 2");
+    await expectTabCount(page, "Perlu Verifikasi", 5);
+    await expectTabCount(page, "Closed", 2);
     const deadline = Date.now() + 10_000;
     while (Date.now() < deadline && (await navBadge(page, "Smart Tracker")) !== 5) await page.waitForTimeout(300);
     assert((await navBadge(page, "Smart Tracker")) === 5, "badge Smart Tracker turun ke 5 tanpa muat ulang");
@@ -607,7 +640,7 @@ async function run() {
     const { page } = await session("reviewer");
     await page.goto(`${BASE}/tracker?status=dijustifikasi`);
     await waitText(page, /Jasa kebersihan/);
-    assert((await tabCount(page, "Dijustifikasi")) === 2, "2 catatan Dijustifikasi");
+    await expectTabCount(page, "Dijustifikasi", 2);
     for (const title of ["Jasa kebersihan", "Rehabilitasi masjid"]) {
       await openNote(page, title, "dijustifikasi");
       await waitText(page, /Justifikasi eselon I/);
@@ -616,7 +649,7 @@ async function run() {
     }
     await page.goto(`${BASE}/tracker?status=closed`);
     await waitText(page, /Jasa kebersihan/);
-    assert((await tabCount(page, "Closed")) === 6, `6 Closed; 1 lagi (honorarium) masih Perlu Verifikasi (dapat ${await tabCount(page, "Closed")})`);
+    await expectTabCount(page, "Closed", 6);
   });
   await step("S10 Satker (UKI): 3 dari 4 Satker siap diajukan selama satu catatan masih terbuka", async () => {
     const { page } = await session("uki");
@@ -736,6 +769,26 @@ async function run() {
     assert((await page.getByRole("button", { name: /Impor/ }).count()) === 0, "UKI tanpa tombol impor");
     await page.goto(`${BASE}/admin/pengguna`);
     await waitText(page, /Akses ditolak/, "body");
+  });
+
+  // ---- Sesi
+  await step("Sesi: cookie kedaluwarsa mengalihkan ke /login dan kembali ke halaman semula setelah masuk; keluar menutup sesi", async () => {
+    const { page, context } = await session("reviewer");
+    await page.goto(`${BASE}/tracker`);
+    await waitText(page, /Smart Tracker/);
+    expectIssue(/HTTP 401/);
+    expectIssue(/console\.error: Failed to load resource.*401/);
+    await context.clearCookies();
+    await page.getByRole("link", { name: /Risk Triage/ }).first().click({ timeout: 3_000 }).catch(() => undefined); // atau shell sudah lebih dulu mengalihkan (polling badge mendapat 401)
+    await page.waitForURL(/\/login/);
+    await page.getByLabel("Username").fill(USERS.reviewer[0]);
+    await page.getByLabel("Kata sandi").fill(USERS.reviewer[1]);
+    await page.getByRole("button", { name: "Masuk" }).click();
+    await page.waitForURL(/\/(triage|tracker)/);
+    await page.getByRole("button", { name: /Keluar/i }).click();
+    await page.waitForURL(/\/login/);
+    await page.goto(`${BASE}/tracker`);
+    await page.waitForURL(/\/login/);
   });
 }
 
