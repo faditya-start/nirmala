@@ -42,7 +42,7 @@ async function issuedChrsWithoutResponse(db: Db, cycleId: string, scope: string[
   return rows.map((row) => row.id);
 }
 
-const chrHref = (ids: string[]) => (ids.length === 1 ? `/chr/${ids[0]}` : "/chr");
+export const chrHref = (ids: string[]) => (ids.length === 1 ? `/chr/${ids[0]}` : "/chr");
 
 export async function needsAction(db: Db, role: Role, scope: string[] | null, cycleId: string): Promise<NeedsActionResponse> {
   const items: NeedsActionItem[] = [];

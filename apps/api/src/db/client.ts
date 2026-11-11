@@ -93,3 +93,17 @@ export function getDatabase(): Database {
   shared ??= createDatabase(process.env.DATABASE_PATH ?? "./nirmala.sqlite");
   return shared;
 }
+
+/**
+ * Salinan konsisten database berkas (aman saat API berjalan: `VACUUM INTO` lewat koneksi baca-saja, tidak memblokir penulis di WAL).
+ * `destination` harus belum ada. Dipakai skrip cadangan harian.
+ */
+export function backupDatabase(sourcePath: string, destination: string): void {
+  const source = new DatabaseSync(sourcePath, { readOnly: true });
+  try {
+    source.exec("PRAGMA busy_timeout = 5000;");
+    source.prepare("VACUUM INTO ?").run(destination);
+  } finally {
+    source.close();
+  }
+}

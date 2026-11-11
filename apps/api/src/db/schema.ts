@@ -352,3 +352,29 @@ export const publicMetrics = sqliteTable("public_metrics", {
   medianDaysToClose: real("median_days_to_close"),
   generatedAt: ms("generated_at").notNull()
 }, (table) => [index("public_metrics_cycle_idx").on(table.cycleId)]);
+
+// ---------------------------------------------------------------- Kunci jawaban validasi engine (D7, D8)
+
+/** Set kunci jawaban: `L1` / `L2` / `L3`. Data asli diisi lewat skrip impor lokal; seed hanya sintetis. */
+export const answerKeySets = sqliteTable("answer_key_sets", {
+  code: text("code").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  metric: text("metric").$type<"recall" | "precision_at_n">().notNull(),
+  n: integer("n"),
+  note: text("note"),
+  synthetic: integer("synthetic", { mode: "boolean" }).notNull().default(true)
+});
+
+/** Item kunci jawaban. Dicocokkan ke item snapshot berlabel `snapshotLabel` lewat `item_key`; `rka_item_id` hanya informatif. */
+export const answerKeyItems = sqliteTable("answer_key_items", {
+  id: text("id").primaryKey(),
+  setCode: text("set_code").notNull().references(() => answerKeySets.code),
+  rkaItemId: text("rka_item_id").references(() => rkaItems.id),
+  itemKey: text("item_key").notNull(),
+  organizationUnitId: text("organization_unit_id").notNull().references(() => organizationUnits.id),
+  snapshotLabel: text("snapshot_label").notNull()
+}, (table) => [
+  uniqueIndex("answer_key_items_unique_idx").on(table.setCode, table.organizationUnitId, table.snapshotLabel, table.itemKey),
+  index("answer_key_items_set_idx").on(table.setCode)
+]);

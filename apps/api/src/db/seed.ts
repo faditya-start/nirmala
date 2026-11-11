@@ -9,6 +9,7 @@ import { accounts, dismissReasons, organizationUnits, riskAssessments, riskConfi
 import type { Db } from "./client.js";
 import { runDetection } from "../services/detectionPipeline.js";
 import { importHooks } from "../services/importHooks.js";
+import { seedSyntheticAnswerKey } from "./seedAnswerKey.js";
 import { hashPassword } from "../lib/security.js";
 import { ACCOUNT_SEEDS, DEFAULT_RISK_PARAMS, DEFAULT_THRESHOLDS, DEFAULT_WEIGHTS, DEMO_USER_SEEDS, DISMISS_REASON_SEEDS, FINDING_STAT_SEEDS, ORGANIZATION_UNIT_SEEDS } from "./seeds/reference.js";
 import { RULE_SEEDS } from "./seeds/rules.js";
@@ -78,5 +79,6 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   migrate(database);
   await seedMasterData(database);
   const { imported } = await seedSyntheticSnapshots(database);
+  await seedSyntheticAnswerKey(database);
   console.log(`Seed sintetis NIRMALA selesai dibuat${imported.length ? ` (snapshot awal diimpor: eselon I ${imported.join(", ")})` : " (snapshot sudah ada)"}.`);
 }
