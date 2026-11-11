@@ -41,3 +41,9 @@ export async function countCycleSnapshots(db: Db, cycleId: string) {
   const [{ total }] = await db.select({ total: count() }).from(rkaDocuments).where(eq(rkaDocuments.cycleId, cycleId));
   return total;
 }
+
+/** Siklus berstatus `aktif` yang terbaru (tahun lalu tahap). undefined bila tidak ada. */
+export async function latestActiveCycle(db: Db): Promise<ReviewCycleDto | undefined> {
+  const [cycle] = await db.select(columns).from(reviewCycles).where(eq(reviewCycles.status, "aktif")).orderBy(desc(reviewCycles.fiscalYear), desc(reviewCycles.createdAt)).limit(1);
+  return cycle;
+}

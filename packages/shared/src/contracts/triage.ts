@@ -195,6 +195,12 @@ export interface ScoreBreakdownDto {
   /** Lima faktor, urut F1..F5. */
   factors: ScoreFactorDto[];
   dataCompleteness: "sufficient" | "partial";
+  /**
+   * Jumlah bobot faktor yang datanya tersedia. Skor = jumlah `contribution` x 100 / `activeWeight`: faktor tanpa data
+   * tidak ikut penyebut, jadi jumlah kontribusi yang tampil bisa lebih kecil dari `value` bila ada faktor tanpa data.
+   * Opsional demi kompatibilitas; server selalu mengirimnya.
+   */
+  activeWeight?: number;
 }
 
 export interface RuleHitDto {

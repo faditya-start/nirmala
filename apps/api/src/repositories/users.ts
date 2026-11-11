@@ -55,10 +55,10 @@ export async function deleteSession(db: Db, sessionId: string) {
 
 export async function findSessionUser(db: Db, sessionId: string, now: number) {
   const [row] = await db
-    .select({ id: users.id, name: users.displayName, role: users.role, expiresAt: sessions.expiresAt })
+    .select({ id: users.id, name: users.displayName, role: users.role, active: users.active, expiresAt: sessions.expiresAt })
     .from(sessions)
     .innerJoin(users, eq(users.id, sessions.userId))
     .where(eq(sessions.id, sessionId))
     .limit(1);
-  return row && row.expiresAt > now ? { id: row.id, name: row.name, role: row.role } : undefined;
+  return row && row.active && row.expiresAt > now ? { id: row.id, name: row.name, role: row.role } : undefined;
 }

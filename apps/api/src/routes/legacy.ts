@@ -6,8 +6,6 @@ import type { AppEnv } from "../middleware/auth.js";
  * sampai fase penggantinya selesai (docs/plan.md).
  */
 const pending: { prefix: string; phase: string }[] = [
-  { prefix: "/api/risk-items", phase: "Fase 3 (Risk Triage)" },
-  { prefix: "/api/risk-config", phase: "Fase 3 (bobot skor)" },
   { prefix: "/api/chr", phase: "Fase 4 (CHR per eselon I)" },
   { prefix: "/api/tracker", phase: "Fase 5 (Smart Tracker)" },
   { prefix: "/api/dashboard", phase: "Fase 6 (Dashboard)" },
