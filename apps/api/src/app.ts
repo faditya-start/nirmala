@@ -9,6 +9,7 @@ import { JobRegistry } from "./jobs/registry.js";
 import { adminRoutes } from "./routes/admin.js";
 import { auditLogRoutes } from "./routes/auditLogs.js";
 import { authRoutes } from "./routes/auth.js";
+import { chrRoutes } from "./routes/chr.js";
 import { cycleRoutes } from "./routes/cycles.js";
 import { jobRoutes } from "./routes/jobs.js";
 import { legacyRoutes } from "./routes/legacy.js";
@@ -19,6 +20,7 @@ import { triageRoutes } from "./routes/triage.js";
 import { userRoutes } from "./routes/users.js";
 import { detectionHooks } from "./services/detectionPipeline.js";
 import type { IngestHooks } from "./ingest/ingestService.js";
+import { printConfigFromEnv, type PrintConfig } from "./services/chrService.js";
 
 export interface AppOptions {
   database: Database;
@@ -29,9 +31,11 @@ export interface AppOptions {
   jobs?: JobRegistry;
   /** Hook impor (default: deteksi aturan + skor Fase 3). */
   hooks?: IngestHooks;
+  /** Kop dan penandatangan cetak CHR (default: variabel lingkungan `PRINT_*`). */
+  print?: PrintConfig;
 }
 
-export function createApp({ database, sessionSecret, webOrigin = "http://localhost:5173", secureCookies = false, jobs = new JobRegistry(), hooks = detectionHooks() }: AppOptions) {
+export function createApp({ database, sessionSecret, webOrigin = "http://localhost:5173", secureCookies = false, jobs = new JobRegistry(), hooks = detectionHooks(), print = printConfigFromEnv() }: AppOptions) {
   const signer = createSessionSigner(sessionSecret);
   const app = new Hono<AppEnv>();
 
@@ -53,6 +57,7 @@ export function createApp({ database, sessionSecret, webOrigin = "http://localho
   app.route("/api/cycles", snapshotRoutes(database, jobs, hooks));
   app.route("/api/jobs", jobRoutes(jobs));
   app.route("/api/triage", triageRoutes(database));
+  app.route("/api/chr", chrRoutes(database, print));
   app.route("/api/admin", adminRoutes(database, jobs));
   app.route("/api", shellRoutes(database));
   app.route("/api/audit-logs", auditLogRoutes(database));

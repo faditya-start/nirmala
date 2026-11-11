@@ -250,12 +250,21 @@ export const chrDocuments = sqliteTable("chr_documents", {
   status: text("status").$type<ChrStatus>().notNull().default("draft"),
   recommendation: text("recommendation"),
   unitResponse: text("unit_response"),
+  /** Pengisi tanggapan eselon I dan waktunya (D6). */
+  unitResponseBy: text("unit_response_by").references(() => users.id),
+  unitResponseAt: ms("unit_response_at"),
   createdBy: text("created_by").notNull().references(() => users.id),
+  /** Penerbit CHR (nama di `ChrDocumentDto.issuedByName`). Diisi saat terbit. */
+  issuedBy: text("issued_by").references(() => users.id),
   issuedAt: ms("issued_at"),
   completedAt: ms("completed_at"),
   createdAt: ms("created_at").notNull(),
   updatedAt: ms("updated_at").notNull()
-}, (table) => [uniqueIndex("chr_documents_cycle_org_idx").on(table.cycleId, table.organizationUnitId)]);
+}, (table) => [
+  uniqueIndex("chr_documents_cycle_org_idx").on(table.cycleId, table.organizationUnitId),
+  /** Nomor dokumen unik; NULL (draf) tidak dibatasi (D6). */
+  uniqueIndex("chr_documents_number_idx").on(table.documentNumber).where(isNotNull(table.documentNumber))
+]);
 
 /** Sumber tunggal status tindak lanjut. */
 export const chrNotes = sqliteTable("chr_notes", {

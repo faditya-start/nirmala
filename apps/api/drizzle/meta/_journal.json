@@ -57,6 +57,13 @@
       "when": 1794344988505,
       "tag": "0007_audit_log_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1794361043506,
+      "tag": "0008_chr_response_issuer_number",
+      "breakpoints": true
     }
   ]
 }
