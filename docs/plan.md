@@ -137,6 +137,9 @@ File:
 - Endpoint siklus (CRUD admin) dan `POST /api/cycles/:id/snapshots` (multipart; reviewer / admin).
 - `apps/api/scripts/generate-synthetic.ts` → `apps/api/fixtures/synthetic/{awal,revisi}/es1_9xxx1_2026.csv` (eselon I fiktif). Isinya kasus R01–R08, item perbaikan / bukan / dihapus.
 - `apps/api/scripts/import-private.ts`: impor lokal dari `data/private` (CSV DIPA revisi + `d_dipa_awal` dari dump SQL) dan bangun `satker_finding_stats` dari PTL. Hanya membaca kolom yang diizinkan.
+  - **Selesai (10 Nov 2026).** `--awal-sql` (dump → CSV per eselon I → snapshot v1), folder CSV revisi (v2), dan `--ptl` (xlsx → statistik). Pembaca dump SQL dan xlsx ditulis sendiri tanpa dependensi baru (`src/ingest/sqlDump.ts`, `xlsxReader.ts`, `ptlProfile.ts`) dan dites dengan data sintetis (`test/privateImport.test.ts`).
+  - Hasil impor penuh ke DB terpisah (`--db`): v1 = 340.683 item (sama dengan angka di data-analysis §2.2), v2 = 258.217 item, 10 eselon I × 2 snapshot, 679 Satker. CSV terbesar (143.545 item) terimpor dalam ±44 detik.
+  - Nama tidak pernah masuk DB: eselon I `Eselon I <kode>`, Satker `Satker <kode>`. Kolom catatan reviu `CHR_*`, "Pejabat Terkait", dan semua kolom uraian PTL tidak dibaca.
 - `db:seed` = master data + impor fixture sintetis.
 
 **Selesai bila:**

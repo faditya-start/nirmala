@@ -119,6 +119,8 @@ Pencocokan dijalankan saat snapshot v(n) diimpor, terhadap snapshot v(n−1) ese
 5. Cocok → `previous_item_id` diisi. `change_type` = `tetap` jika akun, volume, satuan, harga, dan total sama; selain itu `berubah`. Tidak cocok → `baru`.
 6. Item v(n−1) yang tidak punya pasangan → dihitung sebagai **hilang** di `diff_summary`. Catatan yang merujuk item itu dicek dengan hasil `item_tidak_ditemukan`.
 
+**Keterbatasan yang teramati pada data asli (10 Nov 2026):** karena langkah 1 dan 2 sama-sama mensyaratkan hierarki yang sama, item yang **dipindah ke subkomponen / output lain** di revisi dihitung `hilang` (di v(n−1)) sekaligus `baru` (di v(n)). Di salah satu eselon I, ±18% item `hilang` punya item berdeskripsi sama di Satker yang sama pada v2, jumlahnya sebanding dengan item `baru`. Dampaknya untuk Fase 5: ekspektasi `hapus_item` bisa dinilai `terpenuhi` padahal itemnya hanya pindah. Belum diubah (algoritma ini dikunci); perlu diputuskan apakah langkah 3 (cocokkan lintas hierarki lewat Satker + akun + uraian) dimasukkan sebelum Fase 5.
+
 Dasar pilihan ini ada di [data-analysis.md](data-analysis.md) §2.3. Hierarki + uraian unik untuk 94% item. `CONS_ITEM` sebagai cadangan cocok dengan uraian yang sama di 89% kasus.
 
 ## 5. Bentuk JSON

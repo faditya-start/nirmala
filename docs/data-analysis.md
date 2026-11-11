@@ -128,6 +128,8 @@ Sheet `PTL 27 JULI 2026`: 16.496 baris rekomendasi, 2.217 judul temuan unik, LHP
 
 **Kolom yang boleh dipakai:** `KODE SATKER`, `UNIT ORGANISASI`, `TAHUN LHP`, `JENIS LHP`, `JENIS TEMUAN`, `Tagging Temuan`, `STATUS SiPTL`, `JUDUL TEMUAN BESAR` (hanya untuk merumuskan tema aturan, tidak disimpan per Satker).
 
+**Hasil implementasi (`ptlProfile.ts`, 10 Nov 2026):** dari 16.796 baris data, **662 baris** bertema anggaran di **165 Satker** (angka ±700 / 174 di atas berasal dari perhitungan awal dengan kata kunci yang sedikit lebih longgar; yang dipakai importer adalah himpunan kata kunci di `THEME_PATTERNS`, yang bisa diaudit). Satu temuan bisa masuk lebih dari satu tema, sehingga tersimpan 280 baris statistik (Satker × tema). Status dinormalisasi ke huruf besar (ada nilai `ss` huruf kecil di sumber), dan status terbuka = BS + BT.
+
 **Kolom yang dilarang:** `Pejabat Terkait`, `Keterangan Paket`, dan semua kolom uraian tindak lanjut (`URAIAN TINDAK LANJUT BPK`, `TL BARU ...`, `RENCANA AKSI`, dst.). Kolom-kolom ini memuat nama orang dan nomor surat.
 
 ## 4. Mengubah data asli menjadi katalog aturan dan seed sintetis
