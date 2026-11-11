@@ -150,3 +150,14 @@ Migrasi yang belum diterapkan pada cadangan lama berjalan otomatis saat start. J
 3. `curl -s https://<domain>/api/public/cycles` → `{"cycles":[]}` sebelum DIPA ditandai terbit.
 4. `systemctl list-timers nirmala-backup.timer` dan satu cadangan percobaan (`npm run backup`), buka dengan `sqlite3 ... "PRAGMA integrity_check"` bila tersedia.
 5. Lakukan skenario [mvp-scope.md](mvp-scope.md) §7 butir 2 (impor v1 → triage → CHR → impor v2 → tracker) pada data uji.
+
+## Kapasitas yang sudah diukur
+
+Diukur secara lokal pada berkas CSV eselon I terbesar dari data asli (±168 ribu baris, 143.545 item detail; hanya angka agregat yang dicatat), jalur impor yang sama dengan API (impor + deteksi aturan + skor + cek tindak lanjut dalam satu transaksi), SQLite berkas, satu proses Node.js:
+
+| Langkah | Waktu | Memori puncak |
+|---|---|---|
+| Snapshot pertama (awal): impor, deteksi R01–R08, skor semua item | ±78 dtk | ±490 MB |
+| Snapshot revisi berukuran penuh: diff, pewarisan hasil deteksi, skor ulang, cek tindak lanjut | ±88 dtk | ±780 MB |
+
+Tidak ada baris galat. Rencanakan memori ≥ 1 GB untuk proses API saat mengimpor eselon I terbesar, dan jalankan impor besar lewat mode asinkron (`async=true`) supaya UI memantau progres lewat `GET /api/jobs/:id`. Impor berjalan dalam satu transaksi di satu event loop: permintaan lain tetap dilayani lewat koneksi baca terpisah, tetapi progres bergerak berkala (bukan mulus).
