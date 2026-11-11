@@ -4,6 +4,8 @@
 }
 
 .scroll {
+  /* Containing block for .sr-only cells: without it an absolute 1px span escapes the scroll box and widens the page. */
+  position: relative;
   width: 100%;
   overflow-x: auto;
 }

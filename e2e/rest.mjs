@@ -292,12 +292,14 @@ async function adminUsers(browser) {
     await p.getByRole("button", { name: "Nonaktifkan" }).last().click();
     await p.locator("tbody tr").filter({ hasText: username }).getByText("Nonaktif").waitFor();
   });
-  await check(s, "admin users: an admin cannot deactivate themselves (409 message shown)", async (p) => {
-    s.expect(/409 PUT/);
-    await p.getByRole("switch", { name: /akun admin\.demo/ }).click();
-    await p.getByRole("button", { name: "Nonaktifkan" }).last().click();
-    await p.getByText(/tidak dapat menonaktifkan dirinya sendiri/).first().waitFor();
-    ok(await p.getByRole("switch", { name: /akun admin\.demo/ }).getAttribute("aria-checked") === "true", "switch flipped");
+  await check(s, "admin users: an admin cannot deactivate themselves (switch disabled, API answers 409)", async (p) => {
+    s.expect(/409 PUT|status of 409/);
+    const own = p.getByRole("switch", { name: /akun admin\.demo/ });
+    ok(await own.isDisabled(), "own switch should be disabled");
+    const id = (await api(p, "GET", "/users")).json.users.find((u) => u.username === "admin.demo").id;
+    const res = await api(p, "PUT", `/users/${id}/active`, { active: false });
+    equal(res.status, 409, "status");
+    ok(/dirinya sendiri/.test(res.json.error), res.json.error);
   });
   await s.context.close();
 }

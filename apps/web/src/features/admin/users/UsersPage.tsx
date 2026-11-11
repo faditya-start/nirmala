@@ -104,7 +104,8 @@ export function UsersPage() {
                       <Td>
                         <Switch
                           checked={user.active}
-                          disabled={toggling !== null}
+                          disabled={toggling !== null || user.id === me?.id}
+                          title={user.id === me?.id ? "Akun Anda sendiri tidak dapat dinonaktifkan." : undefined}
                           aria-label={`${user.active ? "Aktif" : "Nonaktif"}, akun ${user.username}`}
                           label={user.active ? "Aktif" : "Nonaktif"}
                           onCheckedChange={(checked) => (checked ? void toggleActive(user, true) : setDeactivating(user))}
