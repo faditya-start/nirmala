@@ -88,7 +88,7 @@ Setiap aturan menyimpan:
 ### R06 · Barang modal di akun belanja barang
 - **Kategori:** `AKUN` · **Jenis:** `keyword_wrong_account`
 - **Pola:** uraian mengandung `laptop` | `notebook` | `komputer` | `pc` | `printer` | `kendaraan` | `mobil` | `sepeda motor` | `ac split` | `server`; akun berawalan 52
-- **Pengecualian:** `pemeliharaan` | `sewa` | `servis` | `perbaikan` | `bbm` | `stnk` | `tinta` | `toner` | `suku cadang`
+- **Pengecualian:** `pemeliharaan` | `sewa` | `servis` | `perbaikan` | `bbm` | `stnk` | `tinta` | `toner` | `suku cadang` | `jasa` | `pengemudi` | `sopir` (tiga yang terakhir ditambahkan di Fase 3: "Jasa pengemudi kendaraan dinas" adalah kasus R02, bukan pembelian kendaraan)
 - **Akun benar:** 532111 Belanja Modal Peralatan dan Mesin
 - **Sumber:** tema LHP BPK "Kesalahan penganggaran belanja barang/modal" (lebih dari 100 baris rekomendasi dengan judul sejenis)
 - **Hit:** awal 3.063 · revisi 3.675 → **terlalu luas**

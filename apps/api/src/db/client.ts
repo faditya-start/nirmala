@@ -11,7 +11,7 @@ type Statement = {
 type Sqlite = { exec(sql: string): void; prepare(sql: string): Statement; close(): void };
 
 const require = createRequire(import.meta.url);
-const { DatabaseSync } = require("node:sqlite") as { DatabaseSync: new (path: string) => Sqlite };
+const { DatabaseSync } = require("node:sqlite") as { DatabaseSync: new (path: string, options?: { readOnly?: boolean }) => Sqlite };
 
 export type Db = SqliteRemoteDatabase<typeof schema>;
 
@@ -20,8 +20,10 @@ export interface Database {
   db: Db;
   /**
    * Jalankan `fn` dalam satu transaksi (BEGIN IMMEDIATE ... COMMIT; ROLLBACK jika melempar).
-   * Transaksi diserialkan. Query dari konteks async lain menunggu sampai transaksi selesai,
-   * jadi tidak pernah ikut ter-commit / ter-rollback secara tidak sengaja.
+   * Transaksi diserialkan. Query tulis dari konteks async lain menunggu sampai transaksi selesai,
+   * jadi tidak pernah ikut ter-commit / ter-rollback secara tidak sengaja. Query baca dari konteks lain
+   * (database berkas, bukan `:memory:`) tetap berjalan lewat koneksi baca kedua dan melihat data yang sudah
+   * ter-commit, sehingga impor besar tidak membekukan API (mis. polling `GET /api/jobs/:id`).
    * Pemanggilan bersarang bergabung ke transaksi yang sedang berjalan.
    */
   transaction<T>(fn: () => Promise<T>): Promise<T>;
@@ -38,13 +40,19 @@ export function createDatabase(path: string): Database {
   const sqlite = new DatabaseSync(path);
   sqlite.exec("PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON; PRAGMA busy_timeout = 5000;");
 
+  // Koneksi baca kedua (WAL: pembaca tidak memblokir penulis). Tidak tersedia untuk `:memory:`.
+  const reader = path === ":memory:" ? null : new DatabaseSync(path, { readOnly: true });
+  reader?.exec("PRAGMA busy_timeout = 5000;");
   const insideTransaction = new AsyncLocalStorage<true>();
   let lock: Promise<void> = Promise.resolve();
   let active: Promise<void> | null = null;
 
   const execute = async (sql: string, params: unknown[], method: "run" | "all" | "values" | "get") => {
-    while (active && !insideTransaction.getStore()) await active;
-    const statement = sqlite.prepare(sql);
+    const outside = !insideTransaction.getStore();
+    const readOnlyQuery = method !== "run" && /^\s*(select|with)\b/i.test(sql);
+    const connection = reader && active && outside && readOnlyQuery ? reader : sqlite;
+    if (connection === sqlite) while (active && outside) await active;
+    const statement = connection.prepare(sql);
     if (method === "run") { statement.run(...params); return { rows: [] }; }
     statement.setReturnArrays(true);
     const rows = statement.all(...params) as unknown[][];
@@ -75,7 +83,7 @@ export function createDatabase(path: string): Database {
     }
   }
 
-  return { db, transaction, sqlite, close: () => sqlite.close() };
+  return { db, transaction, sqlite, close: () => { reader?.close(); sqlite.close(); } };
 }
 
 let shared: Database | undefined;
@@ -84,4 +92,18 @@ let shared: Database | undefined;
 export function getDatabase(): Database {
   shared ??= createDatabase(process.env.DATABASE_PATH ?? "./nirmala.sqlite");
   return shared;
+}
+
+/**
+ * Salinan konsisten database berkas (aman saat API berjalan: `VACUUM INTO` lewat koneksi baca-saja, tidak memblokir penulis di WAL).
+ * `destination` harus belum ada. Dipakai skrip cadangan harian.
+ */
+export function backupDatabase(sourcePath: string, destination: string): void {
+  const source = new DatabaseSync(sourcePath, { readOnly: true });
+  try {
+    source.exec("PRAGMA busy_timeout = 5000;");
+    source.prepare("VACUUM INTO ?").run(destination);
+  } finally {
+    source.close();
+  }
 }

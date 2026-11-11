@@ -1,0 +1,1 @@
+ALTER TABLE `rka_items` ADD `hierarchy_names` text;

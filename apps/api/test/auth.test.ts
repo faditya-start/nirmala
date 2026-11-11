@@ -50,11 +50,12 @@ test("endpoint admin: 401 tanpa login, 403 untuk non-admin, 200 untuk admin", as
   close();
 });
 
-test("endpoint prototipe yang belum diporting mengembalikan 501 dengan pesan jelas", async () => {
+test("tidak ada endpoint 501 lagi; rute /api yang tidak dikenal menjawab 404 JSON", async () => {
   const { login, get, close } = await setup();
   const { cookie } = await login(...DEMO.reviewer);
-  const response = await get("/api/chr", cookie);
-  assert.equal(response.status, 501);
-  assert.match(((await response.json()) as { error: string }).error, /Fase 4/);
+  const unknown = await get("/api/risk-items", cookie);
+  assert.equal(unknown.status, 404);
+  assert.deepEqual(await unknown.json(), { error: "Endpoint tidak ditemukan." });
+  assert.equal((await get("/api/dashboard", cookie)).status, 400, "dashboard sudah nyata: tanpa cycleId -> 400");
   close();
 });

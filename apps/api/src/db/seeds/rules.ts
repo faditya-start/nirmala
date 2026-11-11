@@ -66,7 +66,7 @@ export const RULE_SEEDS: RuleSeed[] = [
     code: "R06", name: "Barang modal di akun belanja barang", category: "AKUN", kind: "keyword_wrong_account",
     params: {
       include: "laptop|notebook|komputer|\\bpc\\b|printer|kendaraan|mobil|sepeda motor|ac split|server",
-      exclude: "pemeliharaan|sewa|servis|perbaikan|bbm|stnk|tinta|toner|suku cadang",
+      exclude: "pemeliharaan|sewa|servis|perbaikan|bbm|stnk|tinta|toner|suku cadang|jasa|pengemudi|sopir",
       akunSalah: ["52"], akunBenar: "532111", minUnitPrice: 1_000_000
     },
     reasonTemplate: "Barang yang memenuhi kriteria kapitalisasi BMN dianggarkan pada belanja modal peralatan dan mesin (532111), bukan belanja barang.",
