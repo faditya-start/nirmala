@@ -1,4 +1,4 @@
-import { Bell, ChevronsUpDown, LogOut, Menu } from "lucide-react";
+import { Bell, CalendarRange, ChevronsUpDown, LogOut, Menu, Monitor, Moon, PanelLeftClose, PanelLeftOpen, Sun, type LucideIcon } from "lucide-react";
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../app/auth";
@@ -7,6 +7,9 @@ import { useCycle } from "../app/cycle";
 import { findNav, navForRole } from "../app/nav";
 import { useNeedsAction } from "../app/needsAction";
 import { cn } from "../lib/cn";
+import { readStorage, writeStorage } from "../lib/storage";
+import { nextTheme, THEME_LABEL, type ThemePreference } from "../lib/theme";
+import { useTheme } from "../lib/useTheme";
 import { daysUntil, formatCountdown, formatDayMonth } from "../lib/format";
 import { initials, ROLE_LABEL, type AuthUser } from "../lib/roles";
 import { cycleLabel } from "../lib/types";
@@ -17,7 +20,7 @@ import styles from "./AppShell.module.css";
 /* ------------------------------------------------------------ Cycle picker */
 
 /** Shell/PemilihSiklus: "Siklus aktif", the cycle name and the ADK countdown. A native select sits invisibly on top. */
-function CyclePicker() {
+function CyclePicker({ collapsed }: { collapsed: boolean }) {
   const { cycles, active, status, setActiveId } = useCycle();
   const deadline = active?.adkDeadline ?? null;
   const days = daysUntil(deadline);
@@ -26,6 +29,7 @@ function CyclePicker() {
 
   return (
     <div className={styles.cycle}>
+      <CalendarRange size={16} aria-hidden="true" className={styles.cycleIcon} />
       <span className={styles.cycleLabel}>Siklus aktif</span>
       <span className={styles.cycleRow}>
         <span className={styles.cycleName}>{name}</span>
@@ -35,6 +39,7 @@ function CyclePicker() {
       <select
         className={styles.cycleSelect}
         aria-label="Siklus aktif"
+        title={collapsed ? [name, countdown].filter(Boolean).join(" · ") : undefined}
         value={active ? String(active.id) : ""}
         disabled={cycles.length === 0}
         onChange={(event) => setActiveId(event.target.value)}
@@ -50,15 +55,81 @@ function CyclePicker() {
   );
 }
 
+/* ------------------------------------------------------------ Theme control */
+
+const THEME_OPTIONS: { value: ThemePreference; icon: LucideIcon }[] = [
+  { value: "light", icon: Sun },
+  { value: "dark", icon: Moon },
+  { value: "system", icon: Monitor }
+];
+
+/**
+ * Tema: a three-way segmented control in the expanded sidebar; a single cycle button in the collapsed rail
+ * (CSS shows one of the two). The pressed segment pairs a filled chip with a border, never colour alone.
+ */
+function ThemeControl({ theme, onTheme }: { theme: ThemePreference; onTheme: (theme: ThemePreference) => void }) {
+  const next = nextTheme(theme);
+  const Current = THEME_OPTIONS.find((option) => option.value === theme)?.icon ?? Monitor;
+  return (
+    <div className={styles.theme}>
+      <span className={styles.themeLabel} aria-hidden="true">
+        Tema
+      </span>
+      <div role="group" aria-label="Tema" className={styles.themeGroup}>
+        {THEME_OPTIONS.map(({ value, icon: Icon }) => (
+          <button
+            key={value}
+            type="button"
+            className={styles.themeOption}
+            aria-pressed={theme === value}
+            aria-label={THEME_LABEL[value]}
+            title={THEME_LABEL[value]}
+            onClick={() => onTheme(value)}
+          >
+            <Icon size={14} aria-hidden="true" />
+          </button>
+        ))}
+      </div>
+      <IconButton
+        icon={Current}
+        label={`Tema: ${THEME_LABEL[theme]}. Ganti ke ${THEME_LABEL[next]}`}
+        className={cn(styles.railTool, styles.themeCycle)}
+        onClick={() => onTheme(next)}
+      />
+    </div>
+  );
+}
+
 /* ----------------------------------------------------------------- Sidebar */
 
-function Sidebar({ user, open, onNavigate, onLogout }: { user: AuthUser; open: boolean; onNavigate: () => void; onLogout: () => void }) {
+function Sidebar({
+  user,
+  open,
+  collapsed,
+  onNavigate,
+  onLogout
+}: {
+  user: AuthUser;
+  open: boolean;
+  collapsed: boolean;
+  onNavigate: () => void;
+  onLogout: () => void;
+}) {
   const groups = useMemo(() => navForRole(user.role), [user.role]);
   const { navCounts } = useNeedsAction();
+  const [theme, setTheme] = useTheme();
+  const navRef = useRef<HTMLElement>(null);
+  const { pathname } = useLocation();
   const unit = user.unitLabel ? ` · ${user.unitLabel}` : "";
+  const identity = `${user.name} · ${ROLE_LABEL[user.role]}${unit}`;
+
+  // The nav scrolls on its own: keep the current page in view (also after the rail or a short window hides it).
+  useEffect(() => {
+    navRef.current?.querySelector('[aria-current="page"]')?.scrollIntoView({ block: "nearest" });
+  }, [pathname, collapsed]);
 
   return (
-    <aside id="app-sidebar" className={cn(styles.sidebar, open && styles.sidebarOpen)} aria-label="Bilah samping">
+    <aside id="app-sidebar" className={cn(styles.sidebar, open && styles.sidebarOpen, collapsed && styles.sidebarRail)} aria-label="Bilah samping">
       <Link to="/dashboard" className={styles.brand} onClick={onNavigate}>
         <Monogram />
         <span className={styles.brandText}>
@@ -67,9 +138,9 @@ function Sidebar({ user, open, onNavigate, onLogout }: { user: AuthUser; open: b
         </span>
       </Link>
 
-      <CyclePicker />
+      <CyclePicker collapsed={collapsed} />
 
-      <nav aria-label="Navigasi utama" className={styles.nav}>
+      <nav ref={navRef} aria-label="Navigasi utama" className={styles.nav}>
         {groups.map((group) => (
           <div key={group.label} role="group" aria-label={group.label} className={styles.navGroup}>
             <p className={styles.navHeading} aria-hidden="true">
@@ -78,7 +149,7 @@ function Sidebar({ user, open, onNavigate, onLogout }: { user: AuthUser; open: b
             {group.items.map((item) => {
               const count = item.badge && navCounts ? navCounts[item.badge.key] : null;
               return (
-                <NavLink key={item.to} to={item.to} className={styles.navItem} onClick={onNavigate}>
+                <NavLink key={item.to} to={item.to} className={styles.navItem} title={collapsed ? item.label : undefined} onClick={onNavigate}>
                   <item.icon size={16} aria-hidden="true" className={styles.navIcon} />
                   <span className={styles.navLabel}>{item.label}</span>
                   {count !== null && count > 0 && (
@@ -94,18 +165,21 @@ function Sidebar({ user, open, onNavigate, onLogout }: { user: AuthUser; open: b
         ))}
       </nav>
 
-      <div className={styles.user}>
-        <span className={styles.avatar} aria-hidden="true">
-          {initials(user.name)}
-        </span>
-        <span className={styles.userText}>
-          <span className={styles.userName}>{user.name}</span>
-          <span className={styles.userRole}>
-            {ROLE_LABEL[user.role]}
-            {unit}
+      <div className={styles.footer}>
+        <ThemeControl theme={theme} onTheme={setTheme} />
+        <div className={styles.user} title={collapsed ? identity : undefined}>
+          <span className={styles.avatar} aria-hidden="true">
+            {initials(user.name)}
           </span>
-        </span>
-        <IconButton icon={LogOut} label="Keluar" onClick={onLogout} className={styles.logout} />
+          <span className={styles.userText}>
+            <span className={styles.userName}>{user.name}</span>
+            <span className={styles.userRole}>
+              {ROLE_LABEL[user.role]}
+              {unit}
+            </span>
+          </span>
+          <IconButton icon={LogOut} label="Keluar" onClick={onLogout} className={styles.logout} />
+        </div>
       </div>
     </aside>
   );
@@ -198,6 +272,8 @@ function NeedsActionMenu() {
 
 /* ----------------------------------------------------------------- AppShell */
 
+const SIDEBAR_KEY = "nirmala.sidebar";
+
 export interface AppShellProps {
   user: AuthUser;
   /** Screen name for the default breadcrumb tail. */
@@ -215,6 +291,8 @@ export function AppShell({ user, title, children }: AppShellProps) {
   const location = useLocation();
   const override = useBreadcrumbOverride();
   const [drawer, setDrawer] = useState(false);
+  // Desktop only: the 56 px icon rail. The drawer below 1024 px always shows the full sidebar (CSS ignores this flag there).
+  const [collapsed, setCollapsed] = useState(() => readStorage(SIDEBAR_KEY) === "collapsed");
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const mainRef = useRef<HTMLElement>(null);
   const restoreFocus = useRef(false);
@@ -270,6 +348,12 @@ export function AppShell({ user, title, children }: AppShellProps) {
     return items;
   }, [override, location.pathname, title]);
 
+  function toggleCollapsed() {
+    const next = !collapsed;
+    setCollapsed(next);
+    writeStorage(SIDEBAR_KEY, next ? "collapsed" : null);
+  }
+
   async function onLogout() {
     await logout();
     navigate("/login", { replace: true });
@@ -280,7 +364,7 @@ export function AppShell({ user, title, children }: AppShellProps) {
       <a href="#main" className="skip-link">
         Lewati ke konten
       </a>
-      <Sidebar user={user} open={drawer} onNavigate={() => setDrawer(false)} onLogout={onLogout} />
+      <Sidebar user={user} open={drawer} collapsed={collapsed} onNavigate={() => setDrawer(false)} onLogout={onLogout} />
       {drawer && <div
           className={styles.scrim}
           onClick={() => {
@@ -293,6 +377,14 @@ export function AppShell({ user, title, children }: AppShellProps) {
       <div className={styles.main} inert={drawer || undefined}>
         <header className={styles.header}>
           <div className={styles.headerStart}>
+            <IconButton
+              icon={collapsed ? PanelLeftOpen : PanelLeftClose}
+              label={collapsed ? "Perluas bilah samping" : "Ciutkan bilah samping"}
+              className={styles.collapseButton}
+              aria-expanded={!collapsed}
+              aria-controls="app-sidebar"
+              onClick={toggleCollapsed}
+            />
             <IconButton
               ref={menuButtonRef}
               icon={Menu}

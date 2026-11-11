@@ -15,14 +15,18 @@
   gap: var(--sp-4);
   width: 248px;
   height: 100vh;
+  height: 100dvh;
   padding: var(--sp-4);
   border-right: 1px solid var(--sidebar-line);
   background: var(--sidebar);
   color: var(--sidebar-ink);
-  overflow-y: auto;
+  /* Only the navigation scrolls; brand, cycle, theme and user stay pinned so nothing is ever out of reach. */
+  overflow: hidden;
 }
 
 .brand {
+  position: relative;
+  flex: none;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -52,6 +56,7 @@
 /* ---- Cycle picker ---- */
 .cycle {
   position: relative;
+  flex: none;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -67,6 +72,11 @@
 .cycle:focus-within {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
+}
+
+/* Rail-only glyph; the full sidebar shows the name instead. */
+.cycleIcon {
+  display: none;
 }
 
 .cycleLabel {
@@ -125,10 +135,56 @@
   flex-direction: column;
   gap: 2px;
   min-height: 0;
+  /* The one scroll region of the sidebar. A thin, token-coloured scrollbar that sits in the sidebar's
+     right padding, so items keep their full width and nothing shifts when it appears. */
+  margin-right: calc(var(--sp-2) * -1);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  /* Content fades out at both ends of the region instead of being cut by a hard edge. The 8 px of bottom
+     padding keeps the last item clear of the fade when the list is not scrolled. */
+  padding-bottom: var(--sp-2);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, black var(--sp-2), black calc(100% - var(--sp-2)), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, black var(--sp-2), black calc(100% - var(--sp-2)), transparent 100%);
+}
+
+/* Chrome, Edge, Safari: an 8 px track with a 4 px rounded thumb and no arrow buttons. */
+.nav::-webkit-scrollbar {
+  width: var(--sp-2);
+}
+
+.nav::-webkit-scrollbar-button {
+  display: none;
+}
+
+.nav::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: var(--r-pill);
+  background: var(--border-strong);
+  background-clip: content-box;
+}
+
+.nav:hover::-webkit-scrollbar-thumb,
+.nav::-webkit-scrollbar-thumb:hover {
+  background-color: var(--ink-faint);
+}
+
+/* Firefox: the standard properties. Browsers that know ::-webkit-scrollbar ignore this block. */
+@supports not selector(::-webkit-scrollbar) {
+  .nav {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
+  }
+
+  .nav:hover {
+    scrollbar-color: var(--ink-faint) transparent;
+  }
 }
 
 .navGroup {
   display: flex;
+  flex: none;
   flex-direction: column;
   gap: 2px;
 }
@@ -141,6 +197,8 @@
 }
 
 .navItem {
+  position: relative;
+  flex: none;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -188,13 +246,89 @@
   font-size: var(--fs-xs);
 }
 
-/* ---- User footer ---- */
+/* ---- Footer: theme + user, pinned below the scrolling nav ---- */
+.footer {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--sidebar-line);
+}
+
+.theme {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  padding: 0 4px;
+}
+
+.themeLabel {
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--sidebar-ink-muted);
+}
+
+.themeGroup {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--sidebar-line);
+  border-radius: var(--r-md);
+}
+
+.themeOption {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--sidebar-ink-muted);
+  transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+
+.themeOption:hover {
+  background: var(--sidebar-line);
+  color: var(--sidebar-ink);
+}
+
+/* Pressed = filled chip + border + full-ink icon, so it reads without colour. */
+.themeOption[aria-pressed="true"] {
+  border-color: var(--border-strong);
+  background: var(--sidebar-active);
+  color: var(--sidebar-ink);
+}
+
+.themeOption:focus-visible {
+  outline-offset: 1px;
+}
+
+/* Rail-only single button; hidden while the full sidebar is shown. */
+.themeCycle {
+  display: none;
+}
+
+.railTool {
+  color: var(--sidebar-ink-muted);
+}
+
+.railTool:hover:not(:disabled) {
+  background: var(--sidebar-line);
+  color: var(--sidebar-ink);
+}
+
+/* ---- User ---- */
 .user {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: var(--sp-3) 4px 0;
-  border-top: 1px solid var(--sidebar-line);
+  padding: 0 4px;
 }
 
 .avatar {
@@ -276,6 +410,11 @@
 
 .menuButton {
   display: none;
+}
+
+/* Desktop only: below 1024 px the menu button opens the drawer instead. */
+.collapseButton {
+  display: inline-flex;
 }
 
 .content {
@@ -408,6 +547,102 @@
   }
 }
 
+/* ---- Desktop: collapsed icon rail (56 px). Instant switch: layout is never animated. ---- */
+@media (min-width: 1024px) {
+  .sidebarRail {
+    width: 56px;
+    padding: var(--sp-4) var(--sp-2);
+  }
+
+  /* Visually hidden but still announced, so every control keeps its accessible name. */
+  .sidebarRail .brandText,
+  .sidebarRail .navLabel,
+  .sidebarRail .userText {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .sidebarRail .cycleLabel,
+  .sidebarRail .cycleRow,
+  .sidebarRail .cycleDeadline,
+  .sidebarRail .navHeading,
+  .sidebarRail .themeLabel,
+  .sidebarRail .themeGroup {
+    display: none;
+  }
+
+  .sidebarRail .brand {
+    justify-content: center;
+    padding: 4px 0 8px;
+  }
+
+  .sidebarRail .cycle {
+    align-items: center;
+    justify-content: center;
+    height: var(--control-h);
+    padding: 0;
+  }
+
+  .sidebarRail .cycleIcon {
+    display: block;
+  }
+
+  /* Groups are told apart by a hairline instead of a heading. */
+  .sidebarRail .navGroup + .navGroup {
+    margin-top: var(--sp-2);
+    padding-top: var(--sp-2);
+    border-top: 1px solid var(--sidebar-line);
+  }
+
+  /* 40 px of width cannot spare a scrollbar; wheel, keyboard and focus still scroll. */
+  /* 4 px of side room lets the count badge poke past the icon's corner without being clipped. */
+  .sidebarRail .nav {
+    margin: 0 calc(var(--sp-1) * -1);
+    padding: 0 var(--sp-1) var(--sp-2);
+    scrollbar-gutter: auto;
+    scrollbar-width: none;
+  }
+
+  .sidebarRail .nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .sidebarRail .navItem {
+    justify-content: center;
+    padding: 0;
+  }
+
+  /* The count rides the icon's corner: still a number, not a bare dot. */
+  .sidebarRail .navCount {
+    position: absolute;
+    top: 0;
+    right: calc(var(--sp-1) * -1);
+    min-width: 16px;
+    padding: 0 4px;
+    line-height: 16px;
+    text-align: center;
+  }
+
+  .sidebarRail .theme {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .sidebarRail .themeCycle {
+    display: inline-flex;
+  }
+
+  .sidebarRail .user {
+    flex-direction: column;
+    gap: var(--sp-2);
+    padding: 0;
+  }
+}
+
 /* ---- Tablet and below: the sidebar becomes a drawer ---- */
 @media (max-width: 1023px) {
   .sidebar {
@@ -424,6 +659,10 @@
     transform: translateX(0);
     visibility: visible;
     transition: transform var(--dur-slow) var(--ease-out), visibility 0s;
+  }
+
+  .collapseButton {
+    display: none;
   }
 
   .menuButton {

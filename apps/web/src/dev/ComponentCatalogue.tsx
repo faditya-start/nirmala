@@ -58,6 +58,7 @@ import {
   type SortDirection
 } from "../ui";
 import { formatNumber } from "../lib/format";
+import { applyTheme, readTheme } from "../lib/theme";
 import styles from "./ComponentCatalogue.module.css";
 
 type Theme = "system" | "light" | "dark";
@@ -71,7 +72,8 @@ function useTheme(): [Theme, (theme: Theme) => void] {
     const root = document.documentElement;
     if (theme === "system") root.removeAttribute("data-theme");
     else root.setAttribute("data-theme", theme);
-    return () => root.removeAttribute("data-theme");
+    // Leaving the catalogue hands the page back to the user's saved theme (set from the sidebar).
+    return () => applyTheme(readTheme());
   }, [theme]);
   return [theme, setTheme];
 }
