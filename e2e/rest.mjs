@@ -105,9 +105,16 @@ async function laporan(browser) {
         const lines = readFileSync(await download.path(), "utf8").split("\r\n").filter(Boolean);
         equal(lines.length - 1, expected, "CSV rows for the filtered eselon I");
       });
-      await check(s, "laporan: export of an eselon I outside the scope is refused (API 403)", async (p) => {
-        const r = await api(p, "GET", "/reports/export.csv?cycleId=x&organizationUnitId=org_tidak_ada");
-        ok([403, 404].includes(r.status), `status ${r.status}`);
+    }
+    if (role === "reviewer") {
+      await check(s, "laporan reviewer: another eselon I is refused by the API (403 on summary and CSV)", async (p) => {
+        s.expect(/403|status of 403/);
+        const cycle = (await api(p, "GET", "/cycles")).json.cycles.find((c) => c.status === "aktif");
+        for (const path of ["/reports/summary", "/reports/export.csv"]) {
+          const r = await api(p, "GET", `${path}?cycleId=${cycle.id}&organizationUnitId=org_90002`);
+          equal(r.status, 403, `${path} status`);
+          equal(r.json.error, "Anda tidak memiliki akses ke eselon I ini.", `${path} message`);
+        }
       });
     }
     await s.context.close();
@@ -173,7 +180,7 @@ async function adminRules(browser) {
     await d.getByRole("button", { name: "Buang perubahan" }).click();
   });
   await check(s, "admin rules: API refuses a bad regex with the contract message", async (p) => {
-    s.expect(/400 PUT/);
+    s.expect(/400 PUT|status of 400/);
     const rules = (await api(p, "GET", "/admin/rules")).json.rules;
     const r02 = rules.find((r) => r.code === "R02");
     const res = await api(p, "PUT", `/admin/rules/${r02.id}`, { params: { ...r02.params, include: "(bad[" } });
@@ -201,7 +208,8 @@ async function adminWeights(browser) {
     await save.click();
     await p.getByText(/tersimpan dan sekarang aktif/).waitFor();
     const cfg = (await api(p, "GET", "/admin/risk-config")).json;
-    equal(cfg.active.weights[`F${a[0] + 1}`], values[a[0]] + 1, "active weight");
+    const code = ["price_vs_peer", "risky_account", "satker_history", "description_quality", "change_from_previous"][a[0]];
+    equal(cfg.active.weights[code], values[a[0]] + 1, "active weight");
     await p.getByRole("button", { name: /Hitung ulang/ }).click();
     await p.getByText(/Hitung ulang selesai/).waitFor({ timeout: 30000 });
     await p.getByText(/item dinilai dengan bobot versi/).waitFor();
@@ -242,8 +250,10 @@ async function adminUsers(browser) {
     await tick(d, units[1].shortName);
     await d.getByRole("button", { name: /Simpan perubahan/ }).click();
     await d.waitFor({ state: "hidden" });
-    const row = await rowText(p, username);
-    ok(row.includes(units[1].shortName) && !row.includes(units[0].shortName), `scopes after edit: ${row}`);
+    await p.waitForFunction(([u, want, gone]) => {
+      const row = [...document.querySelectorAll("tbody tr")].find((tr) => tr.textContent.includes(u));
+      return row && row.textContent.includes(want) && !row.textContent.includes(gone);
+    }, [username, units[1].shortName, units[0].shortName]);
     await p.getByRole("switch", { name: new RegExp(`akun ${username}`) }).click();
     await p.getByRole("button", { name: "Nonaktifkan" }).last().click();
     await p.locator("tbody tr").filter({ hasText: username }).getByText("Nonaktif").waitFor();
@@ -255,7 +265,7 @@ async function adminUsers(browser) {
     await fresh.page.getByLabel("Username").fill(username);
     await fresh.page.getByLabel("Kata sandi").fill(password);
     await fresh.page.getByRole("button", { name: /^Masuk/ }).click();
-    await fresh.page.getByText(/tidak valid|salah/i).first().waitFor();
+    await fresh.page.getByText(/tidak sesuai/i).first().waitFor();
     equal(new URL(fresh.page.url()).pathname, "/login", "stays on /login");
     await fresh.context.close();
   });
@@ -265,7 +275,6 @@ async function adminUsers(browser) {
     const id = (await api(p, "GET", "/users")).json.users.find((u) => u.username === username).id;
     equal((await api(p, "PUT", `/users/${id}/scopes`, { organizationUnitIds: [] })).status, 200, "clear scopes");
     const user = await newSession(browser);
-    user.expect(/^$/);
     await user.page.goto(`${BASE_URL}/login`);
     await user.page.getByLabel("Username").fill(username);
     await user.page.getByLabel("Kata sandi").fill(password);
@@ -355,7 +364,7 @@ async function cyclesAndPublic(browser) {
     await p.locator("tbody tr").filter({ hasText: String(active.fiscalYear) }).filter({ hasNotText: "Selesai" }).getByRole("button", { name: /Tandai DIPA terbit/ }).click();
     const d = p.getByRole("dialog");
     await d.waitFor();
-    await d.getByRole("button", { name: /Tandai DIPA terbit/ }).click();
+    await d.getByRole("button", { name: "Tandai terbit" }).click();
     await d.waitFor({ state: "hidden" });
     await p.getByText("Agregat tampil di Transparansi publik").first().waitFor();
     const second = await api(p, "POST", `/cycles/${active.id}/dipa-issued`, {});
@@ -377,8 +386,8 @@ async function cyclesAndPublic(browser) {
       const text = await bodyText(p);
       ok(!/Rp\s?\d|Satker [A-Z]|rupiah per item:/.test(text.replace("nilai rupiah per item", "")), "per-item money or Satker name on the public page");
       if (width === 1440) {
-        const totalRow = (await p.locator("tbody tr").last().innerText()).replace(/\s+/g, " ");
-        ok(totalRow.startsWith("Total"), `total row: ${totalRow}`);
+        const totalRow = (await p.locator("tr", { hasText: /^\s*Total/ }).first().innerText()).replace(/\s+/g, " ");
+        ok(totalRow.includes(String(publicJson.totals.total)), `total row: ${totalRow}`);
         await p.screenshot({ path: process.env.SHOTS ? `${process.env.SHOTS}/rest-p2.png` : undefined, fullPage: true }).catch(() => {});
       }
       await v.context.close();
@@ -430,6 +439,8 @@ async function cyclesAndPublic(browser) {
     await d.waitFor({ state: "hidden" });
     await p.getByText("Belum", { exact: true }).first().waitFor();
     const v = await visitor();
+    await v.page.goto(`${BASE_URL}/transparansi`, { waitUntil: "networkidle" });
+    await v.page.getByText("Belum ada siklus yang DIPA-nya terbit").waitFor();
     ok((await api(v.page, "GET", "/public/cycles")).json.cycles.length === 0, "public cycles after retract");
     await v.context.close();
   });
@@ -447,22 +458,24 @@ async function adminAudit(browser) {
     const options = await p.getByLabel("Aksi").locator("option").count();
     equal(options, facets.actions.length + 1, "Aksi options vs facets");
     await p.getByLabel("Aksi").selectOption(facets.actions[0]);
-    await p.waitForResponse((r) => r.url().includes(`action=${encodeURIComponent(facets.actions[0])}`));
-    const filtered = Number(/(\d+) entri/.exec(await bodyText(p))[1]);
+    const expectedTotal = (await api(p, "GET", `/audit-logs?action=${encodeURIComponent(facets.actions[0])}&pageSize=1`)).json.pagination.total;
+    await p.getByText(new RegExp(`^${expectedTotal} entri$`)).first().waitFor();
+    const filtered = expectedTotal;
     ok(filtered > 0 && filtered <= total, `filtered total ${filtered} of ${total}`);
     const rows = await p.locator("tbody tr").count();
     ok(rows === Math.min(filtered, 25), `rows ${rows}`);
     await p.getByLabel("Aksi").selectOption("");
     await p.getByLabel("Pengguna").selectOption(facets.actors[0].id);
-    await p.waitForResponse((r) => r.url().includes(`actorUserId=${facets.actors[0].id}`));
+    const byActor = (await api(p, "GET", `/audit-logs?actorUserId=${facets.actors[0].id}&pageSize=1`)).json.pagination.total;
+    await p.getByText(new RegExp(`^${byActor} entri$`)).first().waitFor();
+    await p.getByLabel("Pengguna").selectOption("");
+    await p.getByText(new RegExp(`^${total} entri$`)).first().waitFor();
     if (total > 25) {
-      await p.getByLabel("Pengguna").selectOption("");
-      await p.getByRole("button", { name: /Berikutnya|Halaman berikutnya|2/ }).first().click();
-      await p.waitForResponse((r) => r.url().includes("page=2"));
-      ok(/Menampilkan 26/.test(await bodyText(p)), "page 2 range");
+      await p.getByRole("button", { name: "Halaman 2", exact: true }).first().click();
+      await p.getByText(/Menampilkan 26/).waitFor();
     }
-    const mine = (await api(p, "GET", "/audit-logs?pageSize=100")).json.logs.map((l) => l.action);
-    ok(mine.includes("risk_config.recalculated") || mine.includes("rule.updated") || mine.length > 0, "audit has entries");
+    const all = (await api(p, "GET", "/audit-logs?pageSize=100")).json.logs.map((l) => l.action);
+    ok(all.includes("cycle.dipa_issued") || all.includes("cycle.created") || all.includes("rule.updated"), "this run's actions appear in the audit log");
   });
   await s.context.close();
 }
@@ -561,7 +574,7 @@ async function production(browser) {
     await p.getByText(/Hitung ulang selesai/).waitFor({ timeout: 30000 });
   });
   await check(s, "prod: fonts are self-hosted, no external hosts, no CSP violation", async (p) => {
-    await p.goto(`${base}/transparansi`, { waitUntil: "networkidle" });
+    await p.goto(`${base}/admin/audit`, { waitUntil: "networkidle" }); // signed in above; timestamps use the mono font
     const state = await p.evaluate(async () => {
       await document.fonts.ready;
       return { fonts: [...document.fonts].filter((f) => f.status === "loaded").map((f) => f.family), csp: window.__csp };

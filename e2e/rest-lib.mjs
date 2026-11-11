@@ -37,6 +37,7 @@ export async function newSession(browser, { viewport = { width: 1440, height: 90
   const page = await context.newPage();
   const issues = [];
   const allow = [];
+  const allowedStatuses = new Set(); // statuses of responses a check declared as expected
   page.on("console", (m) => {
     if (m.type() === "error" || m.type() === "warning") {
       const text = m.text();
@@ -53,7 +54,8 @@ export async function newSession(browser, { viewport = { width: 1440, height: 90
     const s = r.status();
     if (s >= 400) {
       const key = `${s} ${r.request().method()} ${new URL(r.url()).pathname}`;
-      if (!allow.some((re) => re.test(key))) issues.push(`http ${key}`);
+      if (allow.some((re) => re.test(key))) allowedStatuses.add(s);
+      else issues.push(`http ${key}`);
     }
   });
   return {
@@ -63,8 +65,16 @@ export async function newSession(browser, { viewport = { width: 1440, height: 90
     expect(re) {
       allow.push(re);
     },
+    clearExpect() {
+      allow.length = 0;
+      allowedStatuses.clear();
+    },
     drain() {
-      return issues.splice(0, issues.length);
+      // Chrome also logs "Failed to load resource ... status of 409" for every 4xx; it is expected when the response was.
+      return issues.splice(0, issues.length).filter((text) => {
+        const m = /Failed to load resource: the server responded with a status of (\d+)/.exec(text);
+        return !(m && allowedStatuses.has(Number(m[1])));
+      });
     }
   };
 }
@@ -86,6 +96,7 @@ export async function logout(s) {
 /** Run a named check; any exception or unexpected issue becomes a FAIL. */
 export async function check(s, name, fn) {
   s.drain();
+  s.clearExpect();
   let err = null;
   try {
     await fn(s.page);
