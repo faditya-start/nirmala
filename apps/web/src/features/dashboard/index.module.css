@@ -1,0 +1,170 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-6);
+  align-items: start;
+}
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 312px;
+  gap: var(--sp-5);
+  align-items: start;
+}
+
+@media (max-width: 1199px) {
+  .split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.solo {
+  display: block;
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+/* Strip of five status cells */
+.strip {
+  display: flex;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.cell {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  min-width: 0;
+  padding: var(--sp-3) 10px;
+}
+
+.cell + .cell {
+  border-left: 1px solid var(--border);
+}
+
+.count {
+  font-size: 30px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.count[data-zero] {
+  color: var(--ink-faint);
+}
+
+/* Right column panels */
+.panel {
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: var(--sp-4);
+}
+
+.action + .action {
+  border-top: 1px solid var(--border);
+}
+
+.actionHead {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.actionCount {
+  font-weight: 600;
+}
+
+.actionBody {
+  font-size: var(--fs-md);
+  line-height: 20px;
+  color: var(--ink-muted);
+}
+
+.actionButton {
+  margin-top: 0;
+}
+
+.panelEmpty {
+  padding: var(--sp-4);
+  font-size: var(--fs-md);
+  line-height: 20px;
+  color: var(--ink-muted);
+}
+
+/* Per eselon I table: 16 px cell padding as designed */
+.orgTable th,
+.orgTable td {
+  padding-inline: var(--sp-4);
+}
+
+.orgTable td {
+  padding-block: 12px;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.right {
+  align-items: flex-end;
+}
+
+.orgName {
+  font-weight: 500;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.orgName:hover {
+  text-decoration: underline;
+}
+
+.sub {
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+}
+
+.faint {
+  color: var(--ink-faint);
+}
+
+.progress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.progressBar {
+  width: 160px;
+}
+
+.chevron {
+  color: var(--ink-muted);
+}
+
+/* Inside a numeric (mono) cell the second line stays in the UI font, as designed. */
+.right .sub {
+  font-family: var(--font-ui);
+}

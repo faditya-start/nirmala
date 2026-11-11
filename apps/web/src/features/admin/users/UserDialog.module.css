@@ -1,0 +1,45 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  width: 100%;
+}
+
+.description {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: -8px;
+  font-size: var(--fs-base);
+  color: var(--ink-muted);
+}
+
+.units {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.legend {
+  margin-bottom: 8px;
+  padding: 0;
+  font-size: var(--fs-xs);
+  font-weight: 500;
+}
+
+.unitsHelp,
+.unitsError {
+  font-size: var(--fs-xs);
+}
+
+.unitsHelp {
+  color: var(--ink-muted);
+}
+
+.unitsError {
+  color: var(--st-flag-fg);
+}

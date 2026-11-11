@@ -9,6 +9,6 @@
     "outDir": "dist",
     "composite": true
   },
-  "include": ["src"],
+  "include": ["src", "scripts"],
   "references": [{ "path": "../../packages/shared/tsconfig.json" }]
 }

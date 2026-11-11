@@ -1,0 +1,26 @@
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  width: 100%;
+}
+
+.sectionHead {
+  width: 100%;
+}
+
+.sunken textarea {
+  background: var(--surface-sunken);
+  color: var(--ink);
+}
+
+.sunken textarea:disabled {
+  color: var(--ink-faint);
+}
+
+.errorHint {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--st-flag-fg);
+}

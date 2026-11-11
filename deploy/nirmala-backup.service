@@ -1,0 +1,17 @@
+# Contoh unit cadangan harian (dipicu nirmala-backup.timer). Salin ke /etc/systemd/system/.
+[Unit]
+Description=Cadangan harian database NIRMALA (SQLite online backup)
+
+[Service]
+Type=oneshot
+User=nirmala
+Group=nirmala
+WorkingDirectory=/opt/nirmala/apps/api
+EnvironmentFile=/etc/nirmala/nirmala.env
+# BACKUP_DIR dan BACKUP_KEEP_DAYS dibaca dari nirmala.env (default ./backups dan 14 hari).
+ExecStart=/opt/nirmala/node_modules/.bin/tsx scripts/backup.ts
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/nirmala /var/backups/nirmala

@@ -1,0 +1,24 @@
+/* Table density from the design: 16 px side padding, 36 px header, per-table row padding. */
+.roomy th {
+  padding: 10px 16px;
+}
+
+.roomy td {
+  padding-right: 16px;
+  padding-left: 16px;
+}
+
+.rows14 td {
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
+.rows16 td {
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+
+.rows18 td {
+  padding-top: 18px;
+  padding-bottom: 18px;
+}

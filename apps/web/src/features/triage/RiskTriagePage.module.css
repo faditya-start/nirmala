@@ -1,0 +1,94 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.flagToggle {
+  padding-left: var(--sp-2);
+}
+
+.summaryRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  margin-bottom: calc(-1 * var(--sp-2));
+}
+
+.summary {
+  font-size: var(--fs-md);
+  color: var(--ink);
+}
+
+.summary strong {
+  font-weight: 600;
+}
+
+.summaryMuted {
+  color: var(--ink-muted);
+}
+
+.order {
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+}
+
+.inlineError {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 8px var(--sp-3);
+  border: 1px solid var(--st-flag-line);
+  background: var(--st-flag-bg);
+  color: var(--st-flag-fg);
+  font-size: var(--fs-xs);
+}
+
+.busy {
+  opacity: 0.6;
+  transition: opacity 0.12s ease;
+}
+
+.rowLink {
+  display: -webkit-box;
+  overflow: hidden;
+  color: inherit;
+  text-decoration: none;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow-wrap: anywhere;
+}
+
+.rowLink:hover {
+  text-decoration: underline;
+}
+
+.chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.unscored {
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .busy {
+    transition: none;
+  }
+}
+
+.emptyCard {
+  align-self: center;
+  width: 520px;
+  max-width: 100%;
+  margin-top: var(--sp-5);
+}
+
+/* At 1024 px keep the description column readable and scroll the table instead of squeezing it. */
+.table {
+  min-width: 900px;
+}

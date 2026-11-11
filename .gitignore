@@ -8,3 +8,10 @@ dist/
 *.sqlite
 *.sqlite-shm
 *.sqlite-wal
+
+data/private/
+*.tsbuildinfo
+
+# Ekspor Pencil (bisa dibangkitkan ulang dari design/nirmala.pen)
+design/export/
+e2e-artifacts/

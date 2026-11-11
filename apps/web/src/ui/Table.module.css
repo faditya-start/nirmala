@@ -1,0 +1,218 @@
+.frame {
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.scroll {
+  /* Containing block for .sr-only cells: without it an absolute 1px span escapes the scroll box and widens the page. */
+  position: relative;
+  width: 100%;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  font-size: var(--fs-base);
+  color: var(--ink);
+}
+
+.thead {
+  background: var(--surface-sunken);
+}
+
+.th {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-strong);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--ink-muted);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.th[data-align="right"] {
+  text-align: right;
+}
+
+.th[data-align="center"] {
+  text-align: center;
+}
+
+.sortButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  /* Extra vertical padding grows the hit area to 24 px without moving the header text. */
+  padding: 5px 0;
+  margin: -5px 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+}
+
+.sortButton {
+  transition: color var(--dur-fast) var(--ease-out);
+}
+
+.sortButton:hover {
+  color: var(--ink);
+}
+
+.tr {
+  background: var(--surface);
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.tr:hover {
+  background: var(--surface-sunken);
+}
+
+.tr[data-interactive] {
+  cursor: pointer;
+}
+
+.tr[data-interactive]:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+
+/* Terpilih: light blue + 3 px left line + check (shape, not just color) */
+.tr[data-selected],
+.tr[data-selected]:hover {
+  background: var(--st-verif-bg);
+  box-shadow: inset 3px 0 0 var(--focus);
+}
+
+.td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+  text-align: left;
+}
+
+.td[data-align="right"] {
+  text-align: right;
+}
+
+.td[data-align="center"] {
+  text-align: center;
+}
+
+.mark {
+  color: var(--st-verif-fg);
+}
+
+.markSpace {
+  display: inline-block;
+  width: 14px;
+}
+
+.cellTitle {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+/* Long item descriptions: two lines at most, full text in the title attribute. */
+.title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+}
+
+.metaPart {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Meta may wrap at its dot separators; a single very long word breaks instead of widening the column. */
+.metaText {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.metaDot {
+  color: var(--ink-faint);
+}
+
+.empty {
+  color: var(--ink-faint);
+}
+
+/* Footer / pagination */
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding: 10px 12px;
+  background: var(--surface);
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+}
+
+.footerCount {
+  margin: 0;
+}
+
+.pages {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.pageButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: var(--fs-xs);
+}
+
+.pageButton:hover:not(:disabled) {
+  background: var(--surface-sunken);
+  color: var(--ink);
+}
+
+.pageButton:disabled {
+  color: var(--ink-faint);
+  opacity: 0.55;
+}
+
+.pageNumber[aria-current="page"] {
+  border-color: var(--border-strong);
+  background: var(--surface-sunken);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.gap {
+  min-width: 20px;
+  text-align: center;
+  color: var(--ink-faint);
+}

@@ -1,0 +1,51 @@
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.card {
+  gap: var(--sp-3);
+  padding: 40px var(--sp-5);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+}
+
+.page {
+  gap: 14px;
+  padding: 96px 0;
+}
+
+.iconBox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  color: var(--ink);
+}
+
+.title {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+}
+
+.page .title {
+  font-size: var(--fs-xl);
+}
+
+.description {
+  max-width: 360px;
+  font-size: var(--fs-base);
+  line-height: 1.5;
+  color: var(--ink-muted);
+}
+
+.page .description {
+  max-width: 420px;
+  font-size: var(--fs-md);
+  line-height: 1.5;
+}

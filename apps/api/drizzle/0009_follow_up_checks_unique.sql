@@ -1,0 +1,2 @@
+CREATE UNIQUE INDEX `follow_up_checks_note_document_idx` ON `follow_up_checks` (`note_id`,`document_id`);--> statement-breakpoint
+CREATE INDEX `follow_up_checks_document_idx` ON `follow_up_checks` (`document_id`);

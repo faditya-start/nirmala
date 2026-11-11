@@ -1,0 +1,22 @@
+.note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.icon {
+  flex: none;
+  margin-top: 2px;
+  color: var(--ink-muted);
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-md);
+  line-height: 20px;
+  color: var(--ink-muted);
+}

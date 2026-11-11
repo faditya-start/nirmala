@@ -1,0 +1,574 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-10T16:42:04.510753Z",
+  "title": "Design System: NIRMALA",
+  "extensions": {
+    "colorMeta": {
+      "graphite": {
+        "role": "primary",
+        "displayName": "Graphite",
+        "canonical": "#22282e",
+        "darkValue": "#e8ebee",
+        "tonalRamp": [
+          "#23262a",
+          "#364049",
+          "#4c5967",
+          "#6c7f93",
+          "#98a6b3",
+          "#bec7cf",
+          "#dce0e5",
+          "#f1f2f3"
+        ]
+      },
+      "focus-blue": {
+        "role": "secondary",
+        "displayName": "Focus Blue",
+        "canonical": "#2563c9",
+        "darkValue": "#7faef5",
+        "tonalRamp": [
+          "#162236",
+          "#14356c",
+          "#1c4a97",
+          "#286ad7",
+          "#6897e3",
+          "#a0bdee",
+          "#cbdbf5",
+          "#edf1f8"
+        ]
+      },
+      "canvas": {
+        "role": "neutral",
+        "displayName": "Canvas",
+        "canonical": "#f2f4f6",
+        "darkValue": "#111418",
+        "tonalRamp": [
+          "#22262a",
+          "#34404b",
+          "#495969",
+          "#688097",
+          "#96a6b6",
+          "#bdc7d1",
+          "#dbe0e6",
+          "#f1f2f4"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Sheet",
+        "canonical": "#ffffff",
+        "darkValue": "#181c21",
+        "tonalRamp": [
+          "#262626",
+          "#404040",
+          "#595959",
+          "#808080",
+          "#a6a6a6",
+          "#c7c7c7",
+          "#e0e0e0",
+          "#f2f2f2"
+        ]
+      },
+      "surface-sunken": {
+        "role": "neutral",
+        "displayName": "Sunken",
+        "canonical": "#e7ebef",
+        "darkValue": "#20252b",
+        "tonalRamp": [
+          "#22262b",
+          "#33404c",
+          "#47596b",
+          "#667f99",
+          "#94a6b8",
+          "#bcc7d2",
+          "#dae0e7",
+          "#f1f2f4"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#d3d9e0",
+        "darkValue": "#2f353c",
+        "tonalRamp": [
+          "#22262a",
+          "#353f4b",
+          "#4a5869",
+          "#697e96",
+          "#96a5b5",
+          "#bdc6d1",
+          "#dbe0e6",
+          "#f1f2f4"
+        ]
+      },
+      "border-strong": {
+        "role": "neutral",
+        "displayName": "Strong Hairline",
+        "canonical": "#a9b3be",
+        "darkValue": "#566069",
+        "tonalRamp": [
+          "#232629",
+          "#373f49",
+          "#4d5966",
+          "#6e7f91",
+          "#99a5b2",
+          "#bfc7cf",
+          "#dce0e5",
+          "#f1f2f3"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#14181c",
+        "darkValue": "#e8ebee",
+        "tonalRamp": [
+          "#22262a",
+          "#35404a",
+          "#4a5968",
+          "#6a7f95",
+          "#97a6b5",
+          "#bec7d0",
+          "#dbe0e5",
+          "#f1f2f4"
+        ]
+      },
+      "ink-muted": {
+        "role": "neutral",
+        "displayName": "Ink Muted",
+        "canonical": "#3f4852",
+        "darkValue": "#aeb6bf",
+        "tonalRamp": [
+          "#232629",
+          "#373f48",
+          "#4e5965",
+          "#6f7f90",
+          "#9aa5b1",
+          "#c0c7ce",
+          "#dce0e4",
+          "#f1f2f3"
+        ]
+      },
+      "ink-faint": {
+        "role": "neutral",
+        "displayName": "Ink Faint",
+        "canonical": "#5a6571",
+        "darkValue": "#929ba5",
+        "tonalRamp": [
+          "#242629",
+          "#393f47",
+          "#4f5963",
+          "#717f8e",
+          "#9ca5b0",
+          "#c1c7cd",
+          "#dde0e4",
+          "#f1f2f3"
+        ]
+      },
+      "sidebar": {
+        "role": "neutral",
+        "displayName": "Sidebar",
+        "canonical": "#e6eaee",
+        "darkValue": "#0c0f12",
+        "tonalRamp": [
+          "#22262b",
+          "#34404c",
+          "#48596a",
+          "#677f98",
+          "#95a6b7",
+          "#bcc7d2",
+          "#dbe0e6",
+          "#f1f2f4"
+        ]
+      },
+      "draf-fg": {
+        "role": "status",
+        "displayName": "Draf (grey)",
+        "canonical": "#3f4852",
+        "darkValue": "#b3bac2",
+        "tonalRamp": [
+          "#232629",
+          "#373f48",
+          "#4e5965",
+          "#6f7f90",
+          "#9aa5b1",
+          "#c0c7ce",
+          "#dce0e4",
+          "#f1f2f3"
+        ]
+      },
+      "menunggu-fg": {
+        "role": "status",
+        "displayName": "Menunggu Revisi (amber)",
+        "canonical": "#6a4c00",
+        "darkValue": "#ebcf70",
+        "tonalRamp": [
+          "#3d300f",
+          "#805b00",
+          "#b28000",
+          "#ffb700",
+          "#ffcc4d",
+          "#ffdf8f",
+          "#ffeec2",
+          "#faf6eb"
+        ]
+      },
+      "verif-fg": {
+        "role": "status",
+        "displayName": "Perlu Verifikasi (blue)",
+        "canonical": "#0f4a94",
+        "darkValue": "#9ac0f2",
+        "tonalRamp": [
+          "#142439",
+          "#0c3a74",
+          "#1051a2",
+          "#1774e8",
+          "#5d9eef",
+          "#99c2f5",
+          "#c7def9",
+          "#ecf2f8"
+        ]
+      },
+      "justif-fg": {
+        "role": "status",
+        "displayName": "Dijustifikasi (violet)",
+        "canonical": "#4d2c88",
+        "darkValue": "#bba5e8",
+        "tonalRamp": [
+          "#231b32",
+          "#371f60",
+          "#4c2c87",
+          "#6d3ec1",
+          "#9978d3",
+          "#bfaae4",
+          "#dcd1f0",
+          "#f1eef6"
+        ]
+      },
+      "closed-fg": {
+        "role": "status",
+        "displayName": "Closed (green)",
+        "canonical": "#145733",
+        "darkValue": "#80cf9f",
+        "tonalRamp": [
+          "#183525",
+          "#18683d",
+          "#219155",
+          "#30cf7a",
+          "#6edea2",
+          "#a4eac4",
+          "#cdf4df",
+          "#edf7f2"
+        ]
+      },
+      "flag-fg": {
+        "role": "status",
+        "displayName": "Flag (red)",
+        "canonical": "#8c1b12",
+        "darkValue": "#f2978e",
+        "tonalRamp": [
+          "#381715",
+          "#71160f",
+          "#9e1f14",
+          "#e22c1d",
+          "#eb6b61",
+          "#f2a29c",
+          "#f8ccc9",
+          "#f8edec"
+        ]
+      },
+      "score-high": {
+        "role": "score",
+        "displayName": "Score High",
+        "canonical": "#c5392b",
+        "darkValue": "#e8695c",
+        "tonalRamp": [
+          "#351a18",
+          "#691e17",
+          "#932a20",
+          "#d13d2e",
+          "#df776c",
+          "#eba9a3",
+          "#f4d0cd",
+          "#f7eeed"
+        ]
+      },
+      "score-mid": {
+        "role": "score",
+        "displayName": "Score Mid",
+        "canonical": "#d5801f",
+        "darkValue": "#e39a47",
+        "tonalRamp": [
+          "#372715",
+          "#6f4310",
+          "#9c5e17",
+          "#df8620",
+          "#e8aa63",
+          "#f1ca9d",
+          "#f7e2ca",
+          "#f8f3ed"
+        ]
+      },
+      "score-low": {
+        "role": "score",
+        "displayName": "Score Low",
+        "canonical": "#3b8f5f",
+        "darkValue": "#5db583",
+        "tonalRamp": [
+          "#1d3025",
+          "#255a3c",
+          "#347e54",
+          "#4ab578",
+          "#81cba0",
+          "#b0dec4",
+          "#d4eddf",
+          "#eff5f2"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Public hero headline only (40 px)."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "App page titles and public section titles (28 px)."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Section titles (20 px)."
+      },
+      "subtitle": {
+        "displayName": "Subtitle",
+        "purpose": "Dialog and card titles (16 px)."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "App default (13 px)."
+      },
+      "body-large": {
+        "displayName": "Body large",
+        "purpose": "Public body and rule names (14 px)."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Labels, table headers, badges (12 px floor)."
+      },
+      "numeric": {
+        "displayName": "Numeric",
+        "purpose": "Money, counts, codes, dates. IBM Plex Mono, tabular."
+      },
+      "kpi": {
+        "displayName": "KPI numeral",
+        "purpose": "Large figures in KPI cards (30 px)."
+      }
+    },
+    "shadows": [
+      {
+        "name": "shadow-md",
+        "value": "0 8px 12px var(--shadow)",
+        "purpose": "Dialog, popover, open drawer."
+      },
+      {
+        "name": "shadow-sm",
+        "value": "0 4px 6px var(--shadow)",
+        "purpose": "Small floating pieces."
+      },
+      {
+        "name": "ring",
+        "value": "0 0 0 2px var(--bg), 0 0 0 4px var(--focus)",
+        "purpose": "Focus ring helper; the global ring is a 2 px outline with 2 px offset."
+      }
+    ],
+    "motion": [
+      {
+        "name": "dur-fast",
+        "value": "100ms var(--ease-out)",
+        "purpose": "Hover, press, row and tab colour changes."
+      },
+      {
+        "name": "dur-base",
+        "value": "140ms var(--ease-out)",
+        "purpose": "Popover and notice entrance, switch."
+      },
+      {
+        "name": "dur-slow",
+        "value": "180ms var(--ease-out)",
+        "purpose": "Dialog and sidebar drawer."
+      },
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "The only easing. Exponential ease-out, no bounce."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "drawer",
+        "value": "1023px (max-width)"
+      },
+      {
+        "name": "public-mobile",
+        "value": "639px (max-width)"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Graphite fill; one per view area.",
+      "html": "<button class=\"ds-btn ds-btn-primary\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M20 6 9 17l-5-5\"/></svg>Konfirmasi</button>",
+      "css": ".ds-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 14px;border:1px solid transparent;border-radius:var(--r-md);font-family:var(--font-ui);font-size:var(--fs-base);font-weight:500;line-height:1;white-space:nowrap;transition:background-color .12s ease,border-color .12s ease;cursor:pointer}.ds-btn:focus-visible{outline:2px solid var(--focus);outline-offset:2px}.ds-btn-primary{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}.ds-btn-primary:hover{background:var(--ink-muted);border-color:var(--ink-muted)}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "White fill with strong hairline; the default.",
+      "html": "<button class=\"ds-btn ds-btn-secondary\">Batal</button>",
+      "css": ".ds-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 14px;border:1px solid transparent;border-radius:var(--r-md);font-family:var(--font-ui);font-size:var(--fs-base);font-weight:500;line-height:1;white-space:nowrap;transition:background-color .12s ease,border-color .12s ease;cursor:pointer}.ds-btn:focus-visible{outline:2px solid var(--focus);outline-offset:2px}.ds-btn-secondary{background:var(--surface);border-color:var(--border-strong);color:var(--ink)}.ds-btn-secondary:hover{background:var(--surface-sunken)}"
+    },
+    {
+      "name": "Danger Button",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "Red-tinted fill for dismiss and destructive confirms.",
+      "html": "<button class=\"ds-btn ds-btn-danger\">Dismiss item</button>",
+      "css": ".ds-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 14px;border:1px solid transparent;border-radius:var(--r-md);font-family:var(--font-ui);font-size:var(--fs-base);font-weight:500;line-height:1;white-space:nowrap;transition:background-color .12s ease,border-color .12s ease;cursor:pointer}.ds-btn:focus-visible{outline:2px solid var(--focus);outline-offset:2px}.ds-btn-danger{background:var(--st-flag-bg);border-color:var(--st-flag-line);color:var(--st-flag-fg)}.ds-btn-danger:hover{border-color:var(--st-flag-fg)}"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "34 px field, label above, hint below.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-label\">Nama pengguna</span><input class=\"ds-input\" placeholder=\"mis. reviewer01\"/><span class=\"ds-help\">Gunakan nama pengguna kantor.</span></label>",
+      "css": ".ds-field{display:flex;flex-direction:column;gap:6px;width:260px;font-family:var(--font-ui)}.ds-label{font-size:var(--fs-xs);font-weight:500;color:var(--ink)}.ds-input{height:34px;padding:0 10px;border:1px solid var(--border-strong);border-radius:var(--r-md);background:var(--surface);color:var(--ink);font:inherit;font-size:var(--fs-base);transition:border-color .12s ease}.ds-input:hover{border-color:var(--ink)}.ds-input:focus-visible{border-color:var(--focus);outline:2px solid var(--focus);outline-offset:2px}.ds-help{font-size:var(--fs-xs);color:var(--ink-muted)}"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "badge-status",
+      "description": "Tinted pill with icon and word; never colour alone.",
+      "html": "<span class=\"ds-badge\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 6v6l4 2\"/></svg>Menunggu revisi</span>",
+      "css": ".ds-badge{display:inline-flex;align-items:center;gap:6px;padding:3px 8px;border:1px solid var(--st-menunggu-line);border-radius:var(--r-md);background:var(--st-menunggu-bg);color:var(--st-menunggu-fg);font-family:var(--font-ui);font-size:var(--fs-xs);font-weight:500;line-height:1.25;white-space:nowrap}"
+    },
+    {
+      "name": "Score Badge",
+      "kind": "custom",
+      "refersTo": "score",
+      "description": "3 px colour marker, number, word.",
+      "html": "<span class=\"ds-score\"><span class=\"ds-marker\"></span><span class=\"ds-num\">82</span><span class=\"ds-word\">tinggi</span></span>",
+      "css": ".ds-score{display:inline-flex;align-items:center;gap:8px;font-family:var(--font-ui)}.ds-marker{width:3px;height:18px;background:var(--score-high)}.ds-num{font-size:var(--fs-md);font-weight:600;color:var(--ink)}.ds-word{font-size:var(--fs-xs);color:var(--ink-muted)}"
+    },
+    {
+      "name": "Table Row",
+      "kind": "custom",
+      "refersTo": "table-row-selected",
+      "description": "Dense rows; selected row has tint, 3 px left line and a check.",
+      "html": "<table class=\"ds-table\"><thead><tr><th>Uraian item</th><th class=\"r\">Nilai (Rp)</th></tr></thead><tbody><tr><td>Belanja perjalanan dinas paket meeting</td><td class=\"r\">125.000.000</td></tr><tr class=\"sel\"><td>Belanja honor output kegiatan</td><td class=\"r\">48.500.000</td></tr></tbody></table>",
+      "css": ".ds-table{width:420px;border:1px solid var(--border);border-collapse:collapse;background:var(--surface);font-family:var(--font-ui);font-size:var(--fs-base);color:var(--ink)}.ds-table th{padding:8px 12px;background:var(--surface-sunken);border-bottom:1px solid var(--border-strong);font-size:var(--fs-xs);font-weight:500;color:var(--ink-muted);text-align:left}.ds-table td{padding:10px 12px;border-bottom:1px solid var(--border)}.ds-table .r{text-align:right;font-family:var(--font-mono);font-variant-numeric:tabular-nums}.ds-table tbody tr:hover{background:var(--surface-sunken)}.ds-table tr.sel,.ds-table tr.sel:hover{background:var(--st-verif-bg);box-shadow:inset 3px 0 0 var(--focus)}"
+    },
+    {
+      "name": "KPI Card",
+      "kind": "card",
+      "refersTo": "kpi",
+      "description": "2 px ink rule, label, big number, hint.",
+      "html": "<div class=\"ds-kpi\"><span class=\"ds-kl\">Catatan menunggu revisi</span><span class=\"ds-kv\">128</span><span class=\"ds-kh\">dari 342 catatan</span></div>",
+      "css": ".ds-kpi{display:flex;flex-direction:column;gap:6px;width:200px;padding-top:12px;border-top:2px solid var(--ink);font-family:var(--font-ui)}.ds-kl{font-size:var(--fs-xs);font-weight:500;color:var(--ink-muted)}.ds-kv{font-size:30px;font-weight:500;line-height:1.2;color:var(--ink)}.ds-kh{font-size:var(--fs-xs);color:var(--ink-muted)}"
+    },
+    {
+      "name": "Sidebar Item",
+      "kind": "nav",
+      "refersTo": "sidebar-item-active",
+      "description": "34 px nav item; active is a white chip.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-ni\" href=\"#\">Dashboard</a><a class=\"ds-ni ds-on\" aria-current=\"page\" href=\"#\">Risk Triage<span class=\"ds-cnt\">24</span></a></nav>",
+      "css": ".ds-nav{display:flex;flex-direction:column;gap:2px;width:216px;padding:16px;background:var(--sidebar);font-family:var(--font-ui)}.ds-ni{display:flex;align-items:center;gap:10px;height:34px;padding:0 12px;border-radius:var(--r-md);color:var(--sidebar-ink-muted);font-size:var(--fs-base);text-decoration:none;transition:background-color .12s ease}.ds-ni:hover{background:var(--sidebar-line);color:var(--sidebar-ink)}.ds-on{background:var(--sidebar-active);color:var(--sidebar-ink);font-weight:500}.ds-cnt{margin-left:auto;padding:1px 6px;border-radius:var(--r-sm);background:var(--sidebar-line);font-family:var(--font-mono);font-size:var(--fs-xs)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Audit Desk",
+    "overview": "A cold-neutral work surface with one graphite voice. Everything an auditor needs to read lies flat on the desk: white sheets on a pale blue-grey canvas, hairline borders, numbers in a monospaced face so columns line up. Nothing glows, nothing bounces, nothing is decorative. The look exists to disappear during a week of line-by-line reading, then become precise at the moments that matter: a flagged rule, a status that changed, a decision about to become part of an official document.\n\nThe palette is almost entirely greys with a faint steel-blue cast. Colour is reserved for meaning: five note statuses, risk score, and the red of \"belum terpenuhi\" and rule flags. Primary actions are graphite, not blue, so that colour keeps its job as a signal. The only saturated non-status colour is the focus blue, which only ever shows up when the keyboard lands somewhere or a row is selected.\n\nDensity is deliberate: 13 px body, 34 px controls, 10 x 12 px table cells. The interface assumes office desktops and long sessions. Public pages (P1, P2) share the same tokens but breathe more: a 1120 px column, 64 px between sections, 14 px body.",
+    "keyCharacteristics": [
+      "Cold neutral greys with a blue cast, never warm, never cream. Explicitly rejected: serif display type, cream paper, warm editorial palettes.",
+      "Graphite (not blue) is the primary action colour.",
+      "Colour carries meaning only: status, score, error, focus. It is never decoration.",
+      "Status is never colour alone: every badge pairs a tinted fill with an icon and a word; selection pairs a tint with a left line and a check.",
+      "Flat. Depth comes from tone (canvas, surface, sunken) and 1 px borders. Shadows appear only on floating layers.",
+      "Light and dark are equal citizens, built from the same token names."
+    ],
+    "rules": [
+      {
+        "name": "The Signal-Only Rule",
+        "body": "Colour is information. A hue appears on screen only when it encodes status, score, error or focus. If you are reaching for a colour to make a screen livelier, stop.",
+        "section": "colors"
+      },
+      {
+        "name": "The Not-Colour-Alone Rule",
+        "body": "Every state expressed by colour also has an icon, a word or a shape (left line, check, marker). A greyscale screenshot must still be readable.",
+        "section": "colors"
+      },
+      {
+        "name": "The Token-Only Rule",
+        "body": "No hex, rgb or hsl outside `styles/tokens.css`. Both dark blocks in that file are identical by design: edit both.",
+        "section": "colors"
+      },
+      {
+        "name": "The Sentence-Case Rule",
+        "body": "Labels, headers and buttons are sentence case in formal, plain Indonesian. No uppercase transforms, no letter-spaced caps (the wordmark \"NIRMALA\" is typed in caps and is the only letter-spaced text).",
+        "section": "typography"
+      },
+      {
+        "name": "The Tabular Rule",
+        "body": "Anything a reviewer will scan down a column or compare across rows (rupiah, counts, percentages, codes R01 to R08, dates) is mono with tabular figures and right-aligned in tables. Format with `lib/format.ts` (id-ID).",
+        "section": "typography"
+      },
+      {
+        "name": "The Floor Rule",
+        "body": "12 px is the minimum size. If something does not fit at 12 px, change the layout.",
+        "section": "typography"
+      },
+      {
+        "name": "The Dense-Not-Cramped Rule",
+        "body": "Tables are dense (10 x 12 px cells, one line per row where possible, long text truncated with a `title`), but cards and dialogs keep 16 to 24 px of padding. Density lives in rows, calm lives around them.",
+        "section": "layout"
+      },
+      {
+        "name": "The Float-Only Rule",
+        "body": "A shadow means \"this sits above the page\". Cards, tables and KPI blocks never get one.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Straight-Line Rule",
+        "body": "Hierarchy and state are drawn with thin straight rules and the radius scale above. No side-stripe accents wider than 3 px, no gradients, no glass.",
+        "section": "shapes"
+      },
+      {
+        "name": "The Operate-Motion Rule",
+        "body": "Animate colour, opacity and short transforms to explain a change of state. Never animate layout, never loop decoration, never delay a control.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "**Do** use tokens for every colour, size, space and radius. Open `styles/tokens.css` before writing a value.",
+      "**Do** pair every status colour with an icon and a word; show selection with the left line and check.",
+      "**Do** put money, counts, codes and dates in `.num` (IBM Plex Mono, tabular) and format with `lib/format.ts`.",
+      "**Do** keep copy in formal, plain Indonesian; keep official terms (Satker, Unor, CHR, Pra-DIPA, UKI, RKA, ADK). Flag risk for review; never accuse.",
+      "**Do** show an explicit state for loading, empty, error and no-access in every data view, and truncate long text with a `title`.",
+      "**Do** keep the 2 px focus ring on every focusable element, in both themes.",
+      "**Do** design light and dark together; test both.",
+      "**Do** use motion only to explain a change of state (dialog, popover, drawer, hover, press), 100 to 200 ms, and respect `prefers-reduced-motion`."
+    ],
+    "donts": [
+      "**Don't** use serif type, cream or warm backgrounds, or any warm editorial look. They were tried and rejected.",
+      "**Don't** make primary actions blue or brand-coloured. Graphite is the primary; blue is focus and selection.",
+      "**Don't** use colour as the only carrier of meaning, and don't use red for anything that is not a flag, error, or destructive action.",
+      "**Don't** add shadows to cards or tables, gradients, glass, hero metrics, or decorative icons.",
+      "**Don't** set text under 12 px, uppercase labels, or letter-spaced captions.",
+      "**Don't** put emphasis in coloured side stripes thicker than 3 px, and don't round tables or cards.",
+      "**Don't** invent new components or tokens in a feature. Build locally and ask for promotion into `ui/`.",
+      "**Don't** put real Satker names or item values in mocks, screenshots, docs or examples."
+    ]
+  }
+}

@@ -1,0 +1,189 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  padding: var(--sp-5) 20px;
+  outline: 1px solid var(--border-strong);
+  outline-offset: -1px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
+.title {
+  white-space: nowrap;
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+
+.title:focus {
+  outline: none;
+}
+
+.title:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.form,
+.decided {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.modes {
+  display: flex;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.mode {
+  position: relative;
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: var(--control-h);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  font-size: var(--fs-base);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.mode:first-of-type {
+  border-radius: var(--r-md) 0 0 var(--r-md);
+}
+
+.mode:last-of-type {
+  margin-left: -1px;
+  border-radius: 0 var(--r-md) var(--r-md) 0;
+}
+
+.mode:hover:not([data-checked]) {
+  background: var(--surface-sunken);
+}
+
+.mode[data-checked] {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.mode:has(:focus-visible) {
+  z-index: 1;
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.modeInput {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+.wide {
+  width: 100%;
+}
+
+.footnote,
+.note,
+.prefill {
+  font-size: var(--fs-xs);
+  line-height: 17px;
+  color: var(--ink-muted);
+}
+
+.error {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--st-flag-line);
+  border-radius: var(--r-md);
+  background: var(--st-flag-bg);
+  color: var(--st-flag-fg);
+  font-size: var(--fs-xs);
+  line-height: 17px;
+}
+
+.error svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+.success {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: var(--fs-base);
+  line-height: 18px;
+}
+
+.success svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--st-closed-fg);
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin: 0;
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--border);
+}
+
+.detail dt {
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+}
+
+.detail dd {
+  margin: 2px 0 0;
+  font-size: var(--fs-base);
+  line-height: 18px;
+  overflow-wrap: anywhere;
+}
+
+.revert {
+  align-self: flex-start;
+  color: var(--ink-muted);
+}
+
+/* Umpan balik masuk: pudar singkat, dimatikan bila pengguna meminta gerak dikurangi. */
+.decided,
+.error {
+  animation: appear 0.16s ease-out;
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .decided,
+  .error {
+    animation: none;
+  }
+}

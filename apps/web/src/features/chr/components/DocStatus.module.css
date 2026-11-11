@@ -1,0 +1,34 @@
+.locked {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--r-md);
+  background: var(--primary);
+  color: var(--on-primary);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.counts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-5);
+}
+
+.countsLabel {
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+}
+
+.count {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-base);
+  font-weight: 600;
+  color: var(--ink);
+}

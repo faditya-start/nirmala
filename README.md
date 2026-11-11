@@ -1,108 +1,92 @@
 # NIRMALA
 
-**Budget Review & Follow-up Intelligence**
+Platform pendukung reviu RKA untuk APIP dan unit perencanaan K/L pada fase Pra-DIPA. NIRMALA memprioritaskan item RKA berisiko dengan aturan dan skor yang bisa dijelaskan, lalu mengawal setiap catatan CHR sampai perbaikan Satker terbukti di versi anggaran berikutnya. Reviewer yang menutup catatan, bukan sistem.
 
-NIRMALA adalah fondasi aplikasi pendukung reviu RKA, prioritisasi pemeriksaan berbasis risiko yang dapat dijelaskan, pengelolaan CHR, dan pemantauan tindak lanjut.
+Skor hanya membantu memprioritaskan peninjauan. Sistem tidak menetapkan pelanggaran secara otomatis.
 
-## Status saat ini
+## Dokumen acuan
 
-Repository kini mencakup fondasi domain, autentikasi demo lokal, dan RBAC dasar:
+Baca berurutan sebelum mengembangkan:
 
-- React + Vite frontend dengan identitas visual NIRMALA.
-- Hono API yang berjalan pada Node.js untuk development lokal.
-- Shared TypeScript contracts.
-- Schema Drizzle untuk users, sessions, struktur organisasi, RKA, referensi harga, risk assessment, dan audit log.
-- Konfigurasi awal yang dapat dilanjutkan ke Cloudflare D1.
-- Endpoint `GET /api/health`.
-- Dashboard ringkasan dengan KPI, distribusi risiko, dan status tindak lanjut.
-- Laporan internal dengan definisi metrik dan ekspor CSV.
-- Audit log read-only untuk admin.
-- Halaman publik `/transparansi` dengan dataset agregat sintetis terpisah.
-- Grafik dashboard untuk distribusi risiko dan progres reviu.
-- Login cookie-session dengan password di-hash menggunakan scrypt.
-- Data demo sintetis yang dapat di-seed ulang.
+1. [docs/concept-brief.md](docs/concept-brief.md): acuan produk
+2. [docs/mvp-scope.md](docs/mvp-scope.md): scope MVP, user flow, daftar layar
+3. [docs/data-analysis.md](docs/data-analysis.md): data yang tersedia
+4. [docs/rule-catalog.md](docs/rule-catalog.md): aturan dan faktor skor
+5. [docs/data-model.md](docs/data-model.md): skema
+6. [docs/plan.md](docs/plan.md): fase pengembangan dan backlog
 
-Risk triage, keputusan reviewer, CHR, Smart Tracker, laporan, konfigurasi risiko, user management, dan dashboard analytics tersedia dalam mode demo lokal. Deployment Cloudflare sengaja ditunda.
+Konteks produk untuk alat desain ada di [PRODUCT.md](PRODUCT.md). Desain UI ada di `design/nirmala.pen` (dibuka lewat Pencil).
+
+## Arsitektur
+
+- **Frontend:** React + Vite + TypeScript (`apps/web`).
+- **API:** Hono di Node.js (`apps/api`), database **SQLite** (`node:sqlite`) dengan Drizzle (D-01).
+- **Kontrak bersama:** `packages/shared`, validasi dengan zod.
+- **Hosting:** server sendiri dengan Cloudflare Tunnel; target Cloudflare Workers / D1 sudah dibuang (D-02).
+- **Data masuk:** impor CSV berformat SIPEKA. Tidak ada integrasi SAKTI (D-03).
+- **Data:** demo dan seed memakai data sintetis. Data asli hanya di server sendiri (`data/private/`, tidak masuk git) (D-07).
+
+- **Produksi:** satu proses Node. `npm run build` lalu `npm start`: API menyajikan hasil build web (`apps/web/dist`, fallback SPA untuk rute non-`/api`) dan, di belakang Cloudflare Tunnel, itulah satu-satunya yang berjalan. Panduan lengkap (systemd, tunnel, cadangan harian SQLite, pemulihan, rotasi rahasia, impor data asli) ada di [docs/deploy.md](docs/deploy.md); contoh berkas di [`deploy/`](deploy).
+- **Halaman publik:** hanya membaca tabel agregat `public_metrics`, diisi saat admin menandai DIPA terbit; eselon I dengan catatan < k (default 5) digabung ke "Lainnya".
+
+Status pengembangan mengikuti fase di [docs/plan.md](docs/plan.md). Backend Fase 0-6 selesai (dashboard, laporan, validasi engine, publik, admin, deploy); kontrak endpoint ada di [docs/api-contract.md](docs/api-contract.md). Tidak ada lagi endpoint prototipe 501.
 
 ## Prasyarat
 
-- Node.js 20 atau lebih baru
+- Node.js 22 atau lebih baru (API memakai `node:sqlite`)
 - npm 10 atau lebih baru
 
 ## Menjalankan lokal
 
-```powershell
+```bash
+cp .env.example .env
 npm install
+npm run db:migrate
+npm run db:seed
 npm run dev
 ```
 
-Frontend tersedia di `http://localhost:5173`, sedangkan API tersedia di `http://localhost:8787`.
+Frontend di `http://localhost:5173`, API di `http://localhost:8787`. Jalankan hanya satu instance `npm run dev`. Jika muncul `EADDRINUSE`, hentikan proses lama di port `5173` atau `8787`. Vite memakai `strictPort` supaya proxy tidak diam-diam menunjuk ke port yang salah. Port API bisa diganti dengan `API_PORT`.
 
-Jalankan hanya satu instance `npm run dev`. Jika muncul `EADDRINUSE`, hentikan proses lama yang masih menggunakan port `5173` atau `8787`, lalu jalankan kembali. Vite dikonfigurasi `strictPort` agar tidak diam-diam berpindah ke port lain sementara proxy masih mengarah ke port yang salah.
-
-Buka halaman berikut setelah server berjalan:
-
-- `http://localhost:5173/` — beranda.
-- `http://localhost:5173/login` — login internal.
-- `http://localhost:5173/dashboard` — dashboard setelah login.
-- `http://localhost:5173/reports` — laporan dan ekspor CSV setelah login.
-- `http://localhost:5173/audit-logs` — audit log, khusus akun admin.
-- `http://localhost:5173/admin/risk-config` — konfigurasi risk scoring, khusus akun admin.
-- `http://localhost:5173/admin/users` — manajemen role pengguna, khusus akun admin.
-- `http://localhost:5173/transparansi` — transparansi publik, tanpa login.
-
-Akun demo:
+Akun demo (sintetis, hanya untuk lokal):
 
 | Peran | Username | Password |
 |---|---|---|
 | Reviewer | `reviewer.demo` | `Review123!` |
+| PIC UKI | `uki.demo` | `Uki12345!` |
 | Pimpinan | `pimpinan.demo` | `Pimpin123!` |
 | Admin | `admin.demo` | `Admin123!` |
 
-Pemeriksaan API:
+Ganti `SESSION_SECRET` di `.env` sebelum penggunaan selain demo lokal. Akun demo dan `db:seed` hanya untuk lokal; di produksi pakai `bootstrap:production` dan `create-admin` ([docs/deploy.md](docs/deploy.md)).
 
-```powershell
-Invoke-WebRequest http://localhost:8787/api/health
-```
+Pemeriksaan API: `curl http://localhost:8787/api/health`
 
 ## Perintah
 
-```powershell
-npm run typecheck
+```bash
+npm run typecheck   # semua workspace
+npm test            # semua workspace
 npm run build
-npm run db:generate
-npm run db:migrate
-npm run db:seed
+npm run db:generate   # buat migrasi baru dari apps/api/src/db/schema.ts
+npm run db:migrate    # terapkan migrasi (runner sendiri, node:sqlite)
+npm run db:seed       # master data + akun demo sintetis + snapshot Awal + kunci jawaban sintetis (idempoten)
+npm run db:seed:demo -w @nirmala/api   # (opsional) demo loop: konfirmasi, terbit CHR, impor Revisi
+npm start             # produksi: NODE_ENV=production, API + web build (butuh SESSION_SECRET dan npm run build)
+npm run backup        # cadangan SQLite online (BACKUP_DIR, BACKUP_KEEP_DAYS)
 ```
 
-## Akun demo lokal
+Skrip produksi: `bootstrap:production` (master data tanpa akun demo), `create-admin`, `import:private -- --production --actor <admin>`, `import:answer-key` (kunci jawaban asli buatan lokal). Semua dijelaskan di [docs/deploy.md](docs/deploy.md).
 
-- Reviewer: `reviewer.demo` / `Review123!`
-- Pimpinan: `pimpinan.demo` / `Pimpin123!`
-- Admin: `admin.demo` / `Admin123!`
+Skema ada di `apps/api/src/db/schema.ts`, migrasi di `apps/api/drizzle/`. Jika muncul "Database lama (skema prototipe) terdeteksi", hapus berkas `apps/api/nirmala.sqlite*` lalu migrasi dan seed ulang.
 
-Ganti `SESSION_SECRET` pada `.env` lokal sebelum penggunaan selain demo. Akun dan data di atas seluruhnya sintetis.
+## Data sintetis dan impor CSV
 
-## Arah arsitektur
+`npm run db:seed` membuat master data, akun demo, siklus **TA 2026 · Alokasi**, dan mengimpor snapshot **Awal** dari `apps/api/fixtures/synthetic/awal/` (dua eselon I fiktif, sembilan Satker fiktif). Snapshot **Revisi** di `fixtures/synthetic/revisi/` sengaja tidak di-seed: unggah lewat API untuk mendemokan loop impor → cek tindak lanjut.
 
-Frontend memakai React/Vite dan akan berkomunikasi dengan Hono melalui REST API. API saat ini menggunakan adapter Node.js agar mudah diuji secara lokal, dengan batasan platform dijaga agar service dapat dipindahkan ke Cloudflare Workers. SQLite digunakan sebagai target development Drizzle; migrasi berikutnya akan menyesuaikan schema untuk D1.
+- Format impor: CSV berformat SIPEKA `es1_<BAES1>_<tahun>.csv`, satu eselon I per berkas. Impor idempoten berdasarkan hash berkas; baris judul kelompok (`HEADER1` / `HEADER2`) disaring; item dicocokkan dengan snapshot sebelumnya (lihat [docs/data-model.md](docs/data-model.md) §4).
+- API: `POST /api/cycles/:id/snapshots` (multipart, field `file`; Reviewer dan Admin, dibatasi eselon I yang ditugaskan). Siklus dikelola Admin lewat `/api/cycles`.
+- Fixtures dibangkitkan deterministik dan tidak membaca `data/private`: `npm run generate:synthetic -w @nirmala/api`. `fixtures/synthetic/manifest.json` memuat angka diff yang diharapkan dan daftar kasus R01–R08.
+- Impor data asli untuk demo lokal (tidak di-commit, hanya di server sendiri):
+  `npm run import:private -w @nirmala/api -- <folder-csv> --cycle 2026:alokasi`. Keluarannya hanya agregat. Impor dari dump `d_dipa_awal` dan profil temuan BPK (PTL) belum diimplementasikan.
 
-Tidak ada secret atau kredensial demo pada repository. Gunakan `.env.example` sebagai referensi konfigurasi lokal.
-
-## Status Cloudflare
-
-Template [wrangler.jsonc](./wrangler.jsonc) dan entrypoint Worker [worker.ts](./apps/api/src/worker.ts) disediakan sebagai target deployment berikutnya. Runtime yang tervalidasi saat ini tetap Node.js lokal karena API aktif menggunakan `node:sqlite`; jangan menjalankan `wrangler deploy` sebelum adapter D1 untuk seluruh workflow dan migration remote diselesaikan. Placeholder `database_id` dan domain wajib diganti dengan nilai deployment Anda.
-
-## Tahap 7: laporan dan transparansi
-
-Endpoint laporan internal memerlukan session login dan RBAC. Endpoint transparansi publik tidak membaca tabel internal dan hanya mengembalikan agregat sintetis yang didefinisikan di `apps/api/src/publicData.ts`. Nilai publik tersebut adalah data demonstrasi, bukan statistik resmi.
-
-## Status implementasi lokal sesuai PRD
-
-Sudah tersedia: login cookie-session, RBAC dasar, seed multi-kategori, explainable risk scoring, historical findings, risk configuration API/UI, user role management, dashboard charts, laporan dengan filter export, audit log pagination/filter, CHR draft/issue/version, Smart Tracker revision/check/close, simulasi SAKTI success/failure/retry endpoint, dan public transparency terisolasi.
-
-Belum diklaim production-ready: adapter D1/Cloudflare, rate limiting produksi, integration test penuh seluruh workflow, dan PDF resmi. Cloudflare sengaja ditunda sesuai keputusan proyek.
-
-## Prinsip produk
-
-Risk score hanya membantu memprioritaskan pemeriksaan. Sistem tidak menetapkan fraud atau pelanggaran secara otomatis. Data demo yang akan ditambahkan pada tahap berikutnya harus sintetis dan tidak merepresentasikan data pemerintah resmi.
+Validasi engine (S11) memakai kunci jawaban: `db:seed` mengisi versi sintetis dari `manifest.json`; kunci jawaban data asli dibuat lokal dan diimpor dengan `import:answer-key` (tidak pernah membaca `data/private`).

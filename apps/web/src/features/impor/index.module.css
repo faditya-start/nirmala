@@ -1,0 +1,49 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* Empty-state cards are 520 px wide and centered in the designs (TzMsS, ptHvP). */
+.centered {
+  width: min(520px, 100%);
+  align-self: center;
+  margin-top: var(--sp-2);
+}
+
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px var(--sp-4);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  font-size: var(--fs-base);
+}
+
+.banner[data-tone="error"] {
+  border-color: var(--st-flag-line);
+  background: var(--st-flag-bg);
+  color: var(--st-flag-fg);
+}
+
+.bannerText {
+  flex: 1;
+  min-width: 0;
+}
+
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spin {
+    animation-duration: 3s;
+  }
+}

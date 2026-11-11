@@ -1,0 +1,102 @@
+.body,
+.snapshot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  width: 100%;
+}
+
+.plain {
+  font-size: var(--fs-xs);
+  line-height: 1.5;
+  color: var(--ink-muted);
+}
+
+.plainInk {
+  font-size: var(--fs-base);
+  line-height: 1.5;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.error {
+  font-size: var(--fs-xs);
+  color: var(--st-flag-fg);
+}
+
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-5);
+  margin: 0;
+}
+
+.facts dt {
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+}
+
+.facts dd {
+  margin: 0;
+  font-size: var(--fs-base);
+  font-weight: 500;
+}
+
+.notes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  max-height: 260px;
+  overflow: auto;
+}
+
+.note {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 8px var(--sp-3);
+  border-bottom: 1px solid var(--border);
+}
+
+.note:last-child {
+  border-bottom: 0;
+}
+
+.noteNo {
+  flex: none;
+  width: 18px;
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+}
+
+.noteBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.noteTitle {
+  overflow: hidden;
+  font-size: var(--fs-base);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.noteMeta {
+  overflow: hidden;
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sub {
+  margin-bottom: 4px;
+  font-size: var(--fs-base);
+  font-weight: 600;
+}

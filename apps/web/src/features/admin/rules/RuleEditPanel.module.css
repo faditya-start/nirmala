@@ -1,0 +1,66 @@
+.section {
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+
+.pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-3);
+}
+
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--st-flag-line);
+  border-radius: var(--r-md);
+  background: var(--st-flag-bg);
+  color: var(--st-flag-fg);
+  font-size: var(--fs-base);
+}
+
+.alert svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.effect {
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+}
+
+.discard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--st-menunggu-line);
+  border-radius: var(--r-md);
+  background: var(--st-menunggu-bg);
+  color: var(--st-menunggu-fg);
+  font-size: var(--fs-base);
+}
+
+.discardActions {
+  display: flex;
+  gap: var(--sp-2);
+}
+
+/* The discard prompt appears in place: a short fade tells the eye where the change happened. */
+.discard {
+  animation: discard-in 120ms ease-out;
+}
+
+@keyframes discard-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .discard {
+    animation: none;
+  }
+}

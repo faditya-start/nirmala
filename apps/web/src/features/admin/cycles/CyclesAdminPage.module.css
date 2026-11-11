@@ -1,0 +1,32 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+.muted {
+  color: var(--ink-muted);
+}
+
+.dipa {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dipaDate {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dipaNote {
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}

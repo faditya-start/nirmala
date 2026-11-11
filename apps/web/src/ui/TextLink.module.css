@@ -1,0 +1,18 @@
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding-bottom: 1px;
+  border-bottom: 1px solid var(--border-strong);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.link:hover {
+  border-bottom-color: var(--ink);
+  text-decoration: none;
+}
+
+.link svg {
+  flex: none;
+}

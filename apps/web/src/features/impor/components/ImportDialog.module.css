@@ -1,0 +1,195 @@
+.fileField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fieldLabel {
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.fileBox {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  background: var(--surface-sunken);
+  color: var(--ink);
+}
+
+.fileBox[data-dragging] {
+  border-color: var(--focus);
+  background: var(--st-verif-bg);
+}
+
+.fileBox[data-problem] {
+  border-color: var(--st-flag-line);
+}
+
+.fileText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.fileName {
+  overflow: hidden;
+  font-size: var(--fs-base);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fileMeta {
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+}
+
+.hint,
+.note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  font-size: var(--fs-xs);
+  line-height: 17px;
+  color: var(--ink-muted);
+}
+
+.hint svg,
+.note svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+.note {
+  gap: 10px;
+  padding: var(--sp-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  background: var(--surface-sunken);
+  font-size: var(--fs-base);
+  line-height: 18px;
+  color: var(--ink);
+}
+
+.problem,
+.error {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: var(--fs-xs);
+  color: var(--st-flag-fg);
+}
+
+.error {
+  padding: 10px var(--sp-3);
+  border: 1px solid var(--st-flag-line);
+  border-radius: var(--r-md);
+  background: var(--st-flag-bg);
+  font-size: var(--fs-base);
+}
+
+.error svg,
+.problem svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.progressHead {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--fs-base);
+  font-weight: 600;
+}
+
+.track {
+  height: 8px;
+  background: var(--surface-sunken);
+}
+
+.fill {
+  height: 100%;
+  background: var(--ink);
+  transition: width 400ms linear;
+}
+
+.rows {
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+}
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--fs-base);
+  color: var(--ink-muted);
+}
+
+.step[data-status="selesai"] {
+  color: var(--ink);
+}
+
+.step[data-status="berjalan"] {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.stepLabel {
+  flex: 1;
+}
+
+.stepStatus {
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  color: var(--ink-muted);
+}
+
+.soft {
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+}
+
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+
+.processing {
+  color: var(--ink-faint);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fill {
+    transition: none;
+  }
+  .spin {
+    animation-duration: 3s;
+  }
+}

@@ -1,0 +1,56 @@
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  min-width: 0;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.note {
+  font-size: var(--fs-base);
+  line-height: 18px;
+  color: var(--ink-muted);
+}
+
+.total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 4px;
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+}
+
+.factors {
+  display: flex;
+  flex-direction: column;
+}
+
+.factor {
+  border-bottom: 1px solid var(--border);
+}
+
+.footnote {
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+}
+
+.zero {
+  color: var(--ink-faint);
+}
+
+.open {
+  font-weight: 600;
+}
