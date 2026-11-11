@@ -67,3 +67,29 @@ test("database prototipe lama terdeteksi dengan pesan jelas", async () => {
   assert.throws(() => migrate(legacy), /Database lama/);
   legacy.close();
 });
+
+test("database berkas: query baca tidak menunggu transaksi panjang, query tulis menunggu", async () => {
+  const { mkdtemp, rm } = await import("node:fs/promises");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const { createDatabase } = await import("../src/db/client.ts");
+  const dir = await mkdtemp(join(tmpdir(), "nirmala-db-"));
+  const database = createDatabase(join(dir, "t.sqlite"));
+  const { migrate: apply } = await import("../src/db/migrate.ts");
+  apply(database);
+  const insert = (id: string) => database.db.insert(organizationUnits).values({ id, code: id, shortName: id, name: id, createdAt: 1 });
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => { release = resolve; });
+  const writer = database.transaction(async () => { await insert("a"); await gate; });
+  await new Promise((resolve) => setTimeout(resolve, 10));
+  assert.deepEqual(await database.db.select().from(organizationUnits), [], "pembaca melihat data ter-commit, tanpa menunggu");
+  let wrote = false;
+  const outside = insert("b").then(() => { wrote = true; });
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  assert.equal(wrote, false, "tulis dari luar menunggu transaksi");
+  release();
+  await Promise.all([writer, outside]);
+  assert.deepEqual((await database.db.select().from(organizationUnits)).map((unit) => unit.id).sort(), ["a", "b"]);
+  database.close();
+  await rm(dir, { recursive: true, force: true });
+});
