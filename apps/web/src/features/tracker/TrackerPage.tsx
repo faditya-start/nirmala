@@ -282,7 +282,7 @@ export function TrackerPage() {
             <span className={styles.bulkMark} aria-hidden="true">
               <Check size={12} strokeWidth={3} />
             </span>
-            <p className={styles.bulkText}>
+            <p className={styles.bulkText} role="status">
               <strong>{formatNum(selection.total)} catatan dipilih</strong>
               <span>
                 {selection.skipped.length > 0
@@ -327,7 +327,7 @@ export function TrackerPage() {
         ) : (
           <div className={styles.tableBlock} aria-busy={list.loading || undefined}>
             <TableFrame>
-              <Table aria-label={`Catatan ${STATUS_TEXT[status]}`}>
+              <Table aria-label={`Catatan ${STATUS_TEXT[status]}`} className={styles.table}>
                 <THead>
                   <tr>
                     {canBulk && (

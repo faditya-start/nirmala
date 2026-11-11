@@ -85,7 +85,7 @@ export function Tr({ selected, onActivate, className, onKeyDown, ...rest }: TrPr
   return (
     <tr
       {...rest}
-      tabIndex={onActivate ? 0 : rest.tabIndex}
+      tabIndex={onActivate ? (rest.tabIndex ?? 0) : rest.tabIndex}
       onClick={onActivate ? (event) => !(event.target as HTMLElement).closest("a,button,input,select,textarea,label") && onActivate() : undefined}
       onKeyDown={handleKeyDown}
       data-selected={selected || undefined}

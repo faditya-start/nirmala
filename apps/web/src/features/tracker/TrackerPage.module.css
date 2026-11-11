@@ -104,3 +104,8 @@
     transition: none;
   }
 }
+
+/* At 1024 px the fixed-width columns would squeeze the item description to a few characters: keep it readable and scroll the table instead. */
+.table {
+  min-width: 1040px;
+}
