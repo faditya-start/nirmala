@@ -36,16 +36,19 @@ export async function* readCsvRecords(path: string, highWaterMark = 1 << 20): As
       else if (ch === ",") { row.push(field); field = ""; }
       else if (ch === "\n") {
         row.push(field); field = "";
-        if (row.length > 1 || row[0] !== "") yield row;
+        if (hasContent(row)) yield row;
         row = [];
       } else if (ch !== "\r") field += ch;
     }
   }
   if (field !== "" || row.length) {
     row.push(field);
-    if (row.length > 1 || row[0] !== "") yield row;
+    if (hasContent(row)) yield row;
   }
 }
+
+/** Baris tanpa satu pun isi (kosong, atau hanya koma seperti ",") bukan data: ekspor SIPEKA kadang menyisipkannya di tengah berkas. */
+const hasContent = (row: string[]) => row.some((field) => field !== "");
 
 export function hashFile(path: string): Promise<string> {
   return new Promise((resolve, reject) => {

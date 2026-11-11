@@ -30,7 +30,7 @@ const itemByDescription = async (env: Awaited<ReturnType<typeof context>>, docum
 test("parser CSV: kutip, koma, newline di dalam kutip, CRLF, BOM, dan batas chunk", async () => {
   const dir = await mkdtemp(join(tmpdir(), "csv-"));
   const path = join(dir, "a.csv");
-  await writeFile(path, "﻿a,b,c\r\n1,\"x, y\",\"baris1\nbaris2\"\r\n2,\"kata \"\"kutip\"\"\",\r\n\r\n3,,z");
+  await writeFile(path, "﻿a,b,c\r\n1,\"x, y\",\"baris1\nbaris2\"\r\n2,\"kata \"\"kutip\"\"\",\r\n\r\n,,\r\n,\r\n3,,z\r\n,");
   for (const chunk of [1, 2, 3, 7, 1 << 20]) {
     const rows: string[][] = [];
     for await (const row of readCsvRecords(path, chunk)) rows.push(row);
