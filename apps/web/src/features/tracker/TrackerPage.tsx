@@ -7,6 +7,7 @@ import { useAuth } from "../../app/auth";
 import { useCycle } from "../../app/cycle";
 import { useNeedsAction } from "../../app/needsAction";
 import { api } from "../../lib/api";
+import { expectationSentence } from "../../lib/expectation";
 import { formatDate } from "../../lib/format";
 import {
   Button,
@@ -37,7 +38,6 @@ import { Notice, type NoticeProps } from "./components/Notice";
 import {
   CATEGORY_LABEL,
   bulkResultMessage,
-  expectationText,
   formatNum,
   isTrackerStatus,
   pickDefaultStatus,
@@ -62,10 +62,6 @@ const EMPTY_COPY: Record<TrackerStatus, { title: string; description: string }> 
   dijustifikasi: { title: "Tidak ada catatan Dijustifikasi", description: "Belum ada justifikasi dari eselon I yang perlu ditinjau." },
   closed: { title: "Belum ada catatan Closed", description: "Catatan ditutup setelah reviewer menyetujui." }
 };
-
-function cycleText(year: number, stage: string): string {
-  return `TA ${year} ${stage.charAt(0).toUpperCase()}${stage.slice(1)}`;
-}
 
 /** S8 · Smart Tracker (X1vbk, dialog MYYQx, state kosong oJHVy). Route: /tracker. */
 export function TrackerPage() {
@@ -164,12 +160,7 @@ export function TrackerPage() {
   const chrNumbers = chrs.map((chr) => chr.documentNumber).filter(Boolean);
   const issuedAt = chrs.find((chr) => chr.issuedAt)?.issuedAt ?? null;
 
-  const subtitle = [
-    orgName,
-    cycleText(active.fiscalYear, active.stage),
-    chrNumbers.length > 0 ? `CHR ${chrNumbers.length > 2 ? `${chrNumbers.length} dokumen` : chrNumbers.join(", ")}` : null,
-    totalAll ? "cek otomatis hanya usulan, reviewer yang menutup" : null
-  ]
+  const subtitle = [orgName, chrNumbers.length > 0 ? `CHR ${chrNumbers.length > 2 ? `${chrNumbers.length} dokumen` : chrNumbers.join(", ")}` : null]
     .filter(Boolean)
     .join(" · ");
 
@@ -257,12 +248,14 @@ export function TrackerPage() {
     body = (
       <>
         <FilterBar label="Filter catatan">
-          <FilterSelect
-            label="Eselon I"
-            value={orgValue}
-            onChange={(value) => update({ organizationUnitId: value, workUnitId: null })}
-            options={[...(orgOptions.length === 1 ? [] : [{ value: ALL, label: "Semua" }]), ...orgOptions.map((unit) => ({ value: unit.id, label: unit.name }))]}
-          />
+          {orgOptions.length > 1 && (
+            <FilterSelect
+              label="Eselon I"
+              value={orgValue}
+              onChange={(value) => update({ organizationUnitId: value, workUnitId: null })}
+              options={[{ value: ALL, label: "Semua" }, ...orgOptions.map((unit) => ({ value: unit.id, label: unit.name }))]}
+            />
+          )}
           <FilterSelect
             label="Satker"
             value={workUnitId}
@@ -384,7 +377,7 @@ export function TrackerPage() {
                         <TagChip>{CATEGORY_LABEL[row.category]}</TagChip>
                       </Td>
                       <Td>
-                        <span className={styles.mono}>{expectationText(row.expectation)}</span>
+                        {expectationSentence(row.expectation, formatNum)}
                       </Td>
                       <Td>
                         <div className={styles.check}>
@@ -402,7 +395,7 @@ export function TrackerPage() {
               <Pagination page={data.pagination.page} pageSize={data.pagination.pageSize} total={data.pagination.total} noun="catatan" onPageChange={(next) => update({ page: String(next) }, true)} />
             </TableFrame>
             <p className={styles.footnote}>
-              Umur dihitung sejak CHR terbit{issuedAt ? ` (${formatDate(issuedAt)})` : ""}. Klik baris untuk membuka bukti dan tindakan.
+              Umur dihitung sejak CHR terbit{issuedAt ? ` (${formatDate(issuedAt)})` : ""}.
             </p>
           </div>
         )}

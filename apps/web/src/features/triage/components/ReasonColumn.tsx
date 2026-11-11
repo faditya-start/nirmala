@@ -17,7 +17,7 @@ export function ReasonColumn({ ruleHits, score, peer, satkerHistory }: ReasonCol
   return (
     <div className={styles.column}>
       <section className={styles.group}>
-        <SectionHeader title="Aturan yang terpicu" description="Flag berasal dari aturan, bukan dari skor." />
+        <SectionHeader title="Aturan yang terpicu" />
         {ruleHits.length === 0 ? (
           <p className={styles.note}>Tidak ada aturan aktif yang mengenai item ini. Item tetap bisa ditinjau berdasarkan skor.</p>
         ) : (
@@ -41,7 +41,7 @@ export function ReasonColumn({ ruleHits, score, peer, satkerHistory }: ReasonCol
       </section>
 
       <section className={styles.group}>
-        <SectionHeader title="Rincian skor" description="Skor 0–100 hanya untuk mengurutkan. Tiap faktor menunjukkan nilai, bobot, dan alasannya." />
+        <SectionHeader title="Rincian skor" description="Hanya untuk mengurutkan, bukan dasar flag." />
         {score ? (
           <>
             <div className={styles.total}>
@@ -82,7 +82,9 @@ export function ReasonColumn({ ruleHits, score, peer, satkerHistory }: ReasonCol
 
       <section className={styles.group}>
         <SectionHeader title={`Riwayat temuan BPK · ${satkerHistory.workUnitName}`} description="Hanya jumlah per tema, tanpa detail temuan." />
-        {satkerHistory.hasProfile ? (
+        {satkerHistory.hasProfile && satkerHistory.themes.every((theme) => theme.countTotal === 0) ? (
+          <p className={styles.note}>Tidak ada rekomendasi BPK pada tema yang diperiksa.</p>
+        ) : satkerHistory.hasProfile ? (
           <TableFrame>
             <Table aria-label={`Riwayat temuan BPK ${satkerHistory.workUnitName}`}>
               <THead>
@@ -97,7 +99,7 @@ export function ReasonColumn({ ruleHits, score, peer, satkerHistory }: ReasonCol
                 </tr>
               </THead>
               <TBody>
-                {satkerHistory.themes.map((theme) => (
+                {satkerHistory.themes.filter((theme) => theme.countTotal > 0).map((theme) => (
                   <tr key={theme.theme}>
                     <Td>{FINDING_THEME_LABEL[theme.theme] ?? theme.theme}</Td>
                     <Td numeric>{formatNumber(theme.countTotal)}</Td>

@@ -7,7 +7,7 @@ import { useNeedsAction } from "../../app/needsAction";
 import { errorMessage, isApiError } from "../../lib/api";
 import { Button, EmptyState, IconButton, Loading, PageHeader } from "../../ui";
 import { fetchImportOverview } from "./api";
-import { CycleTable, SnapshotTable, resultHref } from "./components/CycleSnapshotTables";
+import { SnapshotTable, resultHref } from "./components/CycleSnapshotTables";
 import { ImportDialog } from "./components/ImportDialog";
 import { ResultView } from "./components/ResultView";
 import { Section } from "./components/Section";
@@ -29,7 +29,7 @@ export function CycleImportPage() {
 type Overview = { status: "loading" } | { status: "error"; message: string } | { status: "ready"; data: ImportOverviewResponse };
 
 function CycleImportList() {
-  const { cycles, active, status: cycleStatus, setActiveId, reload: reloadCycles } = useCycle();
+  const { cycles, active, status: cycleStatus, reload: reloadCycles } = useCycle();
   const navigate = useNavigate();
   const [overview, setOverview] = useState<Overview>({ status: "loading" });
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -143,10 +143,6 @@ function CycleImportList() {
       )}
 
       {showBanner && <RunBanner runner={runner} onOpen={() => openDialog(null)} onDismiss={() => setBannerDismissed(true)} onResult={(url) => navigate(url)} />}
-
-      <Section title="Siklus">
-        <CycleTable cycles={cycles} activeId={active.id} onSelect={setActiveId} />
-      </Section>
 
       <Section title={snapshotTitle} description={snapshotNote}>
         {overview.status === "loading" ? (

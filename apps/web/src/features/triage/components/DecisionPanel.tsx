@@ -58,7 +58,7 @@ export function DecisionPanel({ detail, reasons, reasonsFailed, onChanged, nextH
         <h2 id="decision-title" ref={headingRef} tabIndex={-1} className={styles.title}>
           Keputusan reviewer
         </h2>
-        {badge}
+        {decision && badge}
       </div>
       {decision ? (
         <Decided detail={detail} nextHref={nextHref} onChanged={onChanged} />
@@ -91,7 +91,6 @@ function DecisionForms({ detail, reasons, reasonsFailed, onChanged }: Pick<Decis
   const [category, setCategory] = useState<NoteCategory>(defaults.category);
   const [text, setText] = useState(defaults.text);
   const [expectation, setExpectation] = useState<ExpectationForm>(() => formFromExpectation(defaults.expectation));
-  const [ruleTouched, setRuleTouched] = useState(false);
   // Isian dismiss
   const [reason, setReason] = useState("");
   const [note, setNote] = useState("");
@@ -166,17 +165,15 @@ function DecisionForms({ detail, reasons, reasonsFailed, onChanged }: Pick<Decis
 
       {mode === "confirm" ? (
         <>
+          {ruleCode && <p className={styles.prefill}>Kategori, teks, dan ekspektasi terisi dari aturan {ruleCode}. Ubah bila perlu.</p>}
           <Select
             label="Kategori catatan"
             title={CATEGORY_LABEL[category]}
             options={CATEGORY_OPTIONS}
             value={category}
             disabled={busy}
-            hint={ruleCode && !ruleTouched ? `Diisi dari aturan ${ruleCode}. Bisa diubah.` : ruleCode ? undefined : "Item ini tidak kena aturan. Pilih kategori yang sesuai."}
-            onChange={(event) => {
-              setCategory(event.target.value as NoteCategory);
-              setRuleTouched(true);
-            }}
+            hint={ruleCode ? undefined : "Item ini tidak kena aturan. Pilih kategori yang sesuai."}
+            onChange={(event) => setCategory(event.target.value as NoteCategory)}
           />
           <Textarea
             label="Teks catatan"
@@ -185,15 +182,13 @@ function DecisionForms({ detail, reasons, reasonsFailed, onChanged }: Pick<Decis
             disabled={busy}
             value={text}
             error={textError}
-            hint={ruleCode ? "Diisi dari alasan aturan. Bisa disunting." : "Tulis alasan catatan untuk Satker, minimal 5 karakter."}
+            hint={ruleCode ? undefined : "Tulis alasan catatan untuk Satker, minimal 5 karakter."}
             onChange={(event) => setText(event.target.value)}
           />
           <ExpectationEditor
             value={expectation}
             onChange={setExpectation}
             errors={expectationErrors}
-            ruleCode={ruleCode}
-            untouchedFromRule={JSON.stringify(expectation) === JSON.stringify(formFromExpectation(defaults.expectation))}
             disabled={busy}
           />
           {serverError && <ErrorLine>{serverError}</ErrorLine>}
@@ -226,7 +221,6 @@ function DecisionForms({ detail, reasons, reasonsFailed, onChanged }: Pick<Decis
           <Button type="submit" icon={Ban} loading={busy} disabled={!reason} className={styles.wide}>
             Simpan dismiss
           </Button>
-          <p className={styles.footnote}>Tombol aktif setelah alasan dipilih. Item yang di-dismiss tidak masuk CHR.</p>
         </>
       )}
     </form>

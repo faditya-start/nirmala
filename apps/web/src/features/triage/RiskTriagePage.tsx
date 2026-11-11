@@ -166,18 +166,15 @@ export function RiskTriagePage() {
     );
   }
 
-  const stage = active.stage.charAt(0).toUpperCase() + active.stage.slice(1);
-  const cycleText = `TA ${active.fiscalYear} ${stage}`;
   const flaggedNone = Boolean(data && data.summary.flaggedItems === 0);
   const emptyFlagged = Boolean(data && data.pagination.total === 0 && state.onlyFlagged && flaggedNone);
   const subtitleParts: string[] = [];
-  if (singleOrg) subtitleParts.push(singleOrg.organizationUnitName, `snapshot ${snapshotName(singleOrg.versionNo, singleOrg.label)}`);
+  if (singleOrg) subtitleParts.push(`Snapshot ${snapshotName(singleOrg.versionNo, singleOrg.label)}`);
   else if (snapshots.length > 1) subtitleParts.push(`${snapshots.length} eselon I`);
-  subtitleParts.push(cycleText);
   if (emptyFlagged && singleOrg) subtitleParts.push(`${formatNumber(singleOrg.itemCount)} item`);
 
-  const orgOptions = units.length > 1 ? [{ value: "", label: "Semua" }, ...units.map((unit) => ({ value: unit.id, label: unit.name }))] : units.map((unit) => ({ value: unit.id, label: unit.name }));
-  const orgValue = units.length === 1 ? units[0].id : state.organizationUnitId;
+  const orgOptions = [{ value: "", label: "Semua" }, ...units.map((unit) => ({ value: unit.id, label: unit.name }))];
+  const orgValue = state.organizationUnitId;
   const satkerOptions = [{ value: "", label: "Semua" }, ...(workUnits.data?.workUnits ?? []).map((unit) => ({ value: unit.id, label: unit.name }))];
   const categoryOptions = [{ value: "", label: "Semua" }, ...CATEGORY_OPTIONS.map((option) => ({ value: option.value, label: option.label }))];
   const filtered = isFiltered(filter);
@@ -192,19 +189,11 @@ export function RiskTriagePage() {
 
   return (
     <div className={styles.page}>
-      <PageHeader
-        title="Risk Triage"
-        subtitle={subtitleParts.join(" · ")}
-        actions={
-          <ButtonLink to="/chr" icon={FileText}>
-            Buka CHR
-          </ButtonLink>
-        }
-      />
+      <PageHeader title="Risk Triage" subtitle={subtitleParts.join(" · ")} />
 
       <FilterBar label="Filter daftar item">
         <FilterSearch value={searchText} onChange={setSearchText} placeholder="Cari uraian item" />
-        <FilterSelect label="Eselon I" value={orgValue} options={orgOptions} onChange={(value) => update({ organizationUnitId: value })} />
+        {units.length > 1 && <FilterSelect label="Eselon I" value={orgValue} options={orgOptions} onChange={(value) => update({ organizationUnitId: value })} />}
         <FilterSelect label="Satker" value={state.workUnitId} options={satkerOptions} onChange={(value) => update({ workUnitId: value })} />
         <FilterSelect label="Kategori" value={state.ruleCategory} options={categoryOptions} onChange={(value) => update({ ruleCategory: value as TriageFilterState["ruleCategory"] })} />
         <FilterSelect label="Keputusan" value={state.decision} options={DECISION_FILTER_OPTIONS} onChange={(value) => update({ decision: value as TriageFilterState["decision"] })} />
@@ -289,7 +278,6 @@ export function RiskTriagePage() {
                     </Th>
                     <Th width={130}>Aturan</Th>
                     <Th width={130}>Skor</Th>
-                    <Th width={100}>Perubahan</Th>
                     <Th width={150}>Keputusan</Th>
                   </tr>
                 </THead>
@@ -305,7 +293,11 @@ export function RiskTriagePage() {
                                 {row.description}
                               </Link>
                             }
-                            meta={[row.workUnitName, <span key="akun" className="mono">{row.accountCode}</span>]}
+                            meta={[
+                              row.workUnitName,
+                              <span key="akun" className="mono">{row.accountCode}</span>,
+                              row.changeType !== "tetap" ? CHANGE_LABEL[row.changeType] : null
+                            ]}
                           />
                         </Td>
                         <Td numeric>{formatNumber(row.totalAmount)}</Td>
@@ -326,9 +318,6 @@ export function RiskTriagePage() {
                           ) : (
                             <ScoreBadge score={row.score} category={row.riskCategory ? RISK_TO_SCORE_CATEGORY[row.riskCategory] : undefined} />
                           )}
-                        </Td>
-                        <Td>
-                          <TagChip>{CHANGE_LABEL[row.changeType]}</TagChip>
                         </Td>
                         <Td>
                           <DecisionCell row={row} />

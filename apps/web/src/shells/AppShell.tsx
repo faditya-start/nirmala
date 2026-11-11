@@ -24,7 +24,7 @@ function CyclePicker({ collapsed }: { collapsed: boolean }) {
   const { cycles, active, status, setActiveId } = useCycle();
   const deadline = active?.adkDeadline ?? null;
   const days = daysUntil(deadline);
-  const countdown = deadline ? `Tenggat ADK ${formatDayMonth(deadline)} · ${formatCountdown(days)}` : null;
+  const countdown = deadline ? `ADK ${formatDayMonth(deadline)} · ${formatCountdown(days)}` : null;
   const name = active ? cycleLabel(active) : status === "loading" ? "Memuat siklus…" : status === "error" ? "Siklus tidak termuat" : "Belum ada siklus";
 
   return (

@@ -112,3 +112,14 @@
 .same {
   color: var(--ink-muted);
 }
+
+/* Hierarki is reference material: folded until asked for. */
+.disclosure summary {
+  cursor: pointer;
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+
+.disclosure[open] summary {
+  margin-bottom: var(--sp-3);
+}

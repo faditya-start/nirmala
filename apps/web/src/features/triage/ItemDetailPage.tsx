@@ -122,7 +122,7 @@ export function ItemDetailPage() {
               <RuleChip key={hit.ruleId} code={hit.code} />
             ))}
             {score ? <ScoreBadge score={score.value} category={RISK_TO_SCORE_CATEGORY[score.category]} /> : <span className={styles.context}>Belum dinilai</span>}
-            <TagChip>{CHANGE_LABEL[item.changeType]}</TagChip>
+            {item.changeType !== "tetap" && <TagChip>{CHANGE_LABEL[item.changeType]}</TagChip>}
           </div>
         </div>
         {nav && (

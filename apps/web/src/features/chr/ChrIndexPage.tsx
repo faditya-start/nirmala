@@ -10,10 +10,6 @@ import { formatDate, formatNumber } from "../../lib/format";
 import {
   Button,
   EmptyState,
-  FilterBar,
-  FilterSelect,
-  FilterSpacer,
-  FilterSummary,
   Loading,
   PageHeader,
   SectionHeader,
@@ -33,19 +29,11 @@ import { NOTE_STATUS_ORDER } from "./logic";
 import { useResource } from "./useResource";
 import styles from "./Index.module.css";
 
-const STATUS_FILTER = [
-  { value: "", label: "Semua" },
-  { value: "draft", label: "Draf dokumen" },
-  { value: "issued", label: "Terbit" },
-  { value: "completed", label: "Selesai" }
-];
-
 /** Nav target "CHR": CHR documents of the active cycle per eselon I. One eselon I with a CHR goes straight to it. Route: /chr. */
 export function ChrIndexPage() {
   const { active, status: cycleStatus } = useCycle();
   const cycleId = active?.id ?? "";
-  const [filter, setFilter] = useState("");
-  const resource = useResource(() => (cycleId ? chrApi.list(cycleId, filter || undefined) : Promise.resolve(null)), [cycleId, filter]);
+  const resource = useResource(() => (cycleId ? chrApi.list(cycleId) : Promise.resolve(null)), [cycleId]);
 
   if (cycleStatus === "loading" || cycleStatus === "idle" || resource.loading) return <Loading block label="Memuat daftar CHR…" />;
   if (!active) {
@@ -55,26 +43,22 @@ export function ChrIndexPage() {
   const data = resource.data;
   if (!data) return null;
 
-  if (!filter && data.items.length === 1 && data.organizationUnitsWithoutChr.length === 0) {
+  if (data.items.length === 1 && data.organizationUnitsWithoutChr.length === 0) {
     return <Navigate to={`/chr/${encodeURIComponent(data.items[0].id)}`} replace />;
   }
-  return <ChrList cycleName={cycleLabel(active)} cycleId={active.id} items={data.items} without={data.organizationUnitsWithoutChr} filter={filter} onFilter={setFilter} />;
+  return <ChrList cycleName={cycleLabel(active)} cycleId={active.id} items={data.items} without={data.organizationUnitsWithoutChr} />;
 }
 
 function ChrList({
   cycleName,
   cycleId,
   items,
-  without,
-  filter,
-  onFilter
+  without
 }: {
   cycleName: string;
   cycleId: string;
   items: ChrListItemDto[];
   without: Array<{ id: string; code: string; shortName: string; name: string }>;
-  filter: string;
-  onFilter: (value: string) => void;
 }) {
   const navigate = useNavigate();
   const { hasRole } = useAuth();
@@ -99,17 +83,11 @@ function ChrList({
     <div className={styles.page}>
       <PageHeader title="CHR" subtitle={`Catatan Hasil Reviu per eselon I · ${cycleName}`} />
 
-      <FilterBar label="Filter CHR">
-        <FilterSelect label="Status" value={filter} onChange={onFilter} options={STATUS_FILTER} />
-        <FilterSpacer />
-        <FilterSummary>{formatNumber(items.length)} dokumen CHR</FilterSummary>
-      </FilterBar>
-
       {items.length === 0 ? (
         <EmptyState
           icon={FileText}
-          title={filter ? "Tidak ada CHR dengan status ini" : "Belum ada CHR di siklus ini"}
-          description={filter ? "Ubah filter status untuk melihat dokumen lain." : "CHR dibuat otomatis saat catatan pertama dikonfirmasi di Risk Triage, atau dibuat dari daftar di bawah."}
+          title="Belum ada CHR di siklus ini"
+          description="CHR dibuat otomatis saat catatan pertama dikonfirmasi di Risk Triage, atau dibuat dari daftar di bawah."
         />
       ) : (
         <TableFrame>
@@ -121,7 +99,6 @@ function ChrList({
                 <Th>Nomor</Th>
                 <Th>Catatan</Th>
                 <Th width={120}>Terbit</Th>
-                <Th width={120}>Diperbarui</Th>
               </tr>
             </THead>
             <TBody>
@@ -138,7 +115,7 @@ function ChrList({
                   <Td className="mono">{item.documentNumber ?? <span className={styles.muted}>Belum terbit</span>}</Td>
                   <Td>
                     <div className={styles.counts}>
-                      <span className="num">{formatNumber(item.notesTotal)}</span>
+                      {item.notesTotal === 0 && <span className="num">0</span>}
                       {NOTE_STATUS_ORDER.filter((status) => item.notesByStatus[status] > 0).map((status) => (
                         <span key={status} className={styles.countItem}>
                           <StatusBadge status={status} />
@@ -148,7 +125,6 @@ function ChrList({
                     </div>
                   </Td>
                   <Td>{item.issuedAt ? formatDate(item.issuedAt) : <span className={styles.muted}>-</span>}</Td>
-                  <Td>{formatDate(item.updatedAt)}</Td>
                 </Tr>
               ))}
             </TBody>
@@ -156,7 +132,7 @@ function ChrList({
         </TableFrame>
       )}
 
-      {without.length > 0 && !filter && (
+      {without.length > 0 && (
         <section className={styles.without} aria-labelledby="chr-without">
           <div id="chr-without">
             <SectionHeader title="Eselon I tanpa CHR" description="Belum ada catatan yang dikonfirmasi di siklus ini." />

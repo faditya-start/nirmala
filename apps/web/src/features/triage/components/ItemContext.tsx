@@ -23,7 +23,7 @@ function Field({ label, children, mono, strong, medium }: { label: string; child
   );
 }
 
-/** Kolom kiri S5: Konteks item, Hierarki, Versi sebelumnya. */
+/** Kolom kiri S5: Konteks item, Hierarki (dilipat), Versi sebelumnya. */
 export function ItemContext({ item, previousVersion }: { item: TriageItemContext; previousVersion: PreviousVersionDto | null }) {
   const unit = item.unit ? ` ${item.unit}` : "";
   return (
@@ -31,9 +31,6 @@ export function ItemContext({ item, previousVersion }: { item: TriageItemContext
       <section className={styles.group}>
         <SectionHeader title="Konteks item" level={2} />
         <dl className={styles.list}>
-          <Field label="Uraian" medium>
-            <span className={styles.wrap}>{item.description}</span>
-          </Field>
           <Field label="Akun">{item.accountName ? `${item.accountCode} · ${item.accountName}` : item.accountCode}</Field>
           <Field label="Nilai" mono>
             {formatNumber(item.quantity)}
@@ -56,14 +53,17 @@ export function ItemContext({ item, previousVersion }: { item: TriageItemContext
               </span>
             )}
           </Field>
-          <Field label="Status blokir">
-            {item.blokirCode ? `${item.blokirCode}${item.blokirAmount !== null ? ` · ${formatNumber(item.blokirAmount)}` : ""}` : "Tidak ada kode blokir"}
-          </Field>
+          {item.blokirCode && (
+            <Field label="Status blokir">
+              {item.blokirCode}
+              {item.blokirAmount !== null ? ` · ${formatNumber(item.blokirAmount)}` : ""}
+            </Field>
+          )}
         </dl>
       </section>
 
-      <section className={styles.group}>
-        <SectionHeader title="Hierarki" level={2} />
+      <details className={styles.disclosure}>
+        <summary>Hierarki program</summary>
         <dl className={styles.list}>
           {item.hierarchy.map((level) => (
             <Field key={level.level} label={LEVEL_LABEL[level.level] ?? level.level}>
@@ -71,7 +71,7 @@ export function ItemContext({ item, previousVersion }: { item: TriageItemContext
             </Field>
           ))}
         </dl>
-      </section>
+      </details>
 
       <section className={styles.group}>
         <SectionHeader title="Versi sebelumnya" level={2} />

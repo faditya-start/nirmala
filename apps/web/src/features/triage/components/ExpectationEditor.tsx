@@ -6,19 +6,15 @@ export interface ExpectationEditorProps {
   value: ExpectationForm;
   onChange: (value: ExpectationForm) => void;
   errors: ExpectationErrors;
-  /** Kode aturan sumber nilai awal, mis. "R01"; null bila tanpa aturan. */
-  ruleCode: string | null;
-  /** Nilai awal berasal dari aturan dan belum diubah. */
-  untouchedFromRule: boolean;
   disabled?: boolean;
 }
 
 const OPTIONS = EXPECTATION_TYPES.map((type) => ({ value: type, label: EXPECTATION_LABEL[type] }));
 
 /** Editor ekspektasi perubahan: pilih jenis, isi parameter jenis itu. Hasilnya `Expectation` lewat `expectationFromForm`. */
-export function ExpectationEditor({ value, onChange, errors, ruleCode, untouchedFromRule, disabled }: ExpectationEditorProps) {
+export function ExpectationEditor({ value, onChange, errors, disabled }: ExpectationEditorProps) {
   const set = (patch: Partial<ExpectationForm>) => onChange({ ...value, ...patch });
-  const hint = value.type ? (untouchedFromRule && ruleCode ? `Bawaan aturan ${ruleCode}. ` : "") + EXPECTATION_HINT[value.type] : "Pilih apa yang diharapkan berubah di revisi. Sistem memakainya untuk cek otomatis.";
+  const hint = value.type ? EXPECTATION_HINT[value.type] : "Pilih apa yang diharapkan berubah di revisi. Sistem memakainya untuk cek otomatis.";
   return (
     <>
       <Select

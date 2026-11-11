@@ -49,6 +49,8 @@ export function ActionPanels({ detail, onDone, onFailed }: ActionPanelsProps) {
   const reviewerRelevant = permissions.canApprove || permissions.canReturn || permissions.canAcceptJustification;
   const showReviewerPanel = reviewerRelevant || (user?.role === "reviewer" && note.status !== "closed");
   const author = justificationAuthor(detail);
+  // The strongest button follows the system's proposal: approve when the check says terpenuhi, otherwise send it back.
+  const approveFirst = result === "terpenuhi";
 
   async function run(kind: Exclude<Pending, null>, path: string, body: unknown, success: (res: NoteActionResponse) => string, onFieldError?: (message: string) => void) {
     setPending(kind);
@@ -112,7 +114,8 @@ export function ActionPanels({ detail, onDone, onFailed }: ActionPanelsProps) {
             Keputusan reviewer
           </h2>
           <p className={styles.hint}>
-            {proposal} {result === "data_tidak_cukup" ? "Reviewer yang memutuskan." : "Hanya reviewer yang bisa menutup atau mengembalikan."}
+            {proposal}
+            {result === "data_tidak_cukup" ? " Reviewer yang memutuskan." : ""}
           </p>
 
           {note.status === "dijustifikasi" && note.justification && (
@@ -125,9 +128,9 @@ export function ActionPanels({ detail, onDone, onFailed }: ActionPanelsProps) {
           )}
 
           <Textarea
-            label="Alasan pengembalian (wajib untuk Kembalikan)"
+            label="Alasan pengembalian"
             placeholder="Tulis alasan jika catatan dikembalikan"
-            hint="Alasan dikirim ke Satker dan tercatat di riwayat."
+            hint="Wajib bila dikembalikan. Dikirim ke Satker dan tercatat di riwayat."
             value={reason}
             maxLength={RETURN_MAX}
             error={reasonError}
@@ -138,21 +141,32 @@ export function ActionPanels({ detail, onDone, onFailed }: ActionPanelsProps) {
             }}
           />
           <div className={styles.actions}>
-            <Button variant="utama" icon={Undo2} className={styles.full} disabled={busy || !permissions.canReturn} loading={pending === "return"} onClick={onReturn}>
+            <Button
+              variant={approveFirst ? "sekunder" : "utama"}
+              icon={Undo2}
+              className={styles.full}
+              disabled={busy || !permissions.canReturn}
+              loading={pending === "return"}
+              onClick={onReturn}
+            >
               Kembalikan ke Satker
             </Button>
-            <Button icon={Check} className={styles.full} disabled={busy || !permissions.canApprove} loading={pending === "approve"} onClick={onApproveClick}>
+            <Button
+              variant={approveFirst ? "utama" : "sekunder"}
+              icon={Check}
+              className={styles.full}
+              disabled={busy || !permissions.canApprove}
+              loading={pending === "approve"}
+              onClick={onApproveClick}
+            >
               Setujui dan tutup
             </Button>
-            <Button icon={FileCheck} className={styles.full} disabled={busy || !permissions.canAcceptJustification} loading={pending === "accept"} onClick={onAccept}>
-              Terima justifikasi
-            </Button>
+            {note.status === "dijustifikasi" && (
+              <Button icon={FileCheck} className={styles.full} disabled={busy || !permissions.canAcceptJustification} loading={pending === "accept"} onClick={onAccept}>
+                Terima justifikasi
+              </Button>
+            )}
           </div>
-          <p className={styles.hint}>
-            {note.status === "dijustifikasi"
-              ? "Terima justifikasi menutup catatan. Kembalikan mengirim catatan ke Satker untuk diperbaiki."
-              : "Terima justifikasi aktif setelah PIC UKI mengisi alasan Satker."}
-          </p>
         </section>
       )}
 
@@ -161,9 +175,7 @@ export function ActionPanels({ detail, onDone, onFailed }: ActionPanelsProps) {
           <h2 id="panel-justifikasi" className={styles.title}>
             Justifikasi eselon I
           </h2>
-          <p className={styles.hint}>
-            Isi atas nama {detail.workUnitName ?? "Satker"} jika Satker tidak mengubah item ini. Reviewer yang memutuskan menutup.
-          </p>
+          <p className={styles.hint}>Isi atas nama {detail.workUnitName ?? "Satker"} jika Satker tidak mengubah item ini.</p>
           <Textarea
             label="Alasan Satker tidak mengubah"
             hint="Wajib diisi. Status berubah menjadi Dijustifikasi."
@@ -179,7 +191,6 @@ export function ActionPanels({ detail, onDone, onFailed }: ActionPanelsProps) {
           <Button variant="utama" icon={Send} className={styles.full} disabled={busy} loading={pending === "justify"} onClick={onJustify}>
             Kirim justifikasi
           </Button>
-          <p className={styles.hint}>PIC UKI bisa melihat catatan dan mengisi justifikasi, tetapi tidak bisa menutup catatan.</p>
         </section>
       )}
 
