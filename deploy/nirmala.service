@@ -1,0 +1,28 @@
+# Contoh unit systemd (TIDAK dijalankan oleh repo). Salin ke /etc/systemd/system/nirmala.service lalu sesuaikan path/user.
+# Satu proses: API + web hasil build (apps/web/dist). Detail: docs/deploy.md
+[Unit]
+Description=NIRMALA (API + web)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=nirmala
+Group=nirmala
+WorkingDirectory=/opt/nirmala/apps/api
+# Berisi NODE_ENV=production, SESSION_SECRET, DATABASE_PATH, WEB_ORIGIN, dst. (lihat deploy/nirmala.env.example); izin 0600, milik root.
+EnvironmentFile=/etc/nirmala/nirmala.env
+Environment=NODE_ENV=production
+ExecStart=/opt/nirmala/node_modules/.bin/tsx src/server.ts
+Restart=on-failure
+RestartSec=3
+
+# Pengerasan
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/nirmala /var/backups/nirmala
+
+[Install]
+WantedBy=multi-user.target

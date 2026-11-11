@@ -1,78 +1,140 @@
-export type RiskFactorCode = "price_variance" | "bas_alignment" | "historical_similarity" | "description_quality" | "revision_pattern";
+/**
+ * Skor risiko 0-100 untuk mengurutkan item (docs/rule-catalog.md §4). Fungsi murni.
+ * Lima faktor, masing-masing 0-100 atau "data tidak tersedia":
+ *   F1 price_vs_peer, F2 risky_account, F3 satker_history, F4 description_quality, F5 change_from_previous.
+ *
+ * Skor = jumlah (nilai faktor x bobot) dibagi jumlah bobot faktor yang datanya tersedia. Faktor tanpa data
+ * (`dataAvailable = false`) tidak punya kontribusi dan tidak ikut penyebut, jadi ketiadaan data tidak menaikkan
+ * maupun menurunkan skor item. Skor hanya dipakai untuk mengurutkan; aturan (flag) tidak mengubahnya.
+ */
+import { FACTOR_CODES, type FactorCode, type RiskCategory } from "@nirmala/shared";
+import type { RiskConfigParams, RiskConfigWeights, StoredFactor } from "../db/schema.js";
+import type { PeerComparison } from "../detection/peer.js";
 
-export interface RiskInput {
-  unitPrice: number;
-  referencePrice?: number;
-  basCode: string;
-  description: string;
-  historicalSimilarity?: number;
-  revisionCount?: number;
-  hasRevision?: boolean;
-}
+export const FACTOR_META: Record<FactorCode, { label: string; description: string }> = {
+  price_vs_peer: { label: "Harga vs Satker lain", description: "Rasio harga satuan terhadap median Satker lain untuk uraian dan satuan yang sama" },
+  risky_account: { label: "Akun rawan", description: "Skor tetap per akun yang sering diblokir atau menjadi tema temuan BPK" },
+  satker_history: { label: "Riwayat temuan BPK Satker", description: "Jumlah rekomendasi BPK bertema penganggaran untuk Satker ini" },
+  description_quality: { label: "Kualitas uraian", description: "Uraian singkat, satuan paket tanpa rincian, atau volume tidak terisi" },
+  change_from_previous: { label: "Perubahan dari versi sebelumnya", description: "Item baru atau nilainya naik dibanding snapshot sebelumnya" }
+};
 
-export interface RiskConfig {
-  version: string;
-  weights: Record<RiskFactorCode, number>;
+export interface ScoreConfig {
+  weights: RiskConfigWeights;
   thresholds: { medium: number; high: number };
+  params: RiskConfigParams;
 }
 
-export interface RiskFactorResult {
-  code: RiskFactorCode;
-  label: string;
-  normalizedScore: number | null;
-  weight: number;
-  contribution: number | null;
-  explanation: string;
-  dataAvailable: boolean;
+export interface FindingProfile {
+  /** false = Satker tidak punya profil temuan sama sekali (F3 tidak tersedia). */
+  hasProfile: boolean;
+  /** Rekomendasi bertema `penganggaran`. */
+  total: number;
+  /** BS + BT di antaranya. */
+  open: number;
 }
 
-export interface RiskResult {
-  score: number;
-  category: "low" | "medium" | "high";
-  factors: RiskFactorResult[];
-  dataCompleteness: "sufficient" | "partial";
-}
-
-export const DEFAULT_RISK_CONFIG: RiskConfig = {
-  version: "rules-v2",
-  weights: { price_variance: 35, bas_alignment: 25, historical_similarity: 20, description_quality: 10, revision_pattern: 10 },
-  thresholds: { medium: 35, high: 70 }
-};
-
-const labels: Record<RiskFactorCode, string> = {
-  price_variance: "Anomali harga terhadap referensi",
-  bas_alignment: "Kesesuaian BAS dan uraian",
-  historical_similarity: "Kemiripan temuan historis",
-  description_quality: "Kualitas dan spesifisitas uraian",
-  revision_pattern: "Pola revisi"
-};
-
-export function validateRiskConfig(config: RiskConfig): string | null {
-  const weights = Object.values(config.weights);
-  if (weights.some((weight) => !Number.isFinite(weight) || weight < 0)) return "Bobot faktor tidak boleh negatif.";
-  if (Math.round(weights.reduce((sum, weight) => sum + weight, 0) * 100) / 100 !== 100) return "Jumlah bobot faktor harus 100%.";
-  if (!Number.isInteger(config.thresholds.medium) || !Number.isInteger(config.thresholds.high) || config.thresholds.medium < 0 || config.thresholds.high > 100 || config.thresholds.medium >= config.thresholds.high) return "Ambang risiko harus berurutan pada rentang 0 sampai 100.";
-  return null;
-}
-
-export function scoreRisk(input: RiskInput, config: RiskConfig = DEFAULT_RISK_CONFIG): RiskResult {
-  const priceScore = input.referencePrice && input.referencePrice > 0 ? Math.min(100, Math.max(0, ((input.unitPrice / input.referencePrice) - 1) * 100 * 2)) : null;
-  const basScore = /^(5|6)\d{5}$/.test(input.basCode) && input.description.length >= 20 ? 10 : 55;
-  const historyScore = input.historicalSimilarity === undefined ? null : Math.min(100, Math.max(0, input.historicalSimilarity));
-  const descriptionScore = input.description.trim().length < 20 ? 75 : input.description.trim().split(/\s+/).length < 5 ? 50 : 10;
-  const revisionScore = input.revisionCount === undefined ? null : input.revisionCount > 1 ? 80 : input.hasRevision ? 35 : 5;
-  const values: Record<RiskFactorCode, number | null> = { price_variance: priceScore, bas_alignment: basScore, historical_similarity: historyScore, description_quality: descriptionScore, revision_pattern: revisionScore };
-  const explanations: Record<RiskFactorCode, string> = {
-    price_variance: priceScore === null ? "Referensi harga sepadan belum tersedia; faktor tidak menaikkan skor." : `Deviasi harga dinormalisasi menjadi ${Math.round(priceScore)} dari 100 berdasarkan referensi sintetis.`,
-    bas_alignment: basScore > 40 ? "Kode BAS atau uraian memerlukan verifikasi manual." : "Format BAS dan uraian terlihat konsisten pada pemeriksaan awal.",
-    historical_similarity: historyScore === null ? "Temuan historis yang sepadan belum tersedia." : `Kemiripan sintetis terukur ${Math.round(historyScore)} dari 100; ini bukan bukti pelanggaran.`,
-    description_quality: descriptionScore > 40 ? "Uraian terlalu singkat atau kurang spesifik untuk dibandingkan secara memadai." : "Uraian memiliki detail yang cukup untuk pemeriksaan awal.",
-    revision_pattern: revisionScore === null ? "Riwayat revisi belum tersedia." : "Pola revisi perlu dilihat bersama bukti perubahan RKA."
+export interface ScoreInput {
+  item: { description: string; accountCode: string; unit: string | null; quantity: number; unitPrice: number; totalAmount: number; hasVolumeDetail: boolean };
+  peer: PeerComparison | null;
+  finding: FindingProfile;
+  change: {
+    /** Snapshot pertama eselon I di siklus (tidak ada pembanding). */
+    firstSnapshot: boolean;
+    changeType: "baru" | "berubah" | "tetap";
+    /** Total padanan di snapshot sebelumnya; null bila tidak ada. */
+    previousTotal: number | null;
   };
-  const factors = (Object.keys(config.weights) as RiskFactorCode[]).map((code) => ({ code, label: labels[code], normalizedScore: values[code], weight: config.weights[code], contribution: values[code] === null ? null : values[code] * config.weights[code] / 100, explanation: explanations[code], dataAvailable: values[code] !== null }));
-  const active = factors.filter((factor) => factor.normalizedScore !== null);
-  const denominator = active.reduce((sum, factor) => sum + factor.weight, 0);
-  const score = denominator === 0 ? 0 : Math.round(active.reduce((sum, factor) => sum + (factor.contribution ?? 0), 0) * 100 / denominator);
-  const category = score >= config.thresholds.high ? "high" : score >= config.thresholds.medium ? "medium" : "low";
-  return { score, category, factors, dataCompleteness: active.length === factors.length ? "sufficient" : "partial" };
+}
+
+export interface ScoreResult {
+  score: number;
+  category: RiskCategory;
+  factors: StoredFactor[];
+  dataCompleteness: "sufficient" | "partial";
+  /** Jumlah bobot faktor yang datanya tersedia (penyebut skor). */
+  activeWeight: number;
+}
+
+const PACKAGE_UNITS = new Set(["paket", "ls", "keg", "kegiatan", "lumpsum", "lump sum"]);
+const clamp = (value: number, low = 0, high = 100) => Math.min(high, Math.max(low, value));
+const round2 = (value: number) => Math.round(value * 100) / 100;
+const rupiah = (value: number) => `Rp${value.toLocaleString("id-ID")}`;
+const decimal = (value: number) => (Math.round(value * 10) / 10).toLocaleString("id-ID", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+type Raw = { value: number | null; explanation: string };
+
+function priceVsPeer(input: ScoreInput, config: ScoreConfig): Raw {
+  if (!input.peer) return { value: null, explanation: `Pembanding belum memadai: uraian dan satuan yang sama belum muncul di ${config.params.peerMinSatker} Satker atau lebih pada siklus ini.` };
+  const { ratio, satkerCount } = input.peer;
+  return { value: clamp((ratio - 1) * 100), explanation: `${decimal(ratio)}× median ${satkerCount} Satker untuk uraian dan satuan yang sama.` };
+}
+
+function riskyAccount(input: ScoreInput, config: ScoreConfig): Raw {
+  const fixed = config.params.riskyAccounts[input.item.accountCode];
+  return fixed === undefined
+    ? { value: 0, explanation: `Akun ${input.item.accountCode} tidak ada di daftar akun rawan.` }
+    : { value: clamp(fixed), explanation: `Akun ${input.item.accountCode} termasuk akun rawan (skor tetap ${Math.round(fixed)}).` };
+}
+
+function satkerHistory(input: ScoreInput): Raw {
+  if (!input.finding.hasProfile) return { value: null, explanation: "Satker ini belum punya profil temuan BPK." };
+  const { total, open } = input.finding;
+  // Setiap rekomendasi dihitung 1 poin; yang belum selesai (BS/BT) dihitung 2 poin; dibatasi 100.
+  return { value: clamp(total + open), explanation: `${total} rekomendasi BPK bertema penganggaran, ${open} belum selesai (belum selesai dihitung dua kali, maks. 100).` };
+}
+
+function descriptionQuality(input: ScoreInput, config: ScoreConfig): Raw {
+  const { description, unit, quantity, totalAmount, hasVolumeDetail } = input.item;
+  const reasons: string[] = [];
+  if (description.trim().split(/\s+/).filter(Boolean).length < 3) reasons.push("uraian kurang dari 3 kata");
+  if (unit && PACKAGE_UNITS.has(unit.trim().toLowerCase()) && quantity <= 1 && totalAmount >= config.params.packageThreshold) reasons.push(`satuan ${unit.trim()} dengan volume ≤ 1 dan total ${rupiah(totalAmount)} (≥ ${rupiah(config.params.packageThreshold)})`);
+  if (!hasVolumeDetail) reasons.push("VOL_KEG_1 tidak terisi");
+  // 50 poin per kondisi yang terpenuhi, maks. 100.
+  return { value: clamp(reasons.length * 50), explanation: reasons.length ? `Perlu dirinci: ${reasons.join("; ")}.` : "Uraian dan rincian volume memadai." };
+}
+
+function changeFromPrevious(input: ScoreInput): Raw {
+  const { firstSnapshot, changeType, previousTotal } = input.change;
+  if (firstSnapshot) return { value: null, explanation: "Snapshot pertama: belum ada versi sebelumnya untuk dibandingkan." };
+  if (changeType === "baru") return { value: 60, explanation: "Item baru di snapshot ini; tidak ada padanan di versi sebelumnya." };
+  if (changeType === "tetap") return { value: 0, explanation: "Item tidak berubah dari versi sebelumnya." };
+  if (previousTotal !== null && previousTotal > 0 && input.item.totalAmount > previousTotal * 1.2) {
+    return { value: 80, explanation: `Total naik ${Math.round((input.item.totalAmount / previousTotal - 1) * 100)}% dari versi sebelumnya (${rupiah(previousTotal)} menjadi ${rupiah(input.item.totalAmount)}).` };
+  }
+  return { value: 30, explanation: "Item berubah dari versi sebelumnya, total tidak naik lebih dari 20%." };
+}
+
+export function scoreItem(input: ScoreInput, config: ScoreConfig): ScoreResult {
+  const raw: Record<FactorCode, Raw> = {
+    price_vs_peer: priceVsPeer(input, config),
+    risky_account: riskyAccount(input, config),
+    satker_history: satkerHistory(input),
+    description_quality: descriptionQuality(input, config),
+    change_from_previous: changeFromPrevious(input)
+  };
+  const factors: StoredFactor[] = FACTOR_CODES.map((code) => {
+    const { value, explanation } = raw[code];
+    const weight = config.weights[code];
+    const normalizedScore = value === null ? null : Math.round(value);
+    return { code, label: FACTOR_META[code].label, normalizedScore, weight, contribution: normalizedScore === null ? null : round2(normalizedScore * weight / 100), explanation, dataAvailable: value !== null };
+  });
+  const available = factors.filter((factor) => factor.dataAvailable);
+  const activeWeight = available.reduce((sum, factor) => sum + factor.weight, 0);
+  const score = activeWeight === 0 ? 0 : Math.round(available.reduce((sum, factor) => sum + (factor.normalizedScore ?? 0) * factor.weight, 0) / activeWeight);
+  return { score, category: categorize(score, config.thresholds), factors, dataCompleteness: available.length === factors.length ? "sufficient" : "partial", activeWeight };
+}
+
+export function categorize(score: number, thresholds: { medium: number; high: number }): RiskCategory {
+  return score >= thresholds.high ? "high" : score >= thresholds.medium ? "medium" : "low";
+}
+
+/** Pemeriksaan bobot (jumlah 100) dan ambang; dipakai juga oleh endpoint admin. null = valid. */
+export function validateRiskConfig(config: Pick<ScoreConfig, "weights" | "thresholds">): string | null {
+  const weights = FACTOR_CODES.map((code) => config.weights[code]);
+  if (weights.some((weight) => !Number.isFinite(weight) || weight < 0)) return "Bobot faktor tidak boleh negatif.";
+  if (weights.reduce((sum, weight) => sum + weight, 0) !== 100) return "Jumlah bobot faktor harus 100%.";
+  const { medium, high } = config.thresholds;
+  if (!Number.isInteger(medium) || !Number.isInteger(high) || medium < 0 || high > 100 || medium >= high) return "Ambang risiko harus berurutan pada rentang 0 sampai 100.";
+  return null;
 }

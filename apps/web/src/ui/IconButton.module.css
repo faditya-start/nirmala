@@ -1,0 +1,33 @@
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--ink-muted);
+  transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+
+.iconButton:hover:not(:disabled) {
+  background: var(--surface-sunken);
+  color: var(--ink);
+}
+
+.iconButton:active:not(:disabled) {
+  background: var(--border);
+}
+
+.iconButton[aria-pressed="true"] {
+  background: var(--surface-sunken);
+  color: var(--ink);
+}
+
+.iconButton:disabled {
+  color: var(--ink-faint);
+  opacity: 0.6;
+  cursor: not-allowed;
+}

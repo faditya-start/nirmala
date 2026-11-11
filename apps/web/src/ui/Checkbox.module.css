@@ -1,0 +1,67 @@
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 24px;
+  cursor: pointer;
+  font-size: var(--fs-base);
+  color: var(--ink);
+}
+
+.disabled {
+  cursor: not-allowed;
+  color: var(--ink-faint);
+}
+
+.input {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+.box {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: transparent;
+  transition: background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+
+.checkbox:hover .box {
+  border-color: var(--ink);
+}
+
+.input:checked + .box,
+.input:indeterminate + .box {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
+}
+
+.input:focus-visible + .box {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.input:disabled + .box {
+  background: var(--surface-sunken);
+  border-color: var(--border);
+}
+
+.input:disabled:checked + .box {
+  color: var(--ink-faint);
+}
+
+.label {
+  line-height: 1.3;
+}

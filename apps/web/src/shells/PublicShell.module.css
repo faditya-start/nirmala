@@ -1,0 +1,131 @@
+.shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+/* Side gutter: 16 px on phones (390 frame), 32 px from tablet up. The 1120 px column plus 2 gutters is the max
+   width, so at 1440 px the content edge is 160 px from the viewport edge, as designed. */
+.shell {
+  --gutter: var(--sp-4);
+}
+
+@media (min-width: 640px) {
+  .shell {
+    --gutter: var(--sp-6);
+  }
+}
+
+.header {
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+/* Content column is 1120 px wide: at 1440 px that is 160 px gutters, as designed (aszmF, rekTU).
+   The 16 px padding is the minimum gutter at narrow widths (390 px frame) and sits outside the 1120 px. */
+.headerInner,
+.container,
+.footerInner {
+  width: 100%;
+  max-width: calc(1120px + 2 * var(--gutter));
+  margin: 0 auto;
+}
+
+.headerInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-5);
+  min-height: 63px;
+  padding: 0 var(--gutter);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-right: auto;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.brandName {
+  font-size: var(--fs-md);
+  font-weight: 700;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+}
+
+.navLink {
+  padding: 4px 0;
+  color: var(--ink-muted);
+  font-size: var(--fs-md);
+  text-decoration: none;
+}
+
+.navLink:hover {
+  color: var(--ink);
+}
+
+.navLink[aria-current="page"] {
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 8px;
+}
+
+.main {
+  flex: 1;
+}
+
+.main:focus {
+  outline: none;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 64px;
+  padding: 72px var(--gutter) 56px;
+}
+
+.footer {
+  border-top: 1px solid var(--border);
+}
+
+.footerInner {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding: var(--sp-5) var(--gutter);
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+}
+
+@media (max-width: 639px) {
+  .nav {
+    display: none;
+  }
+
+  .headerInner {
+    min-height: 55px;
+  }
+
+  .container {
+    gap: var(--sp-6);
+    padding-top: var(--sp-6);
+    padding-bottom: var(--sp-6);
+  }
+
+  .footerInner {
+    flex-direction: column;
+    gap: 6px;
+    padding: 20px var(--gutter);
+  }
+}

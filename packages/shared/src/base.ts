@@ -62,7 +62,9 @@ export const evidenceSchema = z.object({
   fields: z.array(z.object({
     field: z.enum(evidenceFieldNames),
     before: z.union([z.string(), z.number(), z.null()]),
-    after: z.union([z.string(), z.number(), z.null()])
+    after: z.union([z.string(), z.number(), z.null()]),
+    /** Nilai yang diharapkan ekspektasi untuk field ini (akun tujuan, batas harga, ...); dihilangkan bila tidak berlaku. */
+    expected: z.union([z.string(), z.number(), z.null()]).optional()
   })),
   note: z.string().optional()
 });

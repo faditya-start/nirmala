@@ -1,0 +1,11 @@
+# Contoh timer cadangan: tiap hari 02:30. Aktifkan: systemctl enable --now nirmala-backup.timer
+[Unit]
+Description=Cadangan harian database NIRMALA
+
+[Timer]
+OnCalendar=*-*-* 02:30:00
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

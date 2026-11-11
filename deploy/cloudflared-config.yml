@@ -1,0 +1,12 @@
+# Contoh konfigurasi Cloudflare Tunnel (TIDAK dijalankan oleh repo). Salin ke /etc/cloudflared/config.yml.
+# Buat tunnel: cloudflared tunnel login && cloudflared tunnel create nirmala
+#              cloudflared tunnel route dns nirmala nirmala.contoh.go.id
+# Jalankan sebagai layanan: cloudflared service install
+tunnel: GANTI-DENGAN-UUID-TUNNEL
+credentials-file: /etc/cloudflared/GANTI-DENGAN-UUID-TUNNEL.json
+
+ingress:
+  # API dan web dilayani satu proses di 127.0.0.1 (API_HOST default di produksi).
+  - hostname: nirmala.contoh.go.id
+    service: http://127.0.0.1:8787
+  - service: http_status:404

@@ -3,6 +3,10 @@
  *
  *   npm run import:private -w @nirmala/api -- [<folder-csv-revisi>] [--awal-sql <d_dipa_awal.sql>] [--ptl <rekap.xlsx>]
  *                                             [--cycle <tahun>:<pagu|alokasi>] [--db <path>] [--keep-work]
+ *                                             [--production --actor <username-admin>]
+ *
+ * `--production`: database produksi tanpa seed demo (siapkan dulu dengan `bootstrap:production` dan `create-admin`); impor dan siklus
+ * dicatat atas nama `--actor` (admin yang sudah ada). Tanpa flag ini skrip memakai seed demo dan akun `usr_admin` seperti sebelumnya.
  *
  * Urutan kerja (hanya sumber yang diberikan yang dijalankan):
  *  1. `--awal-sql`  : dump MySQL `d_dipa_awal` diubah menjadi satu CSV per eselon I lalu diimpor sebagai
@@ -24,20 +28,21 @@
 import "dotenv/config";
 import { readdir, rm } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { createDatabase, type Database } from "../src/db/client.js";
 import { migrate } from "../src/db/migrate.js";
 import { seedMasterData } from "../src/db/seed.js";
-import { organizationUnits, satkerFindingStats } from "../src/db/schema.js";
+import { organizationUnits, satkerFindingStats, users } from "../src/db/schema.js";
 import { readSnapshotRows } from "../src/ingest/csvParser.js";
 import { ingestSnapshot } from "../src/ingest/ingestService.js";
+import { importHooks } from "../src/services/importHooks.js";
 import { readPtlFindings } from "../src/ingest/ptlProfile.js";
 import { convertDipaDump } from "../src/ingest/sqlDump.js";
 import { newId } from "../src/lib/security.js";
 import { createCycle, findCycleByYearStage } from "../src/repositories/cycles.js";
 
 const args = process.argv.slice(2);
-const VALUE_FLAGS = ["--awal-sql", "--ptl", "--cycle", "--db"];
+const VALUE_FLAGS = ["--awal-sql", "--ptl", "--cycle", "--db", "--actor"];
 const option = (name: string) => { const index = args.indexOf(name); return index >= 0 ? args[index + 1] : undefined; };
 const folder = args.find((arg, index) => !arg.startsWith("--") && !VALUE_FLAGS.includes(args[index - 1] ?? ""));
 const awalSql = option("--awal-sql");
@@ -55,11 +60,19 @@ const fiscalYear = Number(yearText);
 const dbPath = option("--db") ?? process.env.DATABASE_PATH ?? "./nirmala.sqlite";
 const database = createDatabase(dbPath);
 migrate(database);
-await seedMasterData(database);
+const production = args.includes("--production");
+await seedMasterData(database, { demo: !production });
 console.log(`Database: ${resolve(dbPath)}`);
+let actorId = "usr_admin";
+if (production) {
+  const username = option("--actor");
+  const [actor] = username ? await database.db.select({ id: users.id }).from(users).where(and(eq(users.username, username), eq(users.role, "admin"))).limit(1) : [];
+  if (!actor) { console.error("Mode --production butuh --actor <username admin yang sudah ada> (buat dengan create-admin)."); process.exit(1); }
+  actorId = actor.id;
+}
 
 const cycleId = (await findCycleByYearStage(database.db, fiscalYear, stage))?.id
-  ?? await createCycle(database.db, { fiscalYear, stage, name: `TA ${fiscalYear} · ${stage === "pagu" ? "Pagu" : "Alokasi"}`, adkDeadline: null, dipaIssuedAt: null, createdBy: "usr_admin" });
+  ?? await createCycle(database.db, { fiscalYear, stage, name: `TA ${fiscalYear} · ${stage === "pagu" ? "Pagu" : "Alokasi"}`, adkDeadline: null, dipaIssuedAt: null, createdBy: actorId });
 
 async function importCsvFolder(directory: string) {
   const files = (await readdir(resolve(directory))).filter((name) => name.toLowerCase().endsWith(".csv")).sort();
@@ -72,7 +85,7 @@ async function importCsvFolder(directory: string) {
     if (!existing) await database.db.insert(organizationUnits).values({ id: newId("org"), code, shortName: `E${code}`, name: `Eselon I ${code}`, createdAt: Date.now() });
 
     const started = Date.now();
-    const result = await ingestSnapshot(database, { cycleId, filePath, fileName: name, importedBy: "usr_admin", allowedOrganizationUnitIds: null });
+    const result = await ingestSnapshot(database, { cycleId, filePath, fileName: name, importedBy: actorId, allowedOrganizationUnitIds: null }, importHooks());
     const seconds = ((Date.now() - started) / 1000).toFixed(1);
     const { snapshot } = result;
     console.log(`${name}: eselon I ${code} · ${result.alreadyImported ? "sudah pernah diimpor" : "diimpor"} · v${snapshot.versionNo} ${snapshot.label} · ${snapshot.rowCount} item · ${snapshot.headerRowsSkipped} baris judul disaring · ${seconds} dtk${snapshot.diffSummary ? ` · diff ${JSON.stringify(snapshot.diffSummary)}` : ""}`);

@@ -1,0 +1,1 @@
+ALTER TABLE `rule_hits` ADD `matched_terms` text;

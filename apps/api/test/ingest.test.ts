@@ -138,20 +138,101 @@ test("item di revisi yang baru ditandai baru dan blokir tersimpan", async () => 
   env.close();
 });
 
-test("impor yang gagal di tengah berkas di-rollback seluruhnya", async () => {
-  const env = await context();
-  const lines = (await readFile(fixturePath("awal/es1_90001_2026.csv"), "utf8")).trim().split("\n");
+/** Salinan fixture dengan baris item terakhir diubah oleh `mutate` (nama kolom -> nilai baru). */
+async function fixtureWithLastRowChanged(name: string, mutate: Record<string, string>) {
+  const lines = (await readFile(fixturePath(name), "utf8")).trim().split("\n");
   const columns = lines[0].split(",");
-  const kdsatker = columns.indexOf("KDSATKER");
-  const bad = lines[lines.length - 1].split(",");
-  bad[kdsatker] = "bukan-angka";
-  const dir = await mkdtemp(join(tmpdir(), "bad-"));
-  const path = join(dir, "bad.csv");
-  await writeFile(path, [...lines, bad.join(",")].join("\n"));
-  await assert.rejects(() => env.importFile("x", { filePath: path }), (error: unknown) => error instanceof IngestError && /KDSATKER/.test(error.message) && error.status === 400);
+  const last = lines[lines.length - 1].split(",");
+  for (const [column, value] of Object.entries(mutate)) last[columns.indexOf(column)] = value;
+  const dir = await mkdtemp(join(tmpdir(), "mut-"));
+  const path = join(dir, "mut.csv");
+  await writeFile(path, [...lines.slice(0, -1), last.join(",")].join("\n"));
+  return { path, line: lines.length, original: lines[lines.length - 1].split(",") };
+}
+
+test("impor yang gagal di tengah berkas (eselon I berbeda) di-rollback seluruhnya", async () => {
+  const env = await context();
+  const { path } = await fixtureWithLastRowChanged("awal/es1_90001_2026.csv", { BAES1: "90002" });
+  await assert.rejects(() => env.importFile("x", { filePath: path }), (error: unknown) => error instanceof IngestError && /lebih dari satu eselon I/.test(error.message) && error.status === 400);
   assert.equal((await env.database.db.select().from(rkaDocuments)).length, 0);
   assert.equal((await env.database.db.select().from(rkaItems)).length, 0);
   assert.equal((await env.database.db.select().from(workUnits)).length, 0);
+  env.close();
+});
+
+test("D2: baris tidak valid dilewati dan dicatat, bukan membatalkan impor", async () => {
+  const env = await context();
+  const lines = (await readFile(fixturePath("awal/es1_90001_2026.csv"), "utf8")).trim().split("\n");
+  const columns = lines[0].split(",");
+  const detailRows = lines.map((text, index) => ({ text, index })).filter(({ text, index }) => index > 0 && text.split(",")[columns.indexOf("HEADER1")] === "0" && text.split(",")[columns.indexOf("HEADER2")] === "0");
+  const mutate = (index: number, column: string, value: string) => {
+    const cells = lines[index].split(",");
+    cells[columns.indexOf(column)] = value;
+    lines[index] = cells.join(",");
+  };
+  mutate(detailRows[0].index, "HARGASAT", "abc");
+  mutate(detailRows[1].index, "KDSATKER", "");
+  mutate(detailRows[2].index, "TOTAL", "-5");
+  const dir = await mkdtemp(join(tmpdir(), "rowerr-"));
+  const path = join(dir, "e.csv");
+  await writeFile(path, lines.join("\n"));
+
+  const { snapshot } = await env.importFile("e.csv", { filePath: path });
+  assert.equal(snapshot.rowErrorCount, 3);
+  assert.equal(snapshot.rowCount, 87 - 3);
+  const [document] = await env.database.db.select().from(rkaDocuments);
+  assert.equal(document.rowErrorCount, 3);
+  assert.deepEqual(document.rowErrors?.map((error) => [error.line, error.column, error.value, error.reason]), [
+    [detailRows[0].index + 1, "HARGASAT", "abc", "bukan_angka"],
+    [detailRows[1].index + 1, "KDSATKER", null, "format_tidak_valid"],
+    [detailRows[2].index + 1, "TOTAL", "-5", "bernilai_negatif"]
+  ]);
+  assert.ok(document.importDurationMs !== null && document.importDurationMs >= 0);
+  assert.equal((await env.database.db.select().from(rkaItems)).length, 84);
+  env.close();
+});
+
+test("D2: jumlah galat dihitung penuh walau yang disimpan dibatasi; berkas tanpa baris valid ditolak dan di-rollback", async () => {
+  const env = await context();
+  const header = (await readFile(fixturePath("awal/es1_90001_2026.csv"), "utf8")).split("\n")[0];
+  const columns = header.split(",");
+  const row = (n: number, kdsatker: string) => {
+    const cells = columns.map(() => "");
+    cells[columns.indexOf("TAHUN")] = "2026"; cells[columns.indexOf("BAES1")] = "90001"; cells[columns.indexOf("KDSATKER")] = kdsatker;
+    cells[columns.indexOf("HEADER1")] = "0"; cells[columns.indexOf("HEADER2")] = "0"; cells[columns.indexOf("URAIAN_ITEM")] = `Item ${n}`;
+    cells[columns.indexOf("VOLKEG")] = "1"; cells[columns.indexOf("HARGASAT")] = "100"; cells[columns.indexOf("TOTAL")] = "100";
+    return cells.join(",");
+  };
+  const dir = await mkdtemp(join(tmpdir(), "allbad-"));
+  const allBad = join(dir, "bad.csv");
+  await writeFile(allBad, [header, ...Array.from({ length: 1005 }, (_, n) => row(n, "12"))].join("\n"));
+  await assert.rejects(() => env.importFile("x", { filePath: allBad }), (error: unknown) => error instanceof IngestError && /Tidak ada baris item yang valid/.test(error.message) && error.status === 400);
+  assert.equal((await env.database.db.select().from(rkaDocuments)).length, 0);
+
+  const mixed = join(dir, "mixed.csv");
+  await writeFile(mixed, [header, row(0, "900101"), ...Array.from({ length: 1004 }, (_, n) => row(n + 1, "12"))].join("\n"));
+  const { snapshot } = await env.importFile("mixed.csv", { filePath: mixed });
+  assert.equal(snapshot.rowCount, 1);
+  assert.equal(snapshot.rowErrorCount, 1004);
+  assert.equal((await env.database.db.select().from(rkaDocuments))[0].rowErrors?.length, 1000);
+  env.close();
+});
+
+test("D4: nama hierarki dari baris judul tersimpan; tanpa baris judul = null", async () => {
+  const env = await context();
+  const lines = (await readFile(fixturePath("awal/es1_90001_2026.csv"), "utf8")).trim().split("\n");
+  const columns = lines[0].split(",");
+  const first = lines.find((text, index) => index > 0 && text.split(",")[columns.indexOf("HEADER1")] === "1")!.split(",");
+  // Baris judul tingkat program: hanya KODE_PROGRAM terisi.
+  const programHeader = columns.map((column, index) => (["TAHUN", "BAES1", "KDSATKER", "KODE_PROGRAM"].includes(column) ? first[index] : column === "HEADER1" ? "1" : column === "URAIAN_ITEM" ? "DUKUNGAN MANAJEMEN" : column === "HEADER2" ? "0" : "")).join(",");
+  const dir = await mkdtemp(join(tmpdir(), "hier-"));
+  const path = join(dir, "h.csv");
+  await writeFile(path, [lines[0], programHeader, ...lines.slice(1)].join("\n"));
+  const { snapshot } = await env.importFile("h.csv", { filePath: path });
+  const items = await env.database.db.select({ names: rkaItems.hierarchyNames, work: rkaItems.workUnitId }).from(rkaItems).where(eq(rkaItems.documentId, snapshot.id));
+  const byName = items.filter((item) => item.names?.program === "DUKUNGAN MANAJEMEN");
+  assert.ok(byName.length > 0 && byName.length < items.length, "hanya Satker yang punya baris judul program yang terisi");
+  assert.ok(items.some((item) => item.names === null));
   env.close();
 });
 

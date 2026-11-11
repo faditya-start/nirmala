@@ -1,0 +1,38 @@
+.track {
+  width: 100%;
+  height: 4px;
+  background: var(--surface-sunken);
+}
+
+.fill {
+  height: 100%;
+  background: var(--ink);
+}
+
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding-top: 12px;
+  border-top: 2px solid var(--ink);
+}
+
+.label {
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--ink-muted);
+}
+
+.value {
+  overflow-wrap: anywhere;
+  font-size: 30px;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--ink);
+}
+
+.hint {
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+}

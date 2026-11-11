@@ -1,0 +1,159 @@
+.ruleCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.flagRule {
+  height: 3px;
+  background: var(--st-flag-fg);
+}
+
+.ruleBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+}
+
+.ruleHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ruleName {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+
+.reason {
+  font-size: var(--fs-base);
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--border);
+}
+
+.detailRow {
+  display: flex;
+  gap: var(--sp-3);
+  font-size: var(--fs-xs);
+  line-height: 1.4;
+}
+
+.detailRow dt {
+  flex: none;
+  width: 120px;
+  font-weight: 500;
+  color: var(--ink-muted);
+}
+
+.detailRow dd {
+  margin: 0;
+  min-width: 0;
+  color: var(--ink);
+}
+
+/* Faktor */
+.factor {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 0;
+}
+
+.factorTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.factorCode {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
+.factorName {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-base);
+  font-weight: 500;
+}
+
+.factorNumber {
+  font-size: var(--fs-base);
+  color: var(--ink-muted);
+}
+
+.factorResult {
+  width: 56px;
+  font-size: var(--fs-base);
+  font-weight: 600;
+  text-align: right;
+}
+
+.bar {
+  height: 4px;
+  background: var(--surface-sunken);
+}
+
+.barFill {
+  height: 100%;
+  background: var(--ink-muted);
+}
+
+.factorExplanation {
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+}
+
+.factorNa .factorCode {
+  color: var(--ink-faint);
+}
+
+.factorNa .factorName {
+  color: var(--ink-muted);
+}
+
+.na {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border: 1px solid var(--st-draf-line);
+  border-radius: var(--r-md);
+  background: var(--st-draf-bg);
+  color: var(--st-draf-fg);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+}
+
+/* Rincian */
+.breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.breakdownHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--sp-2);
+}
+
+.breakdownTitle {
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--ink-muted);
+}

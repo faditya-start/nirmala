@@ -1,0 +1,127 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: var(--button-h);
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--fs-base);
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+
+.sm {
+  height: var(--button-h-sm);
+  padding: 0 10px;
+}
+
+.icon {
+  flex: none;
+}
+
+.label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.button {
+  max-width: 100%;
+}
+
+.utama {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
+}
+
+.utama:hover:not(:disabled) {
+  background: var(--ink-muted);
+  border-color: var(--ink-muted);
+}
+
+/* Press: one step darker than hover, no movement. */
+.utama:active:not(:disabled) {
+  background: var(--ink);
+  border-color: var(--ink);
+}
+
+.sekunder {
+  background: var(--surface);
+  border-color: var(--border-strong);
+  color: var(--ink);
+}
+
+.sekunder:hover:not(:disabled) {
+  background: var(--surface-sunken);
+}
+
+.sekunder:active:not(:disabled),
+.ghost:active:not(:disabled) {
+  background: var(--border);
+}
+
+.ghost:hover:not(:disabled) {
+  background: var(--surface-sunken);
+}
+
+.bahaya:active:not(:disabled) {
+  border-color: var(--st-flag-fg);
+  background: var(--st-flag-line);
+}
+
+.bahaya {
+  background: var(--st-flag-bg);
+  border-color: var(--st-flag-line);
+  color: var(--st-flag-fg);
+}
+
+.bahaya:hover:not(:disabled) {
+  border-color: var(--st-flag-fg);
+}
+
+/* Nonaktif: same shape, sunken surface, faint text */
+.button:disabled {
+  background: var(--surface-sunken);
+  border-color: transparent;
+  color: var(--ink-faint);
+  cursor: not-allowed;
+}
+
+.spinner {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: var(--r-pill);
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Reduced motion: a busy button breathes instead of spinning. */
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    border-right-color: currentColor;
+    animation: pulse 1.4s ease-in-out infinite !important;
+  }
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
