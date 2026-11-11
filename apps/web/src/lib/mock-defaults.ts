@@ -16,11 +16,12 @@ import type { Cycle, NeedsActionResponse } from "./types";
 const SESSION_KEY = "nirmala.mock.user";
 
 /** Synthetic eselon I. Features that need more can register their own `/auth/me` or reference these ids. */
-const ORG_UNITS: OrganizationUnitDto[] = [
-  { id: "o-ditjen-a", code: "01", shortName: "Ditjen Contoh A", name: "Direktorat Jenderal Contoh A" },
-  { id: "o-ditjen-b", code: "02", shortName: "Ditjen Contoh B", name: "Direktorat Jenderal Contoh B" },
-  { id: "o-biro-c", code: "03", shortName: "Biro Contoh C", name: "Biro Contoh C" }
+export const MOCK_ORG_UNITS: OrganizationUnitDto[] = [
+  { id: "o-ditjen-a", code: "90001", shortName: "Ditjen Contoh A", name: "Direktorat Jenderal Contoh A" },
+  { id: "o-ditjen-b", code: "90002", shortName: "Ditjen Contoh B", name: "Direktorat Jenderal Contoh B" },
+  { id: "o-biro-c", code: "90003", shortName: "Biro Contoh C", name: "Biro Contoh C" }
 ];
+const ORG_UNITS = MOCK_ORG_UNITS;
 
 const USERS: Record<Role, AuthUser> = {
   reviewer: { id: "u-reviewer", name: "Reviewer 01", role: "reviewer", username: "reviewer", unitLabel: "Itjen", scopeOrganizationUnitIds: ["o-ditjen-a", "o-ditjen-b"] },
@@ -76,25 +77,35 @@ function dayOffset(days: number): number {
 function buildCycles(): Cycle[] {
   const year = new Date().getFullYear();
   return [
-    {
-      id: "c-alokasi",
-      fiscalYear: year,
-      stage: "alokasi",
-      name: `Reviu RKA TA ${year} tahap alokasi`,
-      adkDeadline: dayOffset(3),
-      dipaIssuedAt: null,
-      status: "aktif"
-    },
-    {
-      id: "c-pagu",
-      fiscalYear: year,
-      stage: "pagu",
-      name: `Reviu RKA TA ${year} tahap pagu`,
-      adkDeadline: dayOffset(-60),
-      dipaIssuedAt: dayOffset(-45),
-      status: "selesai"
-    }
+    { id: "c-alokasi", fiscalYear: year, stage: "alokasi", name: `TA ${year} · Alokasi`, adkDeadline: dayOffset(3), dipaIssuedAt: null, status: "aktif" },
+    { id: "c-pagu", fiscalYear: year, stage: "pagu", name: `TA ${year} · Pagu`, adkDeadline: dayOffset(-60), dipaIssuedAt: null, status: "selesai" },
+    { id: `c-${year - 1}`, fiscalYear: year - 1, stage: "alokasi", name: `TA ${year - 1} · Alokasi`, adkDeadline: dayOffset(-365), dipaIssuedAt: dayOffset(-330), status: "selesai" }
   ];
+}
+
+/**
+ * THE cycle list of mock mode. Every feature reads it through `GET /cycles` and the admin mock mutates it in place
+ * (create, edit, delete, mark/retract DIPA), so the cycle picker, S3, S11 and S12d always agree.
+ */
+export const mockCycles: Cycle[] = buildCycles();
+
+/** Eselon I the signed-in mock user may see, like the real `GET /organization-units`. */
+export function visibleMockUnits(): OrganizationUnitDto[] {
+  return visibleUnits(currentUser);
+}
+
+/** Role of the signed-in mock user ("reviewer" until someone signs in). */
+export function currentMockRole(): Role {
+  return currentUser?.role ?? "reviewer";
+}
+
+/**
+ * Jobs of mock mode (`GET /jobs/:jobId` is registered once, here). A feature that starts a job registers a reader that
+ * returns the JobDto for the given time; unknown ids answer 404 like a restarted server.
+ */
+const mockJobReaders = new Map<string, (now: number) => unknown>();
+export function registerMockJob(jobId: string, read: (now: number) => unknown): void {
+  mockJobReaders.set(jobId, read);
 }
 
 export function registerDefaultMocks(): void {
@@ -122,8 +133,24 @@ export function registerDefaultMocks(): void {
 
   registerMock("GET", "/cycles", () => {
     if (!currentUser) throw new ApiError(401, "Sesi berakhir. Silakan masuk kembali.");
-    return { cycles: buildCycles() };
+    return { cycles: mockCycles.map((cycle) => ({ ...cycle })) };
   });
+
+  registerMock("GET", "/organization-units", () => {
+    if (!currentUser) throw new ApiError(401, "Sesi berakhir. Silakan masuk kembali.");
+    return { organizationUnits: visibleMockUnits() };
+  });
+
+  registerMock(
+    "GET",
+    "/jobs/:jobId",
+    ({ params }) => {
+      const read = mockJobReaders.get(params.jobId);
+      if (!read) throw new ApiError(404, "Proses tidak ditemukan atau sudah kedaluwarsa.");
+      return read(Date.now());
+    },
+    { delay: [40, 120] }
+  );
 
   registerMock("GET", "/needs-action", (): NeedsActionResponse => {
     if (!currentUser) throw new ApiError(401, "Sesi berakhir. Silakan masuk kembali.");

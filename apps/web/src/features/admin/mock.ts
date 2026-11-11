@@ -27,18 +27,13 @@ import {
   type UserAdminDto
 } from "@nirmala/shared";
 import { ApiError } from "../../lib/api-error";
+import { MOCK_ORG_UNITS, currentMockRole, mockCycles, registerMockJob } from "../../lib/mock-defaults";
 import { registerMock, respond } from "../../lib/mock";
 import { readSession } from "../../lib/storage";
 
 /* ---------------------------------------------------------------- helpers */
 
-function currentRole(): string {
-  try {
-    return (JSON.parse(readSession("nirmala.mock.user") ?? "{}") as { role?: string }).role ?? "reviewer";
-  } catch {
-    return "reviewer";
-  }
-}
+const currentRole = currentMockRole;
 
 function requireAdmin(): void {
   if (currentRole() !== "admin") throw new ApiError(403, "Peran Anda tidak memiliki akses ke sumber daya ini.");
@@ -91,34 +86,19 @@ if (typeof window !== "undefined" && new URLSearchParams(window.location.search)
 
 /* ---------------------------------------------------------------- organization units */
 
-const UNITS: OrganizationUnitDto[] = [
-  { id: "ou-a", code: "90001", shortName: "Ditjen Contoh A", name: "Direktorat Jenderal Contoh A" },
-  { id: "ou-b", code: "90002", shortName: "Ditjen Contoh B", name: "Direktorat Jenderal Contoh B" },
-  { id: "ou-c", code: "90003", shortName: "Ditjen Contoh C", name: "Direktorat Jenderal Contoh C" }
-];
-
-registerMock("GET", "/organization-units", () => {
-  const role = currentRole();
-  return { organizationUnits: role === "reviewer" || role === "uki" ? UNITS.slice(0, 1) : UNITS };
-});
+const UNITS: OrganizationUnitDto[] = MOCK_ORG_UNITS;
 
 /* ---------------------------------------------------------------- cycles */
 
-const cycles: ReviewCycleDto[] = [
-  { id: "c-alokasi", fiscalYear: 2026, stage: "alokasi", name: "TA 2026 · Alokasi", adkDeadline: at(2026, 11, 12), dipaIssuedAt: null, status: "aktif" },
-  { id: "c-pagu", fiscalYear: 2026, stage: "pagu", name: "TA 2026 · Pagu", adkDeadline: at(2026, 6, 11), dipaIssuedAt: null, status: "selesai" },
-  { id: "c-2025", fiscalYear: 2025, stage: "alokasi", name: "TA 2025 · Alokasi", adkDeadline: at(2025, 11, 12), dipaIssuedAt: at(2025, 12, 12), status: "selesai" }
-];
+const cycles = mockCycles;
 const STAGE_NAME = { pagu: "Pagu", alokasi: "Alokasi" } as const;
-const SNAPSHOT_CYCLES = new Set(["c-alokasi", "c-pagu", "c-2025"]);
+const SNAPSHOT_CYCLES = new Set(mockCycles.map((cycle) => cycle.id));
 
 function findCycle(id: string): ReviewCycleDto {
   const cycle = cycles.find((item) => item.id === id);
   if (!cycle) throw new ApiError(404, "Siklus tidak ditemukan.");
   return cycle;
 }
-
-registerMock("GET", "/cycles", () => ({ cycles: cycles.map((cycle) => ({ ...cycle })) }));
 
 registerMock("POST", "/cycles", ({ body }) => {
   requireAdmin();
@@ -293,14 +273,13 @@ registerMock("POST", "/admin/risk-config/recalculate", ({ body }) => {
   }
   const job = { id: nextId("job"), cycleId: parsed.data.cycleId, startedAt: Date.now(), version: configs[configs.length - 1].version };
   jobs.set(job.id, job);
+  registerMockJob(job.id, (now) => jobDto(job, now));
   record("risk_config.recalculated", "risk_config", job.id, `Hitung ulang ${findCycle(job.cycleId).name} dengan bobot versi ${job.version}`);
   return respond(202, { jobId: job.id });
 });
 
-registerMock("GET", "/jobs/:jobId", ({ params }): RecalculateJobDto => {
-  const job = jobs.get(params.jobId);
-  if (!job) throw new ApiError(404, "Proses tidak ditemukan atau sudah kedaluwarsa.");
-  const elapsed = Date.now() - job.startedAt;
+function jobDto(job: { id: string; cycleId: string; startedAt: number; version: string }, now: number): RecalculateJobDto {
+  const elapsed = now - job.startedAt;
   const done = elapsed >= JOB_MS;
   const percent = done ? 100 : Math.floor((elapsed / JOB_MS) * 100);
   const total = 12702;
@@ -313,7 +292,7 @@ registerMock("GET", "/jobs/:jobId", ({ params }): RecalculateJobDto => {
     rowsDone: Math.floor((total * percent) / 100), rowsTotal: total, percent, startedAt: job.startedAt, finishedAt: done ? job.startedAt + JOB_MS : null, error: null,
     result: done ? { cycleId: job.cycleId, riskConfigId: configs[configs.length - 1].id, riskConfigVersion: job.version, itemsAssessed: total, ruleHits: 117, durationMs: JOB_MS } : null
   };
-}, { delay: 80 });
+}
 
 /* ---------------------------------------------------------------- users */
 
@@ -322,10 +301,10 @@ const users: UserAdminDto[] = [];
 function seedUser(id: string, username: string, displayName: string, role: UserAdminDto["role"], unitIds: string[], unitLabel: string | null): void {
   users.push({ id, username, displayName, role, active: true, unitLabel, organizationUnitIds: unitIds, organizationUnits: [], allOrganizations: role === "leader" || role === "admin", createdAt: at(2026, 11, 3, 8, 30) });
 }
-seedUser("u1", "reviewer01", "Reviewer 01", "reviewer", ["ou-a"], "Itjen");
-seedUser("u2", "reviewer02", "Reviewer 02", "reviewer", ["ou-b"], "Itjen");
-seedUser("u3", "uki01", "PIC UKI 01", "uki", ["ou-a"], null);
-seedUser("u4", "uki02", "PIC UKI 02", "uki", ["ou-b"], null);
+seedUser("u1", "reviewer01", "Reviewer 01", "reviewer", ["o-ditjen-a"], "Itjen");
+seedUser("u2", "reviewer02", "Reviewer 02", "reviewer", ["o-ditjen-b"], "Itjen");
+seedUser("u3", "uki01", "PIC UKI 01", "uki", ["o-ditjen-a"], null);
+seedUser("u4", "uki02", "PIC UKI 02", "uki", ["o-ditjen-b"], null);
 seedUser("u5", "pimpinan01", "Pimpinan 01", "leader", [], "Itjen");
 seedUser("u6", "admin01", "Admin 01", "admin", [], "Itjen");
 

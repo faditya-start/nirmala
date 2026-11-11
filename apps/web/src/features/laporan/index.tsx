@@ -42,8 +42,9 @@ function stageLabel(cycle: { fiscalYear: number; stage: string }): string {
   return `TA ${cycle.fiscalYear} ${cycle.stage.charAt(0).toUpperCase()}${cycle.stage.slice(1)}`;
 }
 
-function downloadBlob(name: string, text: string): void {
-  const url = URL.createObjectURL(new Blob([text], { type: "text/csv;charset=utf-8" }));
+function downloadBlob(name: string, content: Blob | string): void {
+  const blob = typeof content === "string" ? new Blob([content], { type: "text/csv;charset=utf-8" }) : content;
+  const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
   link.download = name;
@@ -97,7 +98,8 @@ export function ReportsPage() {
       }
       const disposition = response.headers.get("content-disposition") ?? "";
       const name = /filename="?([^";]+)"?/.exec(disposition)?.[1] ?? `nirmala-catatan-${cycle?.fiscalYear}-${cycle?.stage}.csv`;
-      downloadBlob(name, await response.text());
+      // Blob, not text(): decoding to a string would drop the UTF-8 BOM that Excel needs to read accents.
+      downloadBlob(name, await response.blob());
     } catch (error) {
       setExportError(error instanceof TypeError ? "Tidak dapat terhubung ke server. Periksa koneksi lalu coba lagi." : failureMessage(error));
     } finally {

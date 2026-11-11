@@ -2,31 +2,11 @@
 import type { EngineValidationResponse, OrganizationUnitDto, ReportSummaryResponse } from "@nirmala/shared";
 import { ApiError } from "../../lib/api-error";
 import { registerMock } from "../../lib/mock";
-import { readSession } from "../../lib/storage";
+import { MOCK_ORG_UNITS, currentMockRole, mockCycles, visibleMockUnits } from "../../lib/mock-defaults";
 
-const UNITS: OrganizationUnitDto[] = [
-  { id: "ou-a", code: "90001", shortName: "Ditjen Contoh A", name: "Direktorat Jenderal Contoh A" },
-  { id: "ou-b", code: "90002", shortName: "Ditjen Contoh B", name: "Direktorat Jenderal Contoh B" }
-];
-
-const CYCLES: Record<string, { id: string; fiscalYear: number; stage: "pagu" | "alokasi"; name: string; adkDeadline: number | null; dipaIssuedAt: number | null; status: "aktif" | "selesai" }> = {
-  "c-alokasi": { id: "c-alokasi", fiscalYear: 2026, stage: "alokasi", name: "TA 2026 · Alokasi", adkDeadline: new Date(2026, 10, 12, 12).getTime(), dipaIssuedAt: null, status: "aktif" },
-  "c-pagu": { id: "c-pagu", fiscalYear: 2026, stage: "pagu", name: "TA 2026 · Pagu", adkDeadline: new Date(2026, 5, 11, 12).getTime(), dipaIssuedAt: null, status: "selesai" },
-  "c-2025": { id: "c-2025", fiscalYear: 2025, stage: "alokasi", name: "TA 2025 · Alokasi", adkDeadline: new Date(2025, 10, 12, 12).getTime(), dipaIssuedAt: new Date(2025, 11, 12, 12).getTime(), status: "selesai" }
-};
-
-function role(): string {
-  try {
-    return (JSON.parse(readSession("nirmala.mock.user") ?? "{}") as { role?: string }).role ?? "reviewer";
-  } catch {
-    return "reviewer";
-  }
-}
-
-/** Reviewer and PIC UKI only see Ditjen Contoh A. */
-function visibleUnits(): OrganizationUnitDto[] {
-  return role() === "reviewer" || role() === "uki" ? UNITS.slice(0, 1) : UNITS;
-}
+const [, UNIT_B] = MOCK_ORG_UNITS;
+const visibleUnits = visibleMockUnits;
+const role = currentMockRole;
 
 function resolveScope(query: Record<string, string>): OrganizationUnitDto | null {
   const visible = visibleUnits();
@@ -40,13 +20,11 @@ function resolveScope(query: Record<string, string>): OrganizationUnitDto | null
 
 const DATA_AS_OF = new Date(2026, 10, 9, 16, 41).getTime();
 
-registerMock("GET", "/organization-units", () => ({ organizationUnits: visibleUnits() }));
-
 registerMock("GET", "/reports/summary", ({ query }): ReportSummaryResponse => {
   const unit = resolveScope(query);
-  const cycle = CYCLES[query.cycleId];
+  const cycle = mockCycles.find((item) => item.id === query.cycleId);
   if (!cycle) throw new ApiError(404, "Siklus tidak ditemukan.");
-  const empty = cycle.id !== "c-alokasi" || unit?.id === "ou-b";
+  const empty = cycle.id !== "c-alokasi" || unit?.id === UNIT_B.id;
   if (empty) {
     return {
       cycle, organizationUnit: unit, dataAsOf: cycle.id === "c-alokasi" ? null : DATA_AS_OF, notesIssued: 0, notesClosed: 0, percentClosed: null, medianDaysToClose: null,

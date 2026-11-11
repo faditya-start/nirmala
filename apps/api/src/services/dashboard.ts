@@ -9,8 +9,8 @@ import { latestChecksByNote } from "../repositories/tracker.js";
 import { resolveScoreConfigId, triageSummary } from "../repositories/triage.js";
 import { loadCoverageOrgs } from "./coverage.js";
 import { emptyCategoryCounts, isIssued, issuedAtOf, latestTime, loadNotes, percent, type NoteRecord } from "./noteMetrics.js";
+import { calendarDaysUntil } from "../lib/calendar.js";
 
-const DAY_MS = 86_400_000;
 
 export async function buildDashboard(db: Db, cycle: ReviewCycleDto, role: Role, scope: string[] | null, orgIds: string[] | null): Promise<DashboardResponse> {
   const now = Date.now();
@@ -65,7 +65,7 @@ export async function buildDashboard(db: Db, cycle: ReviewCycleDto, role: Role, 
     kpis: {
       itemsAnalyzed: summary.analyzedItems, itemsFlagged: summary.flaggedItems, satkerReady, satkerWithNotes: byWorkUnit.size,
       satkerTotal: [...satkerCounts.values()].reduce((sum, total) => sum + total, 0),
-      adkDeadline: adk, daysToAdkDeadline: adk === null ? null : Math.floor((adk - now) / DAY_MS)
+      adkDeadline: adk, daysToAdkDeadline: adk === null ? null : calendarDaysUntil(adk, now)
     },
     notesByStatus, notesByCategory,
     chrDocumentNumbers: chrs.filter((chr) => chr.status !== "draft" && chr.documentNumber).sort((a, b) => (a.issuedAt ?? 0) - (b.issuedAt ?? 0)).map((chr) => chr.documentNumber!),

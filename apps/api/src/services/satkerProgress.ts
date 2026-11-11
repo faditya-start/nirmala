@@ -9,8 +9,8 @@ import type { Db } from "../db/client.js";
 import { chrDocuments, chrNotes, organizationUnits, reviewCycles, rkaDocuments, rkaItems, workUnits } from "../db/schema.js";
 import { findChrByCycleOrg } from "../repositories/chr.js";
 import { latestChecksByNote } from "../repositories/tracker.js";
+import { calendarDaysUntil } from "../lib/calendar.js";
 
-const DAY_MS = 86_400_000;
 const zeroCounts = () => Object.fromEntries(TRACKER_STATUSES.map((status) => [status, 0])) as Record<TrackerStatus, number>;
 
 export async function buildSatkerProgress(db: Db, cycleId: string, organizationUnitId: string, sort: SatkerProgressSort): Promise<SatkerProgressResponse> {
@@ -83,7 +83,7 @@ export async function buildSatkerProgress(db: Db, cycleId: string, organizationU
     summary: {
       satkerTotal: items.length, satkerWithNotes: withNotes.length, satkerWithoutNotes: items.length - withNotes.length,
       satkerReady: withNotes.filter((row) => row.readiness === "siap_diajukan").length, openNotes: openNotes.length, openNotesPreview,
-      adkDeadline, daysToAdkDeadline: adkDeadline === null ? null : Math.floor((adkDeadline - Date.now()) / DAY_MS)
+      adkDeadline, daysToAdkDeadline: adkDeadline === null ? null : calendarDaysUntil(adkDeadline)
     },
     items
   };

@@ -1,6 +1,7 @@
 /** Mocks for S3 (VITE_MOCK=1). Stateful: an upload creates a job that advances with time, then a snapshot. */
 import type { SnapshotLookupResponse } from "@nirmala/shared";
 import { ApiError } from "../../lib/api-error";
+import { mockCycles, registerMockJob } from "../../lib/mock-defaults";
 import { registerMock, respond } from "../../lib/mock";
 import { toHex } from "./logic";
 import {
@@ -21,7 +22,7 @@ const scenario = typeof window !== "undefined" ? new URLSearchParams(window.loca
 applyScenario(scenario);
 
 // `?scenario=belum-siklus` shows the "Belum ada siklus" state (replaces the default cycle list).
-if (scenario === "belum-siklus") registerMock("GET", "/cycles", () => ({ cycles: [] }));
+if (scenario === "belum-siklus") mockCycles.length = 0;
 
 async function requireCycle(id: string) {
   const cycle = (await getCycles()).find((c) => c.id === id);
@@ -99,14 +100,9 @@ registerMock(
       snapshotId: null
     };
     store.jobs.set(job.id, job);
+    registerMockJob(job.id, (now) => jobDto(job, now));
     return respond(202, { jobId: job.id });
   },
   { delay: [300, 500] }
 );
-
-registerMock("GET", "/jobs/:jobId", ({ params }) => {
-  const job = store.jobs.get(params.jobId);
-  if (!job) throw new ApiError(404, "Proses tidak ditemukan atau sudah kedaluwarsa.");
-  return jobDto(job, Date.now());
-}, { delay: [40, 120] });
 
