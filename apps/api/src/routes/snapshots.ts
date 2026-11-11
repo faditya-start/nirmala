@@ -21,7 +21,7 @@ import { canAccessOrganization } from "../middleware/scope.js";
 import { findCycle } from "../repositories/cycles.js";
 import { listOrganizationUnits } from "../repositories/organizationUnits.js";
 import { findSnapshot, findSnapshotByHash, listSnapshots, listSnapshotsAscending } from "../repositories/snapshots.js";
-import { detectionHooks } from "../services/detectionPipeline.js";
+import { importHooks } from "../services/importHooks.js";
 import { buildImportResult } from "../services/importResult.js";
 
 const MAX_UPLOAD_BYTES = 500 * 1024 * 1024;
@@ -40,7 +40,7 @@ function importProgress(handle: JobHandle) {
   };
 }
 
-export function snapshotRoutes(database: Database, jobs: JobRegistry, hooks: IngestHooks = detectionHooks()) {
+export function snapshotRoutes(database: Database, jobs: JobRegistry, hooks: IngestHooks = importHooks()) {
   const { db } = database;
   const routes = new Hono<AppEnv>();
 

@@ -315,7 +315,12 @@ export const followUpChecks = sqliteTable("follow_up_checks", {
   reviewerNote: text("reviewer_note"),
   reviewedBy: text("reviewed_by").references(() => users.id),
   reviewedAt: ms("reviewed_at")
-}, (table) => [index("follow_up_checks_note_idx").on(table.noteId)]);
+}, (table) => [
+  index("follow_up_checks_note_idx").on(table.noteId),
+  /** Satu cek per (catatan, snapshot): impor ulang tidak menggandakan cek. */
+  uniqueIndex("follow_up_checks_note_document_idx").on(table.noteId, table.documentId),
+  index("follow_up_checks_document_idx").on(table.documentId)
+]);
 
 // ---------------------------------------------------------------- Lain-lain
 

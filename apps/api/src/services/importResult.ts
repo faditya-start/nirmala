@@ -1,7 +1,7 @@
-import { count, eq } from "drizzle-orm";
+import { and, count, eq, inArray } from "drizzle-orm";
 import type { ImportRecheckedNote, ImportResultDto, ImportRuleHitCount, SnapshotDto } from "@nirmala/shared";
 import type { Db } from "../db/client.js";
-import { chrNotes, followUpChecks, rkaItems, ruleHits, rules, workUnits } from "../db/schema.js";
+import { auditLogs, chrNotes, followUpChecks, rkaItems, ruleHits, rules, workUnits } from "../db/schema.js";
 import { findSnapshotRowErrors } from "../repositories/snapshots.js";
 
 /** Hasil impor satu snapshot, seluruhnya diturunkan dari data tersimpan (docs/api-contract.md §3.2). */
@@ -23,6 +23,14 @@ export async function buildImportResult(db: Db, snapshot: SnapshotDto): Promise<
     expectation: check.expectation, result: check.result, evidence: check.evidence
   }));
 
+  // Catatan yang benar-benar berpindah menunggu_revisi -> perlu_verifikasi oleh cek snapshot ini (dari audit `note.checked`, A47).
+  const checkedIds = checks.map((check) => check.noteId);
+  const audits = checkedIds.length
+    ? await db.select({ before: auditLogs.before, after: auditLogs.after }).from(auditLogs).where(and(eq(auditLogs.action, "note.checked"), inArray(auditLogs.entityId, checkedIds)))
+    : [];
+  const notesMovedToVerification = audits.filter((audit) =>
+    (audit.after as { documentId?: string } | null)?.documentId === snapshot.id && (audit.before as { status?: string } | null)?.status === "menunggu_revisi").length;
+
   const diff = snapshot.diffSummary;
   return {
     snapshot,
@@ -35,7 +43,6 @@ export async function buildImportResult(db: Db, snapshot: SnapshotDto): Promise<
     itemsAssessed: diff ? diff.baru + diff.berubah : snapshot.rowCount,
     ruleHits: ruleHitCounts,
     recheckedNotes,
-    // Catatan yang kini berstatus perlu_verifikasi dan dicek oleh snapshot ini.
-    notesMovedToVerification: checks.filter((check) => check.status === "perlu_verifikasi").length
+    notesMovedToVerification
   };
 }

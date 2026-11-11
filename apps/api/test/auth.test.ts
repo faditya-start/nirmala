@@ -53,8 +53,8 @@ test("endpoint admin: 401 tanpa login, 403 untuk non-admin, 200 untuk admin", as
 test("endpoint prototipe yang belum diporting mengembalikan 501 dengan pesan jelas", async () => {
   const { login, get, close } = await setup();
   const { cookie } = await login(...DEMO.reviewer);
-  const response = await get("/api/tracker", cookie);
+  const response = await get("/api/dashboard", cookie);
   assert.equal(response.status, 501);
-  assert.match(((await response.json()) as { error: string }).error, /Fase 5/);
+  assert.match(((await response.json()) as { error: string }).error, /Fase 6/);
   close();
 });

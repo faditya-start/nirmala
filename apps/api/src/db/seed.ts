@@ -7,7 +7,8 @@ import { createCycle, findCycleByYearStage } from "../repositories/cycles.js";
 import { eq } from "drizzle-orm";
 import { accounts, dismissReasons, organizationUnits, riskAssessments, riskConfig, rkaItems, rules, satkerFindingStats, userScopes, users } from "./schema.js";
 import type { Db } from "./client.js";
-import { detectionHooks, runDetection } from "../services/detectionPipeline.js";
+import { runDetection } from "../services/detectionPipeline.js";
+import { importHooks } from "../services/importHooks.js";
 import { hashPassword } from "../lib/security.js";
 import { ACCOUNT_SEEDS, DEFAULT_RISK_PARAMS, DEFAULT_THRESHOLDS, DEFAULT_WEIGHTS, DEMO_USER_SEEDS, DISMISS_REASON_SEEDS, FINDING_STAT_SEEDS, ORGANIZATION_UNIT_SEEDS } from "./seeds/reference.js";
 import { RULE_SEEDS } from "./seeds/rules.js";
@@ -62,7 +63,7 @@ export async function seedSyntheticSnapshots(database: Database) {
   const imported: string[] = [];
   for (const code of Object.keys(manifest.expectedDiff)) {
     const name = `awal/es1_${code}_${manifest.fiscalYear}.csv`;
-    const result = await ingestSnapshot(database, { cycleId, filePath: join(fixtureDir, name), fileName: name.split("/")[1], importedBy: "usr_admin", allowedOrganizationUnitIds: null, satkerNames }, detectionHooks());
+    const result = await ingestSnapshot(database, { cycleId, filePath: join(fixtureDir, name), fileName: name.split("/")[1], importedBy: "usr_admin", allowedOrganizationUnitIds: null, satkerNames }, importHooks());
     if (!result.alreadyImported) imported.push(code);
     else if (!(await hasAssessments(db, result.snapshot.id))) await database.transaction(() => runDetection(db, result.snapshot.id, { mode: "recalculate" })); // snapshot dari seed Fase 2
   }

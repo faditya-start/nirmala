@@ -64,6 +64,13 @@
       "when": 1794361043506,
       "tag": "0008_chr_response_issuer_number",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1794361768510,
+      "tag": "0009_follow_up_checks_unique",
+      "breakpoints": true
     }
   ]
 }
