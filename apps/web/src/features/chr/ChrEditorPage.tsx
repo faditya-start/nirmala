@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import type { AddendumBody, ChrDetailResponse, ChrNoteDto, CreateNoteBody, UpdateNoteBody } from "@nirmala/shared";
 import { usePageBreadcrumb } from "../../app/breadcrumb";
+import { useNeedsAction } from "../../app/needsAction";
 import { errorMessage, isApiError } from "../../lib/api-error";
 import { formatDateTime, formatNumber } from "../../lib/format";
 import { Button, ButtonLink, ConfirmDialog, EmptyState, Loading } from "../../ui";
@@ -43,6 +44,7 @@ function ChrEditor({ detail, reload }: { detail: ChrDetailResponse; reload: () =
   const [notice, setNotice] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const needsAction = useNeedsAction();
 
   usePageBreadcrumb([{ label: "Reviu" }, { label: "CHR", to: "/chr" }, { label: doc.organizationUnitName }]);
 
@@ -75,6 +77,7 @@ function ChrEditor({ detail, reload }: { detail: ChrDetailResponse; reload: () =
       throw error;
     }
     await reload();
+    void needsAction.refresh(); // draft CHR, unreviewed items and "menunggu revisi" counts in the header and sidebar
     setNotice(done);
     close();
   }
@@ -105,6 +108,7 @@ function ChrEditor({ detail, reload }: { detail: ChrDetailResponse; reload: () =
     try {
       const result = await chrApi.issue(doc.id);
       await reload();
+      void needsAction.refresh();
       setNotice(`CHR terbit dengan nomor ${result.document.documentNumber ?? ""}. ${formatNumber(result.notesTransitioned)} catatan berstatus Menunggu Revisi.`);
       close();
     } catch (error) {
@@ -242,7 +246,10 @@ function ChrEditor({ detail, reload }: { detail: ChrDetailResponse; reload: () =
 
         <aside className={styles.side} aria-label="Isian dokumen">
           <RecommendationField doc={doc} editable={permissions.canEditRecommendation} onSaved={() => undefined} />
-          <UnitResponseField doc={doc} canRespond={permissions.canRespond} onSaved={() => void reload()} />
+          <UnitResponseField doc={doc} canRespond={permissions.canRespond} onSaved={() => {
+            void reload();
+            void needsAction.refresh();
+          }} />
           <VersionTimeline doc={doc} versions={versions} />
         </aside>
       </div>

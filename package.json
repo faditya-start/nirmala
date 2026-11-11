@@ -18,7 +18,9 @@
     "db:seed": "npm run db:seed -w @nirmala/api",
     "start": "npm run start -w @nirmala/api",
     "backup": "npm run backup -w @nirmala/api",
-    "e2e:rest": "node e2e/rest.mjs"
+    "e2e:rest": "node e2e/rest.mjs",
+    "e2e:core": "node e2e/core-loop.mjs",
+    "e2e:core:fresh": "e2e/with-stack.sh node e2e/core-loop.mjs"
   },
   "devDependencies": {
     "concurrently": "^9.1.2",

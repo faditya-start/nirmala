@@ -87,3 +87,8 @@
   max-width: 100%;
   margin-top: var(--sp-5);
 }
+
+/* At 1024 px keep the description column readable and scroll the table instead of squeezing it. */
+.table {
+  min-width: 900px;
+}

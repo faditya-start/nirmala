@@ -1,6 +1,6 @@
 import type { MeResponse, TriageListResponse, WorkUnitDto } from "@nirmala/shared";
 import { CircleAlert, CircleCheck, FileText, Table2 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FocusEvent, type KeyboardEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { usePageBreadcrumb } from "../../app/breadcrumb";
 import { useCycle } from "../../app/cycle";
@@ -129,6 +129,13 @@ export function RiskTriagePage() {
 
   // ---- papan tombol: panah atas/bawah (dan j/k) memindah fokus antarbaris
   const bodyRef = useRef<HTMLTableSectionElement>(null);
+  // Roving tabindex: the table is one Tab stop (25 rows would otherwise stand between the filters and the pager).
+  const [rowStop, setRowStop] = useState(0);
+  function onBodyFocus(event: FocusEvent<HTMLTableSectionElement>) {
+    const rows = [...(bodyRef.current?.querySelectorAll<HTMLTableRowElement>("tr") ?? [])];
+    const index = rows.indexOf((event.target as HTMLElement).closest("tr") as HTMLTableRowElement);
+    if (index >= 0) setRowStop(index);
+  }
   function onBodyKeyDown(event: KeyboardEvent<HTMLTableSectionElement>) {
     if (event.target !== event.currentTarget && !(event.target as HTMLElement).matches("tr")) return;
     if (event.metaKey || event.ctrlKey || event.altKey) return;
@@ -273,7 +280,7 @@ export function RiskTriagePage() {
             )
           ) : (
             <TableFrame>
-              <Table aria-label="Daftar item Risk Triage" aria-busy={list.loading || undefined} className={list.loading ? styles.busy : undefined}>
+              <Table aria-label="Daftar item Risk Triage" aria-busy={list.loading || undefined} className={list.loading ? `${styles.table} ${styles.busy}` : styles.table}>
                 <THead>
                   <tr>
                     <Th>Uraian (Satker · akun)</Th>
@@ -286,11 +293,11 @@ export function RiskTriagePage() {
                     <Th width={150}>Keputusan</Th>
                   </tr>
                 </THead>
-                <TBody ref={bodyRef} onKeyDown={onBodyKeyDown}>
-                  {data.items.map((row) => {
+                <TBody ref={bodyRef} onKeyDown={onBodyKeyDown} onFocus={onBodyFocus}>
+                  {data.items.map((row, rowIndex) => {
                     const href = itemPath(row.id, detailFilter);
                     return (
-                      <Tr key={row.id} onActivate={() => navigate(href)}>
+                      <Tr key={row.id} tabIndex={rowIndex === Math.min(rowStop, data.items.length - 1) ? 0 : -1} onActivate={() => navigate(href)}>
                         <Td>
                           <CellTitle
                             title={

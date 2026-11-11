@@ -12,6 +12,7 @@
     "db:migrate": "tsx src/db/migrate.ts",
     "db:seed": "tsx src/db/seed.ts",
     "db:seed:demo": "tsx src/db/seedDemoLoop.ts",
+    "db:seed:e2e": "tsx src/db/seedE2e.ts",
     "generate:synthetic": "tsx scripts/generate-synthetic.ts",
     "import:private": "tsx scripts/import-private.ts",
     "import:answer-key": "tsx scripts/import-answer-key.ts",

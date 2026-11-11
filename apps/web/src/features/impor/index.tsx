@@ -3,6 +3,7 @@ import { CalendarDays, CircleAlert, CircleCheck, Inbox, LoaderCircle, Upload, X 
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useCycle } from "../../app/cycle";
+import { useNeedsAction } from "../../app/needsAction";
 import { errorMessage, isApiError } from "../../lib/api";
 import { Button, EmptyState, IconButton, Loading, PageHeader } from "../../ui";
 import { fetchImportOverview } from "./api";
@@ -51,7 +52,12 @@ function CycleImportList() {
   }, [cycleId, attempt]);
 
   const refresh = useCallback(() => setAttempt((n) => n + 1), []);
-  const runner = useImportRunner(refresh);
+  const needsAction = useNeedsAction();
+  // A finished import changes the queues (flagged items for review, notes to verify): refresh the header and sidebar counts now.
+  const runner = useImportRunner(() => {
+    refresh();
+    void needsAction.refresh();
+  });
   const { state: runState } = runner;
 
   // A finished import that was not "file sama": open its result straight away when the dialog is still open.

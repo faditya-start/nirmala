@@ -22,7 +22,7 @@ export function NoteCard({ note, editable, busy, onEdit, onDelete }: NoteCardPro
       <span className={`${styles.number} num`}>{note.number}</span>
       <div className={styles.body}>
         <div className={styles.item}>
-          <h4 className={styles.title}>{note.title}</h4>
+          <h3 className={styles.title}>{note.title}</h3>
           {meta.length > 0 && (
             <span className={styles.meta}>
               {meta.map((part, index) => (
