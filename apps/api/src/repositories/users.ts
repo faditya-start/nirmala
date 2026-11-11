@@ -1,7 +1,7 @@
-import { asc, eq } from "drizzle-orm";
-import type { Role } from "@nirmala/shared";
+import { asc, eq, inArray } from "drizzle-orm";
+import { GLOBAL_SCOPE_ROLES, type OrganizationUnitDto, type Role, type UserAdminDto } from "@nirmala/shared";
 import type { Db } from "../db/client.js";
-import { sessions, userScopes, users } from "../db/schema.js";
+import { organizationUnits, sessions, userScopes, users } from "../db/schema.js";
 import { newId } from "../lib/security.js";
 
 export async function findUserByUsername(db: Db, username: string) {
@@ -14,17 +14,45 @@ export async function findUserById(db: Db, userId: string) {
   return user;
 }
 
-export async function listUsers(db: Db) {
-  return db.select({ id: users.id, username: users.username, displayName: users.displayName, role: users.role, createdAt: users.createdAt }).from(users).orderBy(asc(users.displayName));
+const userColumns = { id: users.id, username: users.username, displayName: users.displayName, role: users.role, active: users.active, unitLabel: users.unitLabel, createdAt: users.createdAt };
+
+/** Pengguna untuk S12c (`UserAdminDto`): termasuk eselon I di `user_scopes`. `userId` mengambil satu pengguna. */
+export async function listUsers(db: Db, userId?: string): Promise<UserAdminDto[]> {
+  const rows = await (userId ? db.select(userColumns).from(users).where(eq(users.id, userId)) : db.select(userColumns).from(users)).orderBy(asc(users.displayName), asc(users.id));
+  if (rows.length === 0) return [];
+  const scopeRows = await db.select({ userId: userScopes.userId, id: organizationUnits.id, code: organizationUnits.code, shortName: organizationUnits.shortName, name: organizationUnits.name })
+    .from(userScopes).innerJoin(organizationUnits, eq(organizationUnits.id, userScopes.organizationUnitId))
+    .where(userId ? eq(userScopes.userId, userId) : undefined).orderBy(asc(organizationUnits.code));
+  const byUser = new Map<string, OrganizationUnitDto[]>();
+  for (const row of scopeRows) byUser.set(row.userId, [...(byUser.get(row.userId) ?? []), { id: row.id, code: row.code, shortName: row.shortName, name: row.name }]);
+  return rows.map((row) => {
+    const all = GLOBAL_SCOPE_ROLES.includes(row.role);
+    const units = all ? [] : (byUser.get(row.id) ?? []);
+    return { ...row, organizationUnitIds: units.map((unit) => unit.id), organizationUnits: units, allOrganizations: all };
+  });
 }
 
-export async function createUser(db: Db, input: { username: string; displayName: string; role: Role; passwordHash: string; id?: string }) {
+export async function createUser(db: Db, input: { username: string; displayName: string; role: Role; passwordHash: string; unitLabel?: string | null; id?: string }) {
   const id = input.id ?? newId("user");
-  await db.insert(users).values({ id, username: input.username, displayName: input.displayName, role: input.role, passwordHash: input.passwordHash, createdAt: Date.now() });
+  await db.insert(users).values({ id, username: input.username, displayName: input.displayName, role: input.role, passwordHash: input.passwordHash, unitLabel: input.unitLabel ?? null, createdAt: Date.now() });
   return id;
 }
 
-export async function updateUserProfile(db: Db, userId: string, patch: { displayName: string; passwordHash?: string }) {
+export async function setUserActive(db: Db, userId: string, active: boolean) {
+  await db.update(users).set({ active }).where(eq(users.id, userId));
+}
+
+export async function deleteUserSessions(db: Db, userId: string) {
+  await db.delete(sessions).where(eq(sessions.userId, userId));
+}
+
+/** Id eselon I yang benar-benar ada (untuk validasi `organizationUnitIds`). */
+export async function existingOrganizationIds(db: Db, ids: string[]): Promise<Set<string>> {
+  if (ids.length === 0) return new Set();
+  return new Set((await db.select({ id: organizationUnits.id }).from(organizationUnits).where(inArray(organizationUnits.id, ids))).map((row) => row.id));
+}
+
+export async function updateUserProfile(db: Db, userId: string, patch: { displayName: string; passwordHash?: string; unitLabel?: string | null }) {
   await db.update(users).set(patch).where(eq(users.id, userId));
 }
 
