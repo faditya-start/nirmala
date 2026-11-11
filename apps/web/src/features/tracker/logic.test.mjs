@@ -1,18 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  bulkResultMessage, checkSummary, evidenceRowViews, expectationText, pickDefaultStatus, rowAccountLine, rowCheckLine,
+  bulkResultMessage, checkSummary, evidenceRowViews, pickDefaultStatus, rowAccountLine, rowCheckLine,
   summarizeSelection, timelineViews, validateJustification, validateReturnReason
 } from "./logic.ts";
 
 const counts = (a, b, c, d) => ({ menunggu_revisi: a, perlu_verifikasi: b, dijustifikasi: c, closed: d });
-
-test("expectationText formats every expectation", () => {
-  assert.equal(expectationText({ type: "ganti_akun", to: "521111" }), "ganti_akun → 521111");
-  assert.equal(expectationText({ type: "hapus_item" }), "hapus_item");
-  assert.equal(expectationText({ type: "turunkan_nilai", maxUnitPrice: 1700000 }), "turunkan_nilai · harga ≤ 1.700.000");
-  assert.equal(expectationText({ type: "manual", instruction: "x" }), "manual · diperiksa reviewer");
-});
 
 test("checkSummary describes the proposal, never claims closure", () => {
   const ev = { fields: [{ field: "account_code", before: "522191", after: "522191" }] };

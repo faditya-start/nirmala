@@ -1,9 +1,9 @@
 import { Check, CircleAlert, Save } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import type { ChrDocumentDto, ChrVersionSummaryDto } from "@nirmala/shared";
+import type { ChrDocumentDto } from "@nirmala/shared";
 import { errorMessage } from "../../../lib/api-error";
-import { formatDate, formatDateTime, formatNumber } from "../../../lib/format";
-import { Button, SectionHeader, Textarea, Timeline, TimelineItem } from "../../../ui";
+import { formatDate, formatDateTime } from "../../../lib/format";
+import { Button, SectionHeader, Textarea } from "../../../ui";
 import { chrApi } from "../chrApi";
 import { RECOMMENDATION_MAX } from "../logic";
 import styles from "./DocumentSide.module.css";
@@ -82,9 +82,10 @@ export function RecommendationField({ doc, editable, onSaved }: { doc: ChrDocume
 
   return (
     <section className={styles.group} aria-labelledby="chr-rec-title">
-      <SectionHeaderId id="chr-rec-title" title="Rekomendasi" description="Diisi reviewer. Menjadi bagian CHR yang diterbitkan." />
+      <SectionHeaderId id="chr-rec-title" title="Rekomendasi" />
       <Textarea
         label="Rekomendasi reviewer"
+        hideLabel
         className={editable ? undefined : styles.sunken}
         value={text}
         readOnly={!editable}
@@ -98,7 +99,7 @@ export function RecommendationField({ doc, editable, onSaved }: { doc: ChrDocume
   );
 }
 
-/** Tanggapan eselon I: PIC UKI writes it after the CHR is issued. */
+/** Tanggapan eselon I: PIC UKI writes it after the CHR is issued; the editor only mounts this for issued documents. */
 export function UnitResponseField({
   doc,
   canRespond,
@@ -112,7 +113,6 @@ export function UnitResponseField({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
-  const issued = doc.status !== "draft";
   const dirty = text.trim() !== (doc.unitResponse ?? "").trim();
 
   useEffect(() => {
@@ -142,21 +142,20 @@ export function UnitResponseField({
     ? `Diisi ${doc.unitResponseByName ?? "PIC UKI"}${doc.unitResponseAt ? `, ${formatDate(doc.unitResponseAt)}` : ""}.`
     : null;
   let hint: React.ReactNode;
-  if (!issued) hint = "Aktif setelah terbit.";
-  else if (error) hint = undefined;
+  if (error) hint = undefined;
   else if (saved && !dirty) hint = filled ?? "Tanggapan tersimpan.";
   else hint = filled ?? (canRespond ? "Belum ada tanggapan. Isi lalu simpan." : "Belum ada tanggapan dari eselon I.");
 
   return (
     <section className={styles.group} aria-labelledby="chr-resp-title">
-      <SectionHeaderId id="chr-resp-title" title="Tanggapan eselon I" description="Diisi PIC UKI setelah CHR terbit." />
+      <SectionHeaderId id="chr-resp-title" title="Tanggapan eselon I" />
       <Textarea
         label="Tanggapan eselon I (PIC UKI)"
-        className={issued && canRespond ? undefined : styles.sunken}
+        hideLabel
+        className={canRespond ? undefined : styles.sunken}
         value={text}
-        readOnly={!(issued && canRespond)}
-        disabled={!issued}
-        placeholder={issued ? (canRespond ? "Tulis tanggapan eselon I" : "") : "Belum bisa diisi sebelum CHR terbit."}
+        readOnly={!canRespond}
+        placeholder={canRespond ? "Tulis tanggapan eselon I" : ""}
         maxLength={5000}
         rows={5}
         onChange={(event) => {
@@ -167,7 +166,7 @@ export function UnitResponseField({
         hint={hint}
         error={error ?? undefined}
       />
-      {issued && canRespond && (
+      {canRespond && (
         <div>
           <Button variant="sekunder" size="sm" icon={saved && !dirty ? Check : Save} onClick={() => void save()} loading={busy} disabled={!dirty}>
             Simpan tanggapan
@@ -179,44 +178,10 @@ export function UnitResponseField({
 }
 
 /** SectionHeader without an id prop: wrap so the section can be labelled. */
-function SectionHeaderId({ id, title, description }: { id: string; title: string; description: string }) {
+function SectionHeaderId({ id, title }: { id: string; title: string }) {
   return (
     <div id={id} className={styles.sectionHead}>
-      <SectionHeader title={title} description={description} />
+      <SectionHeader title={title} />
     </div>
-  );
-}
-
-/** Riwayat versi timeline: one item per version, a hollow "Adendum" item while none exists. */
-export function VersionTimeline({ doc, versions }: { doc: ChrDocumentDto; versions: ChrVersionSummaryDto[] }) {
-  const hasAddendum = versions.some((version) => version.reason === "adendum");
-  const sorted = [...versions].sort((a, b) => a.versionNumber - b.versionNumber);
-  return (
-    <section className={styles.group} aria-labelledby="chr-ver-title">
-      <div id="chr-ver-title" className={styles.sectionHead}>
-        <SectionHeader title="Riwayat versi" />
-      </div>
-      {sorted.length === 0 ? (
-        <p className={styles.plain}>Belum ada versi. Versi 1 dibuat saat CHR diterbitkan.</p>
-      ) : (
-        <Timeline label="Riwayat versi CHR">
-          {sorted.map((version, index) => (
-            <TimelineItem
-              key={version.versionNumber}
-              title={version.reason === "terbit" ? `Versi ${version.versionNumber} · terbit` : `Versi ${version.versionNumber} · adendum`}
-              time={formatDateTime(version.createdAt)}
-              tone={version.reason === "terbit" ? "menunggu" : "default"}
-              description={
-                version.reason === "adendum" && version.addendumReason
-                  ? `${version.createdByName} · ${formatNumber(version.notesCount)} catatan. ${version.addendumReason}`
-                  : `${version.createdByName} · ${formatNumber(version.notesCount)} catatan`
-              }
-              last={hasAddendum && index === sorted.length - 1}
-            />
-          ))}
-          {!hasAddendum && doc.status !== "draft" && <TimelineItem title="Adendum" description="Belum ada adendum" pending last />}
-        </Timeline>
-      )}
-    </section>
   );
 }

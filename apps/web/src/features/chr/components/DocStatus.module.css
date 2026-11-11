@@ -32,13 +32,3 @@
   font-weight: 600;
   color: var(--ink);
 }
-
-/* A zero count stays readable (text keeps its contrast) but the badge recedes. */
-.count[data-zero] > :first-child {
-  opacity: 0.55;
-}
-
-.count[data-zero] > :last-child {
-  color: var(--ink-muted);
-  font-weight: 500;
-}

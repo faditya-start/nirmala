@@ -1,5 +1,5 @@
 import type { DashboardActionCard, DashboardOrganizationRow, DashboardResponse } from "@nirmala/shared";
-import { CalendarDays, ChartColumn, ChevronRight, CircleAlert, Eye, ListChecks } from "lucide-react";
+import { CalendarDays, ChevronRight, CircleAlert, ListChecks } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../app/auth";
@@ -26,18 +26,7 @@ import {
   Tr,
   type NoteStatus
 } from "../../ui";
-import {
-  CATEGORY_ROWS,
-  actionBody,
-  actionButtonLabel,
-  actionCountText,
-  barRatio,
-  daysValue,
-  flaggedShareText,
-  rowProgress,
-  snapshotHint,
-  triageHref
-} from "./logic";
+import { actionBody, actionButtonLabel, actionCountText, daysValue, flaggedShareText, rowProgress, triageHref } from "./logic";
 import styles from "./index.module.css";
 
 const STATUS_ORDER: NoteStatus[] = ["draf", "menunggu_revisi", "perlu_verifikasi", "dijustifikasi", "closed"];
@@ -111,31 +100,25 @@ function Shell({ children }: { children: React.ReactNode }) {
 function DashboardBody({ data, leader }: { data: DashboardResponse; leader: boolean }) {
   const { kpis, cycle } = data;
   const share = flaggedShareText(kpis.itemsFlagged, kpis.itemsAnalyzed);
-  const multiple = data.snapshots.length > 1;
   const stage = cycle.stage === "pagu" ? "Pagu" : "Alokasi";
   const scope = data.scopeKind === "all" ? "Semua eselon I" : data.organizationUnitNames.join(", ") || "Eselon I Anda";
   const subtitle = `${scope} · TA ${cycle.fiscalYear} ${stage} · ${data.dataAsOf ? `data per ${formatDate(data.dataAsOf)}` : "belum ada data"}`;
-  const maxCategory = Math.max(0, ...CATEGORY_ROWS.map((row) => data.notesByCategory[row.key] ?? 0));
   const statusNote = leader
     ? "Catatan draf ikut dihitung. Draf belum terlihat oleh Satker."
     : data.chrDocumentNumbers.length > 0
-      ? `Catatan CHR ${data.chrDocumentNumbers.join(", ")} per status.`
-      : "Catatan per status.";
+      ? `CHR ${data.chrDocumentNumbers.join(", ")}`
+      : undefined;
 
   return (
     <div className={styles.page}>
-      <PageHeader
-        title="Dashboard"
-        subtitle={subtitle}
-        actions={
-          <ButtonLink to="/laporan" icon={ChartColumn}>
-            Laporan
-          </ButtonLink>
-        }
-      />
+      <PageHeader title="Dashboard" subtitle={subtitle} />
 
       <div className={styles.kpis}>
-        <KpiCard label={multiple ? "Item dianalisis · semua snapshot terbaru" : "Item dianalisis"} value={formatNumber(kpis.itemsAnalyzed)} hint={snapshotHint(data.snapshots)} />
+        <KpiCard
+          label="Sisa hari ke tenggat ADK"
+          value={daysValue(kpis.daysToAdkDeadline)}
+          hint={kpis.adkDeadline ? `Tenggat ${formatDate(kpis.adkDeadline)}` : "Tenggat belum diatur"}
+        />
         <KpiCard label="Item kena aturan" value={formatNumber(kpis.itemsFlagged)} hint={share ?? "Belum ada item dianalisis"} />
         <KpiCard
           label="Satker siap diajukan"
@@ -144,60 +127,31 @@ function DashboardBody({ data, leader }: { data: DashboardResponse; leader: bool
           progress={kpis.satkerWithNotes > 0 ? kpis.satkerReady / kpis.satkerWithNotes : 0}
           progressLabel="Satker siap diajukan"
         />
-        <KpiCard
-          label="Sisa hari ke tenggat ADK"
-          value={daysValue(kpis.daysToAdkDeadline)}
-          hint={kpis.adkDeadline ? `Tenggat ${formatDate(kpis.adkDeadline)}` : "Tenggat belum diatur"}
-        />
       </div>
 
-      <div className={styles.split}>
-        <div className={styles.main}>
-          <section className={styles.block}>
-            <SectionHeader title="Catatan per status" description={statusNote} />
-            <div className={styles.strip} role="list" aria-label="Jumlah catatan per status">
-              {STATUS_ORDER.map((key) => {
-                const count = data.notesByStatus[key] ?? 0;
-                return (
-                  <div key={key} className={styles.cell} role="listitem">
-                    <StatusBadge status={key} />
-                    <span className={`${styles.count} num`} data-zero={count === 0 || undefined}>
-                      {formatNumber(count)}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
+      <div className={leader ? styles.solo : styles.split}>
+        <section className={styles.block}>
+          <SectionHeader title="Catatan per status" description={statusNote} />
+          <div className={styles.strip} role="list" aria-label="Jumlah catatan per status">
+            {STATUS_ORDER.map((key) => {
+              const count = data.notesByStatus[key] ?? 0;
+              return (
+                <div key={key} className={styles.cell} role="listitem">
+                  <StatusBadge status={key} />
+                  <span className={`${styles.count} num`} data-zero={count === 0 || undefined}>
+                    {formatNumber(count)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </section>
 
-          <section className={styles.block}>
-            <SectionHeader title="Distribusi kategori catatan" description={leader ? "Jumlah catatan per kategori, termasuk draf." : "Jumlah catatan per kategori."} />
-            <ul className={styles.bars} aria-label="Catatan per kategori">
-              {CATEGORY_ROWS.map((row) => {
-                const count = data.notesByCategory[row.key] ?? 0;
-                return (
-                  <li key={row.key} className={styles.barRow}>
-                    <span className={styles.barLabel}>{row.label}</span>
-                    <span className={styles.barTrack} aria-hidden="true">
-                      <span className={styles.barFill} style={{ width: `${barRatio(count, maxCategory) * 100}%` }} />
-                    </span>
-                    <span className={`${styles.barCount} num`} data-zero={count === 0 || undefined}>
-                      {formatNumber(count)}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-        </div>
-
-        <aside className={styles.side}>
-          {leader ? <ScopeCard /> : <ActionsPanel actions={data.actions} />}
-        </aside>
+        {!leader && <ActionsPanel actions={data.actions} />}
       </div>
 
       <section className={styles.block}>
-        <SectionHeader title="Per eselon I" description="Klik baris untuk membuka Risk Triage dengan filter eselon I tersebut." />
+        <SectionHeader title="Per eselon I" />
         {data.organizations.length === 0 ? (
           <EmptyState icon={CalendarDays} title="Belum ada eselon I" description="Tidak ada eselon I yang tercakup dalam akses Anda pada siklus ini." />
         ) : (
@@ -205,20 +159,6 @@ function DashboardBody({ data, leader }: { data: DashboardResponse; leader: bool
         )}
       </section>
     </div>
-  );
-}
-
-function ScopeCard() {
-  return (
-    <section className={styles.block}>
-      <SectionHeader title="Cakupan tampilan" />
-      <div className={styles.panel}>
-        <div className={styles.scope}>
-          <Eye size={16} aria-hidden="true" />
-          <p>Pimpinan melihat semua eselon I secara baca-saja. Reviewer dan PIC UKI hanya melihat eselon I miliknya.</p>
-        </div>
-      </div>
-    </section>
   );
 }
 
@@ -238,14 +178,15 @@ function ActionBadge({ card }: { card: DashboardActionCard }) {
 }
 
 function ActionsPanel({ actions }: { actions: DashboardActionCard[] }) {
+  const pending = actions.filter((card) => card.count > 0);
   return (
     <section className={styles.block}>
-      <SectionHeader title="Perlu tindakan saya" description="Hanya yang menunggu keputusan Anda." />
+      <SectionHeader title="Perlu tindakan saya" />
       <div className={styles.panel}>
-        {actions.length === 0 ? (
+        {pending.length === 0 ? (
           <p className={styles.panelEmpty}>Tidak ada yang menunggu keputusan Anda saat ini.</p>
         ) : (
-          actions.map((card) => {
+          pending.map((card) => {
             const label = actionButtonLabel(card);
             return (
               <div key={card.kind} className={styles.action}>
@@ -283,9 +224,6 @@ function OrganizationTable({ rows }: { rows: DashboardOrganizationRow[] }) {
             <Th align="right" width={140}>
               Catatan terbuka
             </Th>
-            <Th align="right" width={100}>
-              % closed
-            </Th>
             <Th width={230}>Progres catatan</Th>
             <Th width={48}>
               <span className="sr-only">Buka</span>
@@ -321,9 +259,6 @@ function OrganizationTable({ rows }: { rows: DashboardOrganizationRow[] }) {
                       {row.notesDraft > 0 && <span className={styles.sub}>{formatNumber(row.notesDraft)} draf</span>}
                     </div>
                   )}
-                </Td>
-                <Td numeric className={row.percentClosed === null ? styles.faint : undefined}>
-                  {row.percentClosed === null ? "—" : `${formatNumber(row.percentClosed)}%`}
                 </Td>
                 <Td>
                   <div className={styles.progress}>

@@ -1,6 +1,7 @@
 import { SquarePen, Trash2 } from "lucide-react";
-import { expectationCode } from "@nirmala/shared";
 import type { ChrNoteDto } from "@nirmala/shared";
+import { expectationSentence } from "../../../lib/expectation";
+import { formatNumber } from "../../../lib/format";
 import { CheckResultBadge, IconButton, RuleChip, StatusBadge } from "../../../ui";
 import styles from "./NoteCard.module.css";
 
@@ -8,6 +9,8 @@ export interface NoteCardProps {
   note: ChrNoteDto;
   /** Edit and delete icons show only while the document is a draft and the server allows editing. */
   editable: boolean;
+  /** Draft documents hold only Draf notes, so the status badge only appears once the CHR is issued. */
+  showStatus?: boolean;
   /** Disables the icons while another request runs. */
   busy?: boolean;
   onEdit?: (note: ChrNoteDto) => void;
@@ -15,7 +18,7 @@ export interface NoteCardProps {
 }
 
 /** One catatan row in the editor: number, title · Satker · account, text, rule / expectation / status chips. */
-export function NoteCard({ note, editable, busy, onEdit, onDelete }: NoteCardProps) {
+export function NoteCard({ note, editable, showStatus = true, busy, onEdit, onDelete }: NoteCardProps) {
   const meta = [note.workUnitName, note.accountCode].filter(Boolean);
   return (
     <li className={styles.row}>
@@ -39,9 +42,9 @@ export function NoteCard({ note, editable, busy, onEdit, onDelete }: NoteCardPro
           {note.ruleCode && <RuleChip code={note.ruleCode} />}
           <span className={styles.expectation}>
             <span className={styles.expectationLabel}>Ekspektasi</span>
-            <span className={`${styles.expectationValue} mono`}>{expectationCode(note.expectation)}</span>
+            <span className={styles.expectationValue}>{expectationSentence(note.expectation, formatNumber)}</span>
           </span>
-          <StatusBadge status={note.status} />
+          {showStatus && <StatusBadge status={note.status} />}
           {note.latestCheckResult && <CheckResultBadge result={note.latestCheckResult} />}
         </div>
       </div>

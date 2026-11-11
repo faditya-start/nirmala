@@ -1,59 +1,12 @@
-import type { ImportOverviewRow, ReviewCycleDto } from "@nirmala/shared";
+import type { ImportOverviewRow } from "@nirmala/shared";
 import { ArrowRight, Upload } from "lucide-react";
 import { Link } from "react-router-dom";
-import { daysUntil, formatCountdown, formatDate, formatDateTime, formatNumber } from "../../../lib/format";
+import { formatDateTime, formatNumber } from "../../../lib/format";
 import { Button, ButtonLink, Table, TableFrame, TBody, Td, THead, Th, Tr } from "../../../ui";
-import { rowAction, stageName, versionColumns, versionText } from "../logic";
+import { rowAction, versionColumns, versionText } from "../logic";
 import styles from "./CycleSnapshotTables.module.css";
 
 export const resultHref = (cycleId: string, snapshotId: string) => `/siklus?siklus=${encodeURIComponent(cycleId)}&hasil=${encodeURIComponent(snapshotId)}`;
-
-export function CycleTable({ cycles, activeId, onSelect }: { cycles: ReviewCycleDto[]; activeId: string | null; onSelect: (id: string) => void }) {
-  return (
-    <TableFrame className={styles.frame}>
-      <Table aria-label="Daftar siklus">
-        <THead>
-          <tr>
-            <Th width={180}>Tahun anggaran</Th>
-            <Th width={180}>Tahap</Th>
-            <Th width={220}>Tenggat ADK</Th>
-            <Th width={220}>DIPA terbit</Th>
-            <Th>Status</Th>
-          </tr>
-        </THead>
-        <TBody>
-          {cycles.map((cycle) => {
-            const active = cycle.id === activeId;
-            const days = cycle.status === "aktif" ? daysUntil(cycle.adkDeadline) : null;
-            return (
-              <Tr key={cycle.id} className={active ? styles.active : undefined} aria-current={active ? "true" : undefined} title={active ? "Siklus aktif" : "Pilih sebagai siklus aktif"} onActivate={() => onSelect(cycle.id)}>
-                <Td>TA {cycle.fiscalYear}</Td>
-                <Td>{stageName(cycle.stage)}</Td>
-                <Td>
-                  {days !== null ? (
-                    <div className={styles.stack}>
-                      <span className={styles.primary}>{formatDate(cycle.adkDeadline)}</span>
-                      <span className={styles.sub}>{formatCountdown(days)}</span>
-                    </div>
-                  ) : (
-                    formatDate(cycle.adkDeadline)
-                  )}
-                </Td>
-                <Td>{cycle.dipaIssuedAt ? formatDate(cycle.dipaIssuedAt) : "Belum"}</Td>
-                <Td>
-                  <span className={styles.status} data-status={cycle.status}>
-                    <span className={styles.dot} aria-hidden="true" />
-                    {cycle.status === "aktif" ? "Aktif" : "Selesai"}
-                  </span>
-                </Td>
-              </Tr>
-            );
-          })}
-        </TBody>
-      </Table>
-    </TableFrame>
-  );
-}
 
 export interface SnapshotTableProps {
   cycleId: string;

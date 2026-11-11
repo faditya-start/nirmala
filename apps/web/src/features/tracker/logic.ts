@@ -63,26 +63,6 @@ export function formatNum(value: number): string {
   return number.format(value);
 }
 
-/** "ganti_akun → 521111", "turunkan_nilai ≤ 4.500.000", "manual · diperiksa reviewer". Mono text in the list and detail. */
-export function expectationText(expectation: Expectation): string {
-  switch (expectation.type) {
-    case "ganti_akun":
-      return `ganti_akun → ${expectation.to}`;
-    case "hapus_item":
-      return "hapus_item";
-    case "turunkan_nilai": {
-      const limits: string[] = [];
-      if (expectation.maxUnitPrice !== undefined) limits.push(`harga ≤ ${formatNum(expectation.maxUnitPrice)}`);
-      if (expectation.maxTotal !== undefined) limits.push(`total ≤ ${formatNum(expectation.maxTotal)}`);
-      return `turunkan_nilai · ${limits.join(", ")}`;
-    }
-    case "rinci_item":
-      return "rinci_item";
-    case "manual":
-      return "manual · diperiksa reviewer";
-  }
-}
-
 export function formatEvidenceValue(field: EvidenceRowDto["field"], value: string | number | null): string {
   if (value === null || value === "") return "tidak ada";
   if (typeof value === "number" && (field === "unit_price" || field === "total_amount" || field === "quantity")) return formatNum(value);

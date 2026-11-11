@@ -337,7 +337,7 @@ async function run() {
     await waitText(page, /Dismiss/);
     await page.getByRole("button", { name: /Ubah keputusan/ }).click();
     await page.locator("dialog[open]").getByRole("button", { name: /Ya, batalkan keputusan/ }).click();
-    await waitText(page, /Belum ditinjau/);
+    await waitText(page, /Konfirmasi dan masukkan ke CHR/);
     await page.getByRole("radio", { name: "Dismiss" }).check({ force: true });
     await page.getByLabel("Alasan dismiss (wajib)").selectOption({ index: 1 });
     await page.getByRole("button", { name: "Simpan dismiss" }).click();
@@ -379,7 +379,7 @@ async function run() {
   async function chrPage(page) {
     await page.goto(`${BASE}/chr`);
     await page.waitForURL(/\/chr\/[^/]+$/);
-    await waitText(page, /Catatan per status/);
+    await waitText(page, /Rekomendasi/);
     state.chrUrl = page.url();
     state.chrId = new URL(page.url()).pathname.split("/").pop();
   }
@@ -415,7 +415,7 @@ async function run() {
     await field.fill("Satker diminta meninjau ulang belanja non-esensial sebelum DIPA diterbitkan.");
     await waitText(page, /Tersimpan otomatis pukul/, 'aside[aria-label="Isian dokumen"]');
     await page.reload();
-    await waitText(page, /Catatan per status/);
+    await waitText(page, /Rekomendasi/);
     assert((await page.getByLabel("Rekomendasi reviewer").inputValue()).includes("belanja non-esensial"), "rekomendasi tersimpan di server");
   });
   await step("S6 CHR draf: tambah catatan manual, ubah, dan hapus catatan", async () => {
@@ -478,7 +478,7 @@ async function run() {
     await page.getByRole("button", { name: "Simpan tanggapan" }).click();
     await waitText(page, /Diisi Umar UKI/, 'aside[aria-label="Isian dokumen"]');
     await page.reload();
-    await waitText(page, /Catatan per status/);
+    await waitText(page, /Rekomendasi/);
     assert((await page.getByLabel("Tanggapan eselon I (PIC UKI)").inputValue()).includes("menindaklanjuti"), "tanggapan tersimpan");
   });
   await step("S6 adendum: reviewer menambah catatan lewat adendum, versi 2 dan riwayat versi", async () => {
@@ -667,7 +667,7 @@ async function run() {
   await step("S9 -> S6: menutup catatan terakhir membuat CHR berstatus Selesai", async () => {
     const { page } = await session("reviewer");
     await page.goto(state.chrUrl);
-    await waitText(page, /Catatan per status/);
+    await waitText(page, /Rekomendasi/);
     assert(!(await has(page, /\bSelesai\b/)), "CHR belum Selesai selama masih ada catatan terbuka");
     await openNote(page, "Honorarium ganda");
     await page.getByRole("button", { name: "Setujui dan tutup" }).click();
@@ -749,7 +749,7 @@ async function run() {
     const response = await page.request.post(`${BASE}/api/triage/items/${itemId}/confirm`, { data: { category: "akun", text: "uji", expectation: { type: "hapus_item" } } });
     assert(response.status() === 403, `POST confirm oleh pimpinan -> 403 (dapat ${response.status()})`);
     await page.goto(`${BASE}/chr/${state.chrId}`);
-    await waitText(page, /Catatan per status/);
+    await waitText(page, /Rekomendasi/);
     assert((await page.getByRole("button", { name: /Tambah adendum|Terbitkan/ }).count()) === 0, "CHR tanpa aksi tulis untuk pimpinan");
     await page.goto(`${BASE}/tracker?status=closed`);
     await waitText(page, /Jasa kebersihan/);

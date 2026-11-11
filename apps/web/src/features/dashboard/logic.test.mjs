@@ -1,22 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { actionBody, actionButtonLabel, actionCountText, barRatio, daysValue, flaggedShareText, rowProgress, snapshotHint } from "./logic.ts";
+import { actionBody, actionButtonLabel, actionCountText, daysValue, flaggedShareText, rowProgress } from "./logic.ts";
 
 const date = () => "4 Nov 2026";
 const org = (over) => ({ snapshot: { versionNo: 2, label: "Revisi" }, notesIssued: 3, notesClosed: 2, notesDraft: 0, chrStatus: "issued", ...over });
 
 test("flaggedShareText", () => {
-  assert.equal(flaggedShareText(108, 12702), "0,9% dari item dianalisis");
+  assert.equal(flaggedShareText(108, 12702), "0,9% dari 12.702 item dianalisis");
   assert.equal(flaggedShareText(0, 0), null);
-});
-
-test("snapshotHint", () => {
-  assert.equal(snapshotHint([]), "Belum ada snapshot");
-  assert.equal(snapshotHint([{ organizationUnitName: "A", versionNo: 2, label: "Revisi" }]), "Snapshot v2 · Revisi");
-  assert.equal(
-    snapshotHint([{ organizationUnitName: "Ditjen A", versionNo: 2, label: "Revisi" }, { organizationUnitName: "Ditjen B", versionNo: 1, label: "Awal" }]),
-    "Ditjen A v2 + Ditjen B v1"
-  );
 });
 
 test("daysValue", () => {
@@ -31,12 +22,6 @@ test("rowProgress", () => {
   assert.equal(rowProgress(org({ snapshot: null })).text, "Belum ada snapshot");
   assert.equal(rowProgress(org({ notesIssued: 0, notesClosed: 0, notesDraft: 4, chrStatus: "draft" })).text, "CHR draf, belum terbit");
   assert.equal(rowProgress(org({ notesIssued: 0, notesClosed: 0, chrStatus: null })).text, "Belum ada catatan terbit");
-});
-
-test("barRatio", () => {
-  assert.equal(barRatio(1, 3), 1 / 3);
-  assert.equal(barRatio(0, 0), 0);
-  assert.equal(barRatio(5, 3), 1);
 });
 
 test("action cards", () => {

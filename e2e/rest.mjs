@@ -52,7 +52,7 @@ async function dashboard(browser) {
       await p.goto(`${BASE_URL}/dashboard`, { waitUntil: "networkidle" });
       await p.getByRole("heading", { name: "Dashboard", level: 1 }).waitFor();
       const text = await bodyText(p);
-      for (const label of ["Item dianalisis", "Item kena aturan", "Satker siap diajukan", "Sisa hari ke tenggat ADK", "Catatan per status", "Per eselon I"]) ok(text.includes(label), `missing "${label}"`);
+      for (const label of ["item dianalisis", "Item kena aturan", "Satker siap diajukan", "Sisa hari ke tenggat ADK", "Catatan per status", "Per eselon I"]) ok(text.includes(label), `missing "${label}"`);
       const d = (await api(p, "GET", "/cycles")).json.cycles.find((c) => c.status === "aktif");
       const dash = (await api(p, "GET", `/dashboard?cycleId=${d.id}`)).json;
       ok(text.includes(String(dash.kpis.itemsAnalyzed).replace(/\B(?=(\d{3})+(?!\d))/g, ".")), "itemsAnalyzed not shown");
@@ -60,7 +60,6 @@ async function dashboard(browser) {
       const sidebarDays = /sisa (\d+) hari/.exec(text)?.[1];
       const cardDays = /(\d+) hari\s*\n?\s*Tenggat/.exec(text)?.[1];
       if (sidebarDays) equal(cardDays, sidebarDays, "KPI card vs sidebar countdown");
-      if (role === "leader") ok(text.includes("Cakupan tampilan"), "leader: Cakupan tampilan");
       if (role === "uki") ok(/Perlu tindakan saya/.test(text), "uki: Perlu tindakan saya");
       if (role === "reviewer") {
         await p.locator("tbody tr").first().click();

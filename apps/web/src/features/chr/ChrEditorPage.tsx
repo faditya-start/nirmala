@@ -10,7 +10,7 @@ import { Button, ButtonLink, ConfirmDialog, EmptyState, Loading } from "../../ui
 import { chrApi } from "./chrApi";
 import { AddendumDialog } from "./components/AddendumDialog";
 import { DocStatusPill, StatusCounts } from "./components/DocStatus";
-import { RecommendationField, UnitResponseField, VersionTimeline } from "./components/DocumentSide";
+import { RecommendationField, UnitResponseField } from "./components/DocumentSide";
 import { NoteCard } from "./components/NoteCard";
 import { NoteDialog } from "./components/NoteDialog";
 import { ResourceError } from "./components/ResourceError";
@@ -188,7 +188,7 @@ function ChrEditor({ detail, reload }: { detail: ChrDetailResponse; reload: () =
         </p>
       )}
 
-      <StatusCounts counts={notesByStatus} />
+      {!draft && <StatusCounts counts={notesByStatus} />}
 
       <div className={styles.columns}>
         <div className={styles.notes}>
@@ -224,6 +224,7 @@ function ChrEditor({ detail, reload }: { detail: ChrDetailResponse; reload: () =
                       key={note.id}
                       note={note}
                       editable={draft && canWrite}
+                      showStatus={!draft}
                       onEdit={(target) => open({ kind: "note", note: target })}
                       onDelete={(target) => open({ kind: "delete", note: target })}
                     />
@@ -246,11 +247,16 @@ function ChrEditor({ detail, reload }: { detail: ChrDetailResponse; reload: () =
 
         <aside className={styles.side} aria-label="Isian dokumen">
           <RecommendationField doc={doc} editable={permissions.canEditRecommendation} onSaved={() => undefined} />
-          <UnitResponseField doc={doc} canRespond={permissions.canRespond} onSaved={() => {
-            void reload();
-            void needsAction.refresh();
-          }} />
-          <VersionTimeline doc={doc} versions={versions} />
+          {!draft && (
+            <UnitResponseField
+              doc={doc}
+              canRespond={permissions.canRespond}
+              onSaved={() => {
+                void reload();
+                void needsAction.refresh();
+              }}
+            />
+          )}
         </aside>
       </div>
 

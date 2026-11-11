@@ -24,7 +24,8 @@ import {
 } from "../../ui";
 import { ActionPanels } from "./ActionPanels";
 import { Notice, type NoticeProps } from "./components/Notice";
-import { CATEGORY_LABEL, evidenceRowViews, expectationText, timelineViews } from "./logic";
+import { expectationSentence } from "../../lib/expectation";
+import { CATEGORY_LABEL, evidenceRowViews, formatNum, timelineViews } from "./logic";
 import { describeError, errorStatus, useRemote } from "./useRemote";
 import styles from "./NoteDetailPage.module.css";
 
@@ -123,7 +124,7 @@ export function NoteDetailPage() {
               <p className={styles.noteText}>{note.text}</p>
               <div className={styles.expectation}>
                 <span>Ekspektasi perubahan</span>
-                <strong className="mono">{expectationText(note.expectation)}</strong>
+                <strong>{expectationSentence(note.expectation, formatNum)}</strong>
               </div>
             </div>
           </section>

@@ -1,38 +1,13 @@
 /** Pure helpers for the Dashboard (S2). No React and no relative imports so `node --test` can run them. */
-import type { CheckResult, DashboardActionCard, DashboardOrganizationRow, DashboardSnapshotRef, NoteCategory } from "@nirmala/shared";
+import type { CheckResult, DashboardActionCard, DashboardOrganizationRow } from "@nirmala/shared";
 
 const integer = new Intl.NumberFormat("id-ID");
 
-/** Order and labels of "Distribusi kategori catatan" (design czg1z). */
-export const CATEGORY_ROWS: Array<{ key: NoteCategory; label: string }> = [
-  { key: "AKUN", label: "Ketepatan akun" },
-  { key: "EFISIENSI", label: "Efisiensi belanja" },
-  { key: "SATUAN_BIAYA", label: "Satuan biaya" },
-  { key: "LAINNYA", label: "Lainnya" }
-];
-
-/** Bar width as a share of the longest bar (0..1). All zero -> 0. */
-export function barRatio(count: number, max: number): number {
-  if (max <= 0 || count <= 0) return 0;
-  return Math.min(1, count / max);
-}
-
-/** "0,9% dari item dianalisis"; null when nothing was analysed. */
+/** "0,9% dari 12.702 item dianalisis"; null when nothing was analysed. */
 export function flaggedShareText(flagged: number, analyzed: number): string | null {
   if (analyzed <= 0) return null;
   const text = new Intl.NumberFormat("id-ID", { maximumFractionDigits: 1 }).format((flagged / analyzed) * 100);
-  return `${text}% dari item dianalisis`;
-}
-
-function versionName(versionNo: number): string {
-  return `v${versionNo}`;
-}
-
-/** Hint under "Item dianalisis": one snapshot -> "Snapshot v2 · Revisi", several -> "Ditjen A v2 + Ditjen B v1". */
-export function snapshotHint(snapshots: DashboardSnapshotRef[]): string {
-  if (snapshots.length === 0) return "Belum ada snapshot";
-  if (snapshots.length === 1) return `Snapshot ${versionName(snapshots[0].versionNo)} · ${snapshots[0].label}`;
-  return snapshots.map((s) => `${s.organizationUnitName} ${versionName(s.versionNo)}`).join(" + ");
+  return `${text}% dari ${integer.format(analyzed)} item dianalisis`;
 }
 
 /** "3 hari", "Lewat 2 hari", "Hari ini"; "—" without a deadline. */

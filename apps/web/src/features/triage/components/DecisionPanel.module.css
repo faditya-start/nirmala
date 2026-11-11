@@ -99,7 +99,8 @@
 }
 
 .footnote,
-.note {
+.note,
+.prefill {
   font-size: var(--fs-xs);
   line-height: 17px;
   color: var(--ink-muted);
